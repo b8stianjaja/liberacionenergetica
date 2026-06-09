@@ -7,15 +7,16 @@ generator client {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
+  id        String      @id @default(cuid())
+  email     String      @unique
   name      String?
   password  String
-  role      String   @default("CUSTOMER")
+  role      String      @default("CUSTOMER") // "CUSTOMER" or "ADMIN"
   orders    Order[]
   notes     Note[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  files     FileAsset[] 
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
 }
 
 model Product {
@@ -23,9 +24,11 @@ model Product {
   name        String
   description String
   price       Float
-  stock       Int         @default(0)
+  stock       Int         @default(0) 
   imageUrl    String?
   isActive    Boolean     @default(true)
+  type        String      @default("PHYSICAL") // "PHYSICAL", "DIGITAL", "SERVICE"
+  duration    Int?        // For services
   orderItems  OrderItem[]
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
@@ -36,8 +39,10 @@ model Order {
   user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId        String
   totalAmount   Float
-  paymentStatus String      @default("PENDING")
+  paymentStatus String      @default("PENDING") // PENDING, PAID, CANCELLED
+  status        String      @default("NEW") // NEW, PROCESSING, COMPLETED
   items         OrderItem[]
+  bookingDate   DateTime?
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
 }
@@ -58,7 +63,18 @@ model Note {
   userId    String
   title     String
   content   String
-  courseId  String?  
+  courseId  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model FileAsset {
+  id        String   @id @default(cuid())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  fileName  String
+  fileUrl   String   
+  fileType  String   // "IMAGE", "VIDEO", "DOCUMENT"
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }

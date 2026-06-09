@@ -1,7 +1,10 @@
-import type { NextConfig } from "next";
+// next.config.ts
+import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  // Keep the external packages declaration so Prisma and SQLite don't get wrongly bundled
+  serverExternalPackages: ['@prisma/client', 'better-sqlite3'],
+  
 };
 
 export default nextConfig;

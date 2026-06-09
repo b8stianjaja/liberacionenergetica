@@ -1,16 +1,17 @@
-// src/lib/prisma.ts
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient } from '@prisma/client';
+import { PrismaBetterSqlite3 } from '@prisma/adapter-better-sqlite3';
 
-const prismaClientSingleton = () => {
-  return new PrismaClient();
-};
+// Prisma 7 syntax explicitly expects the connection object with the url, 
+// rather than an instance of the native better-sqlite3 Database.
+const adapter = new PrismaBetterSqlite3({ url: "file:./dev.db" });
 
-declare const globalThis: {
-  prismaGlobal: ReturnType<typeof prismaClientSingleton>;
-} & typeof global;
+const globalForPrisma = globalThis as unknown as { prisma: PrismaClient };
 
-export const prisma = globalThis.prismaGlobal ?? prismaClientSingleton();
+export const prisma =
+  globalForPrisma.prisma ||
+  new PrismaClient({
+    adapter, // <-- Using the correctly typed adapter
+    log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
+  });
 
-if (process.env.NODE_ENV !== "production") {
-  globalThis.prismaGlobal = prisma;
-}
+if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
