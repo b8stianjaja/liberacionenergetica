@@ -3,14 +3,14 @@
   "version": "0.1.0",
   "private": true,
   "prisma": {
-    "seed": "tsx prisma/seed.ts"
+    "seed": "tsx -r dotenv/config prisma/seed.ts"
   },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "seed": "tsx prisma/seed.ts"
+    "seed": "prisma db seed"
   },
   "dependencies": {
     "@gsap/react": "^2.1.2",
