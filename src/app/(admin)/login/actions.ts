@@ -1,35 +1,35 @@
-'use server'
+  'use server';
 
-import { signIn } from "@/auth";
-import { AuthError } from "next-auth";
+  import { signIn } from '@/auth';
+  import { AuthError } from 'next-auth';
 
-export async function loginAction(prevState: string | undefined, formData: FormData) {
-  const email = formData.get("email") as string;
-  const password = formData.get("password") as string;
+  export async function authenticate(
+    prevState: string | undefined,
+    formData: FormData,
+  ) {
+    try {
+      // CRITICAL FIX: Convert FormData to a standard plain object.
+      // NextAuth v5 credentials provider handles plain objects much more predictably.
+      const credentials = Object.fromEntries(formData.entries());
 
-  if (!email || !password) {
-    return "Por favor, completa todos los campos.";
-  }
-
-  try {
-    // Usamos el signIn configurado en tu servidor (@/auth.ts)
-    await signIn("credentials", {
-      email,
-      password,
-      redirectTo: "/dashboard",
-    });
-  } catch (error) {
-    if (error instanceof AuthError) {
-      // NextAuth v5 usa este tipo para errores de credenciales
-      switch (error.type) {
-        case 'CredentialsSignin':
-          return 'Correo o contraseña incorrectos.';
-        default:
-          return 'Error de autenticación.';
+      // Call NextAuth signIn, passing the credentials object and redirection path
+      await signIn('credentials', {
+        ...credentials,
+        redirectTo: '/dashboard',
+      });
+    } catch (error) {
+      if (error instanceof AuthError) {
+        // Map Auth.js specific errors to UI-friendly messages
+        switch (error.type) {
+          case 'CredentialsSignin':
+            return 'Credenciales inválidas. Verifica tu correo y contraseña.';
+          default:
+            return 'Error en el servidor. Intenta de nuevo más tarde.';
+        }
       }
+      
+      // CRITICAL: Next.js 'redirect()' internally throws an error to halt execution.
+      // We MUST rethrow the error if it is not an AuthError, otherwise the redirect fails.
+      throw error;
     }
-    // IMPORTANTE: Los redireccionamientos de Next.js lanzan errores internos.
-    // Debemos dejar que el error de redirect pase para que Next.js haga su trabajo.
-    throw error;
   }
-}
