@@ -5,6 +5,8 @@ import Image from "next/image";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 import { Cormorant_Garamond, Montserrat } from "next/font/google";
+// 1. Importamos tu nuevo contexto de carrito
+import { useCart } from "@/context/CartContext";
 
 const cormorant = Cormorant_Garamond({ 
   subsets: ["latin"], 
@@ -37,10 +39,12 @@ type FilterType = 'ALL' | 'SERVICE' | 'PHYSICAL' | 'DIGITAL';
 export default function HomeClient({ products }: { products: Product[] }) {
   const container = useRef<HTMLDivElement>(null);
   
+  // 2. Extraemos las funciones reales del carrito
+  const { addItem, totalItems, openCart, isHydrated } = useCart();
+  
   // E-commerce State
   const [activeFilter, setActiveFilter] = useState<FilterType>('ALL');
   const [searchQuery, setSearchQuery] = useState('');
-  const [cartCount, setCartCount] = useState(0);
 
   // Filtrado de productos en tiempo real
   const filteredProducts = useMemo(() => {
@@ -95,13 +99,23 @@ export default function HomeClient({ products }: { products: Product[] }) {
     return new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 }).format(price);
   };
 
-  const handleAddToCart = () => {
-    // Simulación visual de añadir al carrito
-    setCartCount(prev => prev + 1);
-    gsap.fromTo(".cart-badge", 
-      { scale: 1.5, backgroundColor: "#a855f7" }, 
-      { scale: 1, backgroundColor: "#111827", duration: 0.4, ease: "back.out(2)" }
-    );
+  // 3. Modificamos la función para que reciba el producto y lo agregue al estado global
+  const handleAddToCart = (product: Product) => {
+    addItem({
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      imageUrl: product.imageUrl || null,
+    });
+
+    // Mantenemos tu sutil animación GSAP en el ícono
+    // Usamos setTimeout para asegurar que React haya renderizado el badge antes de animarlo
+    setTimeout(() => {
+      gsap.fromTo(".cart-badge", 
+        { scale: 1.5, backgroundColor: "#a855f7" }, 
+        { scale: 1, backgroundColor: "#111827", duration: 0.4, ease: "back.out(2)" }
+      );
+    }, 50);
   };
 
   return (
@@ -141,12 +155,15 @@ export default function HomeClient({ products }: { products: Product[] }) {
             />
           </div>
 
-          {/* Cart */}
-          <button className="relative p-2 text-gray-700 hover:text-indigo-600 transition-colors shrink-0">
+          {/* 4. Cart Button: Ahora abre el Drawer y lee los items globales */}
+          <button 
+            onClick={openCart} 
+            className="relative p-2 text-gray-700 hover:text-indigo-600 transition-colors shrink-0"
+          >
             <CartIcon className="w-7 h-7" />
-            {cartCount > 0 && (
+            {isHydrated && totalItems > 0 && (
               <span className="cart-badge absolute -top-1 -right-1 bg-gray-900 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center border-2 border-white">
-                {cartCount}
+                {totalItems}
               </span>
             )}
           </button>
@@ -239,10 +256,10 @@ export default function HomeClient({ products }: { products: Product[] }) {
                     </div>
                   )}
 
-                  {/* Quick Add Overlay Overlay (Desktop solo) */}
+                  {/* Quick Add Overlay (Desktop solo) */}
                   <div className="absolute inset-x-4 bottom-4 z-20 translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300 hidden md:block">
                     <button 
-                      onClick={handleAddToCart}
+                      onClick={() => handleAddToCart(product)}
                       disabled={product.type === 'PHYSICAL' && product.stock === 0}
                       className="w-full bg-white/90 backdrop-blur-md text-gray-900 font-bold py-3 rounded-xl shadow-lg hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed"
                     >
@@ -274,9 +291,9 @@ export default function HomeClient({ products }: { products: Product[] }) {
                       {formatPrice(product.price)}
                     </p>
                     
-                    {/* Botón Mobile (Visible siempre en móvil, oculto en Desktop donde usamos el hover) */}
+                    {/* Botón Mobile */}
                     <button 
-                      onClick={handleAddToCart}
+                      onClick={() => handleAddToCart(product)}
                       disabled={product.type === 'PHYSICAL' && product.stock === 0}
                       className="md:hidden w-10 h-10 bg-gray-900 text-white rounded-full flex items-center justify-center disabled:bg-gray-200 disabled:text-gray-400 active:scale-95 transition-transform"
                     >
