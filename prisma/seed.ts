@@ -1,69 +1,47 @@
-// prisma/seed.ts
-import { prisma } from "../src/lib/prisma";
-import bcrypt from "bcryptjs";
+import { PrismaClient } from '@prisma/client';
+import bcrypt from 'bcryptjs';
+
+const prisma = new PrismaClient();
 
 async function main() {
-  console.log("🌱 Iniciando proceso de seed...");
+  const adminEmail = process.env.ADMIN_EMAIL;
+  const adminPassword = process.env.ADMIN_PASSWORD;
 
-  // 1. Limpiar datos existentes (opcional pero recomendado en desarrollo)
-  await prisma.orderItem.deleteMany({});
-  await prisma.order.deleteMany({});
-  await prisma.product.deleteMany({});
-  await prisma.note.deleteMany({});
-  await prisma.user.deleteMany({});
+  // 1. Fail gracefully if variables are missing
+  if (!adminEmail || !adminPassword) {
+    console.warn("⚠️ ADMIN_EMAIL or ADMIN_PASSWORD not found in environment variables. Skipping admin creation.");
+    return;
+  }
 
-  // 2. Crear un Administrador inicial
-  const hashedPassword = await bcrypt.hash("admin1234", 10);
-  
+  // 2. Check if this admin already exists to prevent duplication
+  const existingAdmin = await prisma.user.findUnique({
+    where: { email: adminEmail },
+  });
+
+  if (existingAdmin) {
+    console.log(`✅ Admin user ${adminEmail} already exists. Skipping creation.`);
+    return;
+  }
+
+  // 3. Hash the password securely
+  const hashedPassword = await bcrypt.hash(adminPassword, 10);
+
+  // 4. Create the user in the database
   const admin = await prisma.user.create({
     data: {
-      email: "admin@liberacionenergetica.com",
-      name: "Administrador",
+      email: adminEmail,
       password: hashedPassword,
-      role: "ADMIN",
+      name: 'Admin',
+      role: 'ADMIN', // Overrides the default "CUSTOMER" role
     },
   });
 
-  // 3. Crear productos/servicios de ejemplo
-  const products = [
-    {
-      name: "Terapia de Reiki",
-      description: "Sesión de sanación energética profunda.",
-      price: 25000,
-      type: "SERVICE",
-      duration: 60,
-      isActive: true,
-    },
-    {
-      name: "Cuarzo Amatista",
-      description: "Piedra natural para la transmutación de energía.",
-      price: 15000,
-      type: "PHYSICAL",
-      stock: 10,
-      isActive: true,
-    },
-    {
-      name: "Guía de Meditación Digital",
-      description: "PDF descargable para principiantes.",
-      price: 5000,
-      type: "DIGITAL",
-      isActive: true,
-    }
-  ];
-
-  for (const product of products) {
-    await prisma.product.create({
-      data: product,
-    });
-  }
-
-  console.log("✅ Seed completado con éxito.");
-  console.log(`👤 Admin creado: ${admin.email}`);
+  console.log(`✅ Admin user created with email: ${admin.email}`);
 }
 
 main()
   .catch((e) => {
-    console.error("❌ Error durante el proceso de seed:", e);
+    console.error(e);
     process.exit(1);
   })
   .finally(async () => {
