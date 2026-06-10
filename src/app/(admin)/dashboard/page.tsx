@@ -1,4 +1,3 @@
-// liberacionenergetica/src/app/(admin)/dashboard/page.tsx
 import { auth, signOut } from "@/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
@@ -10,7 +9,7 @@ export default async function DashboardPage() {
     redirect('/login');
   }
 
-  // Consultas optimizadas en paraleloy
+  // Consultas optimizadas en paralelo
   const [customerCount, pendingAppointments, activeProducts] = await Promise.all([
     prisma.user.count({ where: { role: "CUSTOMER" } }),
     prisma.order.count({ 

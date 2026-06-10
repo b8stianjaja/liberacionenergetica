@@ -1,13 +1,12 @@
-// liberacionenergetica/src/app/(admin)/dashboard/store/new/actions.ts
 'use server';
 
 import { prisma } from "@/lib/prisma";
 import { redirect } from 'next/navigation';
 import { v2 as cloudinary } from 'cloudinary';
 
-// Configuración de Cloudinary (Asegúrate de agregar estas variables a tu .env)
+// Configuración a prueba de fallos leyendo la variable correcta
 cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
