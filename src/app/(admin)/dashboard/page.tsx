@@ -10,7 +10,7 @@ export default async function DashboardPage() {
     redirect('/login');
   }
 
-  // Consultas optimizadas en paralelo
+  // Consultas optimizadas en paraleloy
   const [customerCount, pendingAppointments, activeProducts] = await Promise.all([
     prisma.user.count({ where: { role: "CUSTOMER" } }),
     prisma.order.count({ 

@@ -1,36 +1,69 @@
-import { PrismaClient } from '@prisma/client';
-import { PrismaBetterSqlite3 } from '@prisma/adapter-better-sqlite3';
-import bcrypt from 'bcryptjs';
-
-// Usamos la misma sintaxis simplificada para el adaptador en el seed
-const adapter = new PrismaBetterSqlite3({ url: "file:./dev.db" });
-const prisma = new PrismaClient({ adapter });
+// prisma/seed.ts
+import { prisma } from "../src/lib/prisma";
+import bcrypt from "bcryptjs";
 
 async function main() {
-  console.log('🌱 Starting database seed...');
+  console.log("🌱 Iniciando proceso de seed...");
 
-  // Encriptamos la contraseña "admin123" de forma segura
-  const hashedPassword = await bcrypt.hash('admin123', 10);
+  // 1. Limpiar datos existentes (opcional pero recomendado en desarrollo)
+  await prisma.orderItem.deleteMany({});
+  await prisma.order.deleteMany({});
+  await prisma.product.deleteMany({});
+  await prisma.note.deleteMany({});
+  await prisma.user.deleteMany({});
 
-  // Upsert asegura que si el usuario ya existe, no tire error
-  const admin = await prisma.user.upsert({
-    where: { email: 'admin@ejemplo.com' },
-    update: {},
-    create: {
-      email: 'admin@ejemplo.com',
-      name: 'Admin Principal',
+  // 2. Crear un Administrador inicial
+  const hashedPassword = await bcrypt.hash("admin1234", 10);
+  
+  const admin = await prisma.user.create({
+    data: {
+      email: "admin@liberacionenergetica.com",
+      name: "Administrador",
       password: hashedPassword,
-      role: 'ADMIN',
+      role: "ADMIN",
     },
   });
 
-  console.log(`✅ Admin user created/verified: ${admin.email}`);
-  console.log('🌱 Seeding finished.');
+  // 3. Crear productos/servicios de ejemplo
+  const products = [
+    {
+      name: "Terapia de Reiki",
+      description: "Sesión de sanación energética profunda.",
+      price: 25000,
+      type: "SERVICE",
+      duration: 60,
+      isActive: true,
+    },
+    {
+      name: "Cuarzo Amatista",
+      description: "Piedra natural para la transmutación de energía.",
+      price: 15000,
+      type: "PHYSICAL",
+      stock: 10,
+      isActive: true,
+    },
+    {
+      name: "Guía de Meditación Digital",
+      description: "PDF descargable para principiantes.",
+      price: 5000,
+      type: "DIGITAL",
+      isActive: true,
+    }
+  ];
+
+  for (const product of products) {
+    await prisma.product.create({
+      data: product,
+    });
+  }
+
+  console.log("✅ Seed completado con éxito.");
+  console.log(`👤 Admin creado: ${admin.email}`);
 }
 
 main()
   .catch((e) => {
-    console.error('❌ Error seeding database:', e);
+    console.error("❌ Error durante el proceso de seed:", e);
     process.exit(1);
   })
   .finally(async () => {

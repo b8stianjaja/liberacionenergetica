@@ -1,23 +1,36 @@
+// liberacionenergetica/src/lib/prisma.ts
 import { PrismaClient } from '@prisma/client';
+import { Pool } from 'pg';
 import { PrismaPg } from '@prisma/adapter-pg';
 
-// Asegurar que la variable exista para evitar fallos silenciosos
 const connectionString = process.env.DATABASE_URL;
 
-if (!connectionString) {
-  throw new Error("DATABASE_URL is not defined in the environment.");
-}
-
-// Prisma 7 usa explícitamente el Adapter en lugar del motor interno tradicional
-const adapter = new PrismaPg({ connectionString });
-
-const globalForPrisma = globalThis as unknown as { prisma: PrismaClient };
-
-export const prisma =
-  globalForPrisma.prisma ||
-  new PrismaClient({
-    adapter, // <-- Inyectamos el adaptador de Postgres
-    log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
+// Next.js hot-reloading safe singleton pattern
+const prismaClientSingleton = () => {
+  // Configuración del pool de PostgreSQL
+  const pool = new Pool({
+    connectionString,
+    // Render requiere SSL en producción, pero en desarrollo local (localhost) suele fallar si está activo
+    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : undefined,
   });
 
-if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
+  const adapter = new PrismaPg(pool);
+
+  return new PrismaClient({
+    adapter,
+    log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
+  });
+};
+
+// Declaración de tipos segura para globalThis
+declare const globalThis: {
+  prismaGlobal: ReturnType<typeof prismaClientSingleton>;
+} & typeof global;
+
+// Exportamos la instancia única
+export const prisma = globalThis.prismaGlobal ?? prismaClientSingleton();
+
+// Guardamos la instancia en globalThis solo en desarrollo
+if (process.env.NODE_ENV !== 'production') {
+  globalThis.prismaGlobal = prisma;
+}

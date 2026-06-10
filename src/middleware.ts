@@ -1,6 +1,5 @@
 import NextAuth from 'next-auth';
-import { authConfig } from '@/auth.config';
-
+import { authConfig } from './auth.config';
 // Exportamos la función auth para que NextAuth intercepte las peticiones
 export default NextAuth(authConfig).auth;
 
