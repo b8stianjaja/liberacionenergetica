@@ -1,19 +1,24 @@
+// liberacionenergetica/src/app/(admin)/dashboard/store/new/actions.ts
 'use server';
 
 import { prisma } from "@/lib/prisma";
 import { redirect } from 'next/navigation';
-import { writeFile, mkdir } from 'fs/promises';
-import { join } from 'path';
+import { v2 as cloudinary } from 'cloudinary';
+
+// Configuración de Cloudinary (Asegúrate de agregar estas variables a tu .env)
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
 export async function createProduct(formData: FormData) {
-  // 1. Safely extract basic text data
   const type = (formData.get('type') as string) || 'PHYSICAL';
   const name = (formData.get('name') as string) || '';
   const description = (formData.get('description') as string) || '';
   const priceStr = formData.get('price') as string;
   const price = priceStr ? parseFloat(priceStr) : 0;
 
-  // 2. Initialize conditional fields
   let duration: number | null = null;
   let stock = 0;
 
@@ -25,39 +30,34 @@ export async function createProduct(formData: FormData) {
     stock = stockStr ? parseInt(stockStr, 10) : 0;
   }
 
-  // Basic validation
   if (!name || !description) {
-    throw new Error("Missing required fields: Name and description are mandatory.");
+    throw new Error("Faltan campos obligatorios: Nombre y descripción.");
   }
 
-  // 3. --- IMAGE UPLOAD LOGIC ---
   const imageFile = formData.get('image') as File | null;
   let imageUrl: string | null = null;
 
-  // Check if a file was actually uploaded (size > 0)
   if (imageFile && imageFile.size > 0) {
     const bytes = await imageFile.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
-    // Create a unique filename to prevent overwriting files with the same name
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    // Replace spaces in original filename with underscores for safer web URLs
-    const originalName = imageFile.name.replace(/\s+/g, '_');
-    const filename = `${uniqueSuffix}-${originalName}`;
-    
-    // Ensure the "public/uploads" directory exists
-    const uploadDir = join(process.cwd(), 'public', 'uploads');
-    await mkdir(uploadDir, { recursive: true });
-
-    // Write the file to the local disk
-    const filepath = join(uploadDir, filename);
-    await writeFile(filepath, buffer);
-
-    // The URL path we save in the DB (Next.js automatically serves the public/ folder)
-    imageUrl = `/uploads/${filename}`;
+    try {
+      imageUrl = await new Promise<string>((resolve, reject) => {
+        const uploadStream = cloudinary.uploader.upload_stream(
+          { folder: 'liberacionenergetica/catalog' },
+          (error, result) => {
+            if (error) reject(error);
+            else resolve(result?.secure_url as string);
+          }
+        );
+        uploadStream.end(buffer);
+      });
+    } catch (error) {
+      console.error("Error subiendo imagen a Cloudinary:", error);
+      throw new Error("No se pudo subir la imagen.");
+    }
   }
 
-  // 4. Save to Database
   await prisma.product.create({
     data: {
       name,
@@ -66,11 +66,10 @@ export async function createProduct(formData: FormData) {
       type,
       duration,
       stock,
-      imageUrl, // <-- We add the generated image URL here
+      imageUrl,
       isActive: true,
     }
   });
 
-  // 5. Redirect back to store dashboard
   redirect('/dashboard/store');
 }

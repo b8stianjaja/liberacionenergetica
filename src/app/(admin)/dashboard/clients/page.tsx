@@ -1,39 +1,38 @@
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
+
+// Definimos el tipo exacto del cliente que incluye el conteo de órdenes
+type CustomerWithCounts = Prisma.UserGetPayload<{
+  include: {
+    _count: {
+      select: { orders: true };
+    };
+  };
+}>;
 
 export default async function ClientesPage() {
-  // Buscamos a todos los usuarios que tengan el rol de "CUSTOMER" (Clientes)
-  // e incluimos la cantidad de pedidos/citas que han hecho.
   const customers = await prisma.user.findMany({
-    where: { 
-      role: "CUSTOMER" 
-    },
-    orderBy: { 
-      createdAt: "desc" // Los más nuevos primero
-    },
-    include: {
-      _count: {
-        select: { orders: true } // Contamos cuántas órdenes tienen
-      }
-    }
+    where: { role: "CUSTOMER" },
+    orderBy: { createdAt: "desc" },
+    include: { _count: { select: { orders: true } } }
   });
 
   return (
     <div className="space-y-8">
-      {/* CABECERA */}
       <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-        <h1 className="text-2xl font-bold text-gray-900">Mis Clientes</h1>
-        <p className="text-gray-500 mt-1">Directorio de personas que han interactuado con tu tienda.</p>
+        <h1 className="text-3xl font-black text-gray-900 tracking-tight">Mis Clientes</h1>
+        <p className="text-gray-500 mt-1 font-medium">Directorio de personas que han interactuado con tu tienda.</p>
       </div>
 
-      {/* LISTA DE CLIENTES */}
       <section>
         {customers.length === 0 ? (
-          <div className="bg-gray-50 rounded-2xl p-8 text-center border border-dashed border-gray-300">
+          <div className="bg-white rounded-2xl p-10 text-center border border-dashed border-gray-300">
             <p className="text-gray-500 font-medium">Aún no tienes clientes registrados.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {customers.map((customer) => (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {/* AQUÍ ESTÁ LA SOLUCIÓN: Tipado explícito en el .map */}
+            {customers.map((customer: CustomerWithCounts) => (
               <CustomerCard key={customer.id} customer={customer} />
             ))}
           </div>
@@ -43,24 +42,18 @@ export default async function ClientesPage() {
   );
 }
 
-// ==========================================
-// Componente de Tarjeta de Cliente
-// ==========================================
-
-function CustomerCard({ customer }: { customer: any }) {
-  // Formateamos la fecha para que diga "octubre de 2023"
-  const joinedDate = new Intl.DateTimeFormat("es-CL", {
-    month: "long",
-    year: "numeric",
+// Componente tipado de forma segura
+function CustomerCard({ customer }: { customer: CustomerWithCounts }) {
+  const joinedDate = new Intl.DateTimeFormat("es-CL", { 
+    month: "long", 
+    year: "numeric" 
   }).format(new Date(customer.createdAt));
-
+  
   const orderCount = customer._count.orders;
 
   return (
-    <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 flex flex-col h-full hover:border-indigo-200 transition-colors">
-      
-      {/* INFO PRINCIPAL */}
-      <div className="flex items-center gap-4 mb-5">
+    <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex flex-col h-full hover:shadow-md hover:border-indigo-100 transition-all">
+      <div className="flex items-center gap-4 mb-6">
         <div className="w-14 h-14 rounded-full bg-gradient-to-br from-indigo-100 to-purple-100 flex items-center justify-center text-indigo-700 font-black text-xl shadow-inner">
           {customer.name ? customer.name.charAt(0).toUpperCase() : "@"}
         </div>
@@ -68,65 +61,37 @@ function CustomerCard({ customer }: { customer: any }) {
           <h3 className="font-bold text-lg text-gray-900 leading-tight">
             {customer.name || "Cliente sin nombre"}
           </h3>
-          <p className="text-sm text-gray-500 mt-0.5">Cliente desde {joinedDate}</p>
+          <p className="text-sm text-gray-500 mt-0.5 font-medium">Desde {joinedDate}</p>
         </div>
       </div>
 
-      {/* MÉTRICAS DEL CLIENTE */}
-      <div className="bg-gray-50 rounded-xl p-3 mb-5 border border-gray-100 flex justify-between items-center">
-        <span className="text-sm text-gray-600 font-medium">Historial:</span>
-        <span className={`font-bold px-3 py-1 rounded-lg text-xs ${
-          orderCount > 0 
-            ? "bg-emerald-100 text-emerald-700" 
-            : "bg-gray-200 text-gray-600"
+      <div className="bg-gray-50 rounded-xl p-4 mb-6 border border-gray-100 flex justify-between items-center">
+        <span className="text-sm text-gray-600 font-bold">Actividad:</span>
+        <span className={`font-black px-3 py-1 rounded-lg text-xs tracking-wide ${
+          orderCount > 0 ? "bg-emerald-100 text-emerald-800" : "bg-gray-200 text-gray-600"
         }`}>
-          {orderCount === 1 ? "1 Compra/Reserva" : `${orderCount} Compras/Reservas`}
+          {orderCount === 1 ? "1 Reserva" : `${orderCount} Reservas`}
         </span>
       </div>
 
-      {/* BOTONES DE ACCIÓN (MÓVILES) */}
-      <div className="mt-auto grid grid-cols-1 gap-2">
-        {/* Botón de Email nativo (abre la app de correo del celular) */}
-        <a 
-          href={`mailto:${customer.email}`}
-          className="flex items-center justify-center gap-2 w-full bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold py-3 rounded-xl transition-colors active:scale-95"
-        >
-          <MailIcon className="w-5 h-5" />
-          <span>Enviar Correo</span>
+      <div className="mt-auto grid grid-cols-1 gap-3">
+        <a href={`mailto:${customer.email}`} className="flex items-center justify-center gap-2 w-full bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold py-3 rounded-xl transition-colors active:scale-95 text-sm">
+          <svg fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" /></svg>
+          Correo
         </a>
 
-        {/* Botón de WhatsApp preparado para el futuro. 
-          Está comentado/desactivado visualmente hasta que agregues "phone" al esquema de Prisma.
-        */}
-        <button 
-          disabled
-          title="Requiere agregar teléfono en la base de datos"
-          className="flex items-center justify-center gap-2 w-full bg-gray-50 text-gray-400 font-bold py-3 rounded-xl cursor-not-allowed border border-gray-100"
-        >
-          <PhoneIcon className="w-5 h-5" />
-          <span>WhatsApp (Próximamente)</span>
-        </button>
+        {customer.phone ? (
+          <a href={`https://wa.me/${customer.phone.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2 w-full bg-green-50 hover:bg-green-100 text-green-700 font-bold py-3 rounded-xl transition-colors active:scale-95 text-sm">
+            <svg fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-2.896-1.596-5.265-3.965-6.861-6.861l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z" /></svg>
+            WhatsApp
+          </a>
+        ) : (
+          <button disabled className="flex items-center justify-center gap-2 w-full bg-gray-50 text-gray-400 font-bold py-3 rounded-xl cursor-not-allowed border border-gray-100 text-sm">
+            <svg fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-2.896-1.596-5.265-3.965-6.861-6.861l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z" /></svg>
+            Sin teléfono
+          </button>
+        )}
       </div>
     </div>
-  );
-}
-
-// ==========================================
-// Iconos
-// ==========================================
-
-function MailIcon(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" {...props}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
-    </svg>
-  );
-}
-
-function PhoneIcon(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" {...props}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 1.5H8.25A2.25 2.25 0 006 3.75v16.5a2.25 2.25 0 002.25 2.25h7.5A2.25 2.25 0 0018 20.25V3.75a2.25 2.25 0 00-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3" />
-    </svg>
   );
 }
