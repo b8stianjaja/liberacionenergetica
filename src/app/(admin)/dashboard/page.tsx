@@ -3,7 +3,12 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { Cormorant_Garamond } from "next/font/google";
 
-const cormorant = Cormorant_Garamond({ subsets: ["latin"], weight: ["400", "500", "600"], display: "swap" });
+// ✅ FIX: Added "300" to the weights here at the module scope
+const cormorant = Cormorant_Garamond({ 
+  subsets: ["latin"], 
+  weight: ["300", "400", "500", "600"], 
+  display: "swap" 
+});
 
 export default async function DashboardPage() {
   const session = await auth();
@@ -66,7 +71,8 @@ function MetricCard({ title, value, delay }: { title: string, value: string, del
           <TetragrammatonIcon className="w-5 h-5 text-zinc-700 group-hover:text-zinc-300 transition-colors duration-700" />
         </div>
         
-        <p className={`text-6xl font-light text-zinc-200 mt-6 tracking-tighter ${Cormorant_Garamond({ subsets: ["latin"], weight: ["300"] }).className}`}>
+        {/* ✅ FIX: Replaced dynamic font call with the module-scoped cormorant variable */}
+        <p className={`text-6xl font-light text-zinc-200 mt-6 tracking-tighter ${cormorant.className}`}>
           {value}
         </p>
       </div>
