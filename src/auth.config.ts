@@ -5,27 +5,38 @@ export const authConfig = {
     signIn: '/login',
   },
   callbacks: {
+    // 1. Callbacks movidos aquí para que el Middleware los procese
+    async jwt({ token, user }) {
+      if (user) {
+        token.id = user.id;
+        token.role = (user as any).role; 
+      }
+      return token;
+    },
+    async session({ session, token }) {
+      if (token && session.user) {
+        session.user.id = token.id as string;
+        (session.user as any).role = token.role as string;
+      }
+      return session;
+    },
+    // 2. Tu lógica de autorización intacta
     authorized({ auth, request: { nextUrl } }) {
       const isLoggedIn = !!auth?.user;
       const path = nextUrl.pathname;
 
-      // Extract precise booleans for our route checks
       const isOnDashboard = path.startsWith('/dashboard');
       const isOnLogin = path === '/login';
 
-      // 1. Dashboard Protection
       if (isOnDashboard) {
         if (isLoggedIn) return true;
-        return false; // Securely redirects unauthenticated users to pages.signIn ('/login')
+        return false; 
       } 
       
-      // 2. Redirect authenticated users away from the login page ONLY
-      // We removed 'isOnHome' so you can browse the store while logged in!
       if (isLoggedIn && isOnLogin) {
         return Response.redirect(new URL('/dashboard', nextUrl));
       }
 
-      // 3. Fallback: Allow access to all other routes (like '/' for the shop)
       return true;
     },
   },
