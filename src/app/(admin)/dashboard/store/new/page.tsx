@@ -1,175 +1,134 @@
-'use client';
+import { prisma } from "@/lib/prisma";
+import Link from "next/link";
+import { Product } from "@prisma/client";
 
-import { useActionState, useState } from 'react';
-import { createProduct } from './actions';
-import Link from 'next/link';
+export default async function StorePage() {
+  // Fetch de productos activos ordenados por el más reciente
+  const products = await prisma.product.findMany({
+    where: { isActive: true },
+    orderBy: { createdAt: 'desc' }
+  });
 
-export default function NewProductPage() {
-  const [state, formAction, isPending] = useActionState(createProduct, undefined);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
-
-  // Función para crear una vista previa instantánea de la imagen local
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const previewUrl = URL.createObjectURL(file);
-      setImagePreview(previewUrl);
-    } else {
-      setImagePreview(null);
-    }
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('es-CL', {
+      style: 'currency',
+      currency: 'CLP',
+      maximumFractionDigits: 0
+    }).format(price);
   };
 
   return (
-    <div className="max-w-4xl mx-auto animation-fade-in">
-      <div className="mb-8 flex items-center justify-between">
+    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      
+      {/* Header Estilo Premium (Igual al Dashboard) */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-white/70 backdrop-blur-xl p-8 rounded-[2rem] shadow-sm border border-white/50 gap-4">
         <div>
-          <h1 className="text-3xl font-black text-gray-900">Nuevo Producto</h1>
-          <p className="text-gray-500 mt-1">Añade un artículo físico o servicio a tu tienda.</p>
+          <h1 className="text-3xl font-black text-gray-900 tracking-tight">Mi Catálogo</h1>
+          <p className="text-gray-500 mt-1 font-medium">Administra tus terapias y productos a la venta.</p>
         </div>
         <Link 
-          href="/dashboard/store"
-          className="text-indigo-600 font-medium hover:bg-indigo-50 px-4 py-2 rounded-xl transition-colors"
+          href="/dashboard/store/new"
+          className="flex items-center gap-2 bg-gray-900 text-white px-6 py-3.5 rounded-2xl font-bold hover:bg-indigo-600 transition-all shadow-lg hover:shadow-indigo-200 hover:-translate-y-1 active:scale-95"
         >
-          ← Volver a la tienda
+          <PlusIcon className="w-5 h-5" />
+          <span>Agregar Nuevo</span>
         </Link>
       </div>
 
-      <form action={formAction} className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 flex flex-col md:flex-row gap-8">
-        
-        {/* COLUMNA IZQUIERDA: Subida de Imagen */}
-        <div className="w-full md:w-1/3 flex flex-col gap-4">
-          <label className="block text-sm font-bold text-gray-700">Fotografía del Producto</label>
-          
-          <div className="relative group w-full aspect-square bg-gray-50 border-2 border-dashed border-gray-300 rounded-3xl overflow-hidden hover:border-indigo-500 hover:bg-indigo-50 transition-all cursor-pointer flex flex-col items-center justify-center">
-            
-            {/* Input invisible que cubre toda la caja */}
-            <input 
-              type="file" 
-              name="image" 
-              accept="image/*"
-              onChange={handleImageChange}
-              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-            />
-
-            {imagePreview ? (
-              // Vista Previa
-              <img 
-                src={imagePreview} 
-                alt="Vista previa" 
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              // Estado Vacío
-              <div className="text-center p-6 flex flex-col items-center">
-                <svg className="w-12 h-12 text-gray-400 mb-3 group-hover:text-indigo-500 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
-                </svg>
-                <span className="text-sm font-medium text-gray-500 group-hover:text-indigo-600">
-                  Haz clic o arrastra una imagen
-                </span>
-              </div>
-            )}
-            
-            {/* Overlay al hacer hover si ya hay imagen */}
-            {imagePreview && (
-              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                <span className="text-white font-medium text-sm px-4 py-2 bg-black/50 rounded-full backdrop-blur-sm">
-                  Cambiar imagen
-                </span>
-              </div>
-            )}
+      {/* Grid de Productos */}
+      {products.length === 0 ? (
+        <div className="text-center bg-white/60 backdrop-blur-xl p-16 rounded-[2rem] border border-dashed border-gray-300 shadow-sm">
+          <div className="mx-auto w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mb-6 shadow-inner">
+            <ShoppingBagIcon className="w-10 h-10 text-gray-400" />
           </div>
+          <h3 className="text-2xl font-bold text-gray-900 mb-2">Aún no tienes elementos</h3>
+          <p className="text-gray-500 mb-8 max-w-md mx-auto text-lg">Comienza agregando tu primera terapia o producto para que tus clientes puedan comprar.</p>
+          <Link 
+            href="/dashboard/store/new"
+            className="text-indigo-600 font-bold hover:text-indigo-800 bg-indigo-50 px-6 py-3 rounded-full transition-colors"
+          >
+            + Crear mi primer elemento
+          </Link>
         </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {products.map((product: Product) => (
+            <div key={product.id} className="group bg-white p-5 rounded-[2rem] border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col h-full">
+              
+              {/* Contenedor de Imagen */}
+              <div className="relative w-full aspect-[4/3] bg-gray-50 rounded-[1.5rem] mb-5 overflow-hidden flex items-center justify-center">
+                
+                {/* Badges */}
+                <div className="absolute top-4 left-4 z-10">
+                  <span className={`text-[10px] uppercase tracking-widest font-black px-4 py-1.5 rounded-full shadow-sm backdrop-blur-md border ${
+                    product.type === 'SERVICE' ? 'bg-purple-500/10 text-purple-700 border-purple-200/50' :
+                    product.type === 'PHYSICAL' ? 'bg-orange-500/10 text-orange-700 border-orange-200/50' :
+                    'bg-blue-500/10 text-blue-700 border-blue-200/50'
+                  }`}>
+                    {product.type === 'SERVICE' ? 'Terapia' : product.type === 'PHYSICAL' ? 'Físico' : 'Digital'}
+                  </span>
+                </div>
 
-        {/* COLUMNA DERECHA: Datos del Producto */}
-        <div className="w-full md:w-2/3 space-y-5">
-          <div>
-            <label className="block text-sm font-bold text-gray-700 mb-2">Nombre del Producto</label>
-            <input 
-              type="text" 
-              name="name" 
-              required 
-              placeholder="Ej: Pulsera de Cuarzo Rosado"
-              className="w-full border border-gray-300 p-3 rounded-xl focus:ring-2 focus:ring-indigo-600 focus:border-transparent outline-none transition-all"
-            />
-          </div>
+                <div className="absolute top-4 right-4 z-10">
+                  <button className="bg-white/90 backdrop-blur-md p-2 rounded-xl text-gray-500 hover:text-gray-900 shadow-sm transition-colors hover:scale-105 active:scale-95">
+                    <DotsIcon className="w-5 h-5" />
+                  </button>
+                </div>
 
-          <div>
-            <label className="block text-sm font-bold text-gray-700 mb-2">Descripción</label>
-            <textarea 
-              name="description" 
-              required 
-              rows={4}
-              placeholder="Describe los beneficios y detalles de tu producto..."
-              className="w-full border border-gray-300 p-3 rounded-xl focus:ring-2 focus:ring-indigo-600 focus:border-transparent outline-none transition-all resize-none"
-            />
-          </div>
+                {product.imageUrl ? (
+                  <img 
+                    src={product.imageUrl} 
+                    alt={product.name} 
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
+                  />
+                ) : (
+                  <ShoppingBagIcon className="w-12 h-12 text-gray-300" />
+                )}
+              </div>
+              
+              <div className="flex-1 px-1">
+                <h3 className="text-xl font-bold text-gray-900 mb-2 leading-tight group-hover:text-indigo-600 transition-colors">{product.name}</h3>
+                <p className="text-gray-500 text-sm mb-4 line-clamp-2 leading-relaxed">{product.description}</p>
+              </div>
+              
+              <div className="pt-4 border-t border-gray-50 flex items-end justify-between mt-auto px-1">
+                <div>
+                  <p className="text-[11px] text-gray-400 uppercase tracking-widest font-bold mb-1">Precio</p>
+                  <p className="text-xl font-black text-gray-900">{formatPrice(product.price)}</p>
+                </div>
+                
+                <div className="text-right">
+                  {product.type === 'SERVICE' && product.duration && (
+                    <p className="text-xs text-gray-600 flex items-center gap-1.5 justify-end font-bold bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-100">
+                      <ClockIcon className="w-4 h-4" /> {product.duration} min
+                    </p>
+                  )}
+                  {product.type === 'PHYSICAL' && (
+                    <p className={`text-xs font-bold px-3 py-1.5 rounded-lg border ${product.stock > 0 ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 'bg-red-50 text-red-600 border-red-100'}`}>
+                      Stock: {product.stock}
+                    </p>
+                  )}
+                </div>
+              </div>
 
-          <div className="flex gap-4">
-            <div className="w-1/2">
-              <label className="block text-sm font-bold text-gray-700 mb-2">Precio ($)</label>
-              <input 
-                type="number" 
-                name="price" 
-                required 
-                min="0"
-                step="0.01"
-                placeholder="0.00"
-                className="w-full border border-gray-300 p-3 rounded-xl focus:ring-2 focus:ring-indigo-600 focus:border-transparent outline-none transition-all"
-              />
             </div>
-            <div className="w-1/2">
-              <label className="block text-sm font-bold text-gray-700 mb-2">Stock Inicial</label>
-              <input 
-                type="number" 
-                name="stock" 
-                required 
-                min="0"
-                placeholder="Ej: 10"
-                className="w-full border border-gray-300 p-3 rounded-xl focus:ring-2 focus:ring-indigo-600 focus:border-transparent outline-none transition-all"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-bold text-gray-700 mb-2">Tipo de Producto</label>
-            <select 
-              name="type" 
-              className="w-full border border-gray-300 p-3 rounded-xl focus:ring-2 focus:ring-indigo-600 focus:border-transparent outline-none transition-all bg-white"
-            >
-              <option value="PHYSICAL">Producto Físico (Despacho)</option>
-              <option value="DIGITAL">Servicio / Sesión / Digital</option>
-            </select>
-          </div>
-
-          {state?.error && (
-            <div className="p-4 bg-red-50 text-red-600 rounded-xl text-sm font-medium border border-red-100 flex items-center gap-2">
-              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" /></svg>
-              {state.error}
-            </div>
-          )}
-
-          <div className="pt-4 border-t border-gray-100">
-            <button 
-              type="submit" 
-              disabled={isPending}
-              className="w-full bg-indigo-600 text-white font-bold py-4 rounded-xl hover:bg-indigo-700 disabled:opacity-70 disabled:cursor-not-allowed transition-all flex justify-center items-center gap-2 active:scale-95"
-            >
-              {isPending ? (
-                <>
-                  <svg className="animate-spin -ml-1 mr-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  Creando y subiendo imagen...
-                </>
-              ) : (
-                'Publicar Producto'
-              )}
-            </button>
-          </div>
+          ))}
         </div>
-      </form>
+      )}
     </div>
   );
+}
+
+// Iconos
+function PlusIcon(props: React.SVGProps<SVGSVGElement>) {
+  return <svg fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" {...props}><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>;
+}
+function ClockIcon(props: React.SVGProps<SVGSVGElement>) {
+  return <svg fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" {...props}><path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>;
+}
+function DotsIcon(props: React.SVGProps<SVGSVGElement>) {
+  return <svg fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" {...props}><path strokeLinecap="round" strokeLinejoin="round" d="M12 6.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 12.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 18.75a.75.75 0 110-1.5.75.75 0 010 1.5z" /></svg>;
+}
+function ShoppingBagIcon(props: React.SVGProps<SVGSVGElement>) {
+  return <svg fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0z" /></svg>;
 }
