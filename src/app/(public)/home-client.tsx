@@ -206,7 +206,6 @@ export default function HomeClient({ products, categories, banners }: HomeClient
     const filters = gsap.utils.toArray('.filter-pill') as HTMLElement[];
     const triggers: ScrollTrigger[] = [];
     
-    // Animate Filters on Scroll
     if (filters.length > 0) {
       triggers.push(ScrollTrigger.create({
         trigger: ".filters-container",
@@ -216,14 +215,14 @@ export default function HomeClient({ products, categories, banners }: HomeClient
       }));
     }
 
-    // Animate Cards on Scroll
     cards.forEach((card, index) => {
+      // Cleaned up the animation: No rotation, just a smooth fade and upward slide.
       triggers.push(ScrollTrigger.create({
         trigger: card,
         start: "top 95%",
         animation: gsap.fromTo(card, 
-          { opacity: 0, y: 120, scale: 0.95 },
-          { opacity: 1, y: 0, scale: 1, duration: 1.2, ease: "expo.out" }
+          { opacity: 0, y: 100 },
+          { opacity: 1, y: 0, duration: 1.2, ease: "expo.out", delay: index * 0.05 }
         ),
         toggleActions: "play none none reverse"
       }));
@@ -231,38 +230,10 @@ export default function HomeClient({ products, categories, banners }: HomeClient
 
     ScrollTrigger.refresh(); 
 
-    // STRICT CLEANUP: Prevents glitching when filters change
-    return () => {
-      triggers.forEach(t => t.kill());
-    };
+    return () => { triggers.forEach(t => t.kill()); };
   }, { scope: container, dependencies: [filteredProducts] });
 
-  // --- Handlers (Smoothed Physics) ---
-  const handleMouseMove = (e: ReactMouseEvent<HTMLDivElement>) => {
-    const card = e.currentTarget;
-    const rect = card.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    const centerX = rect.width / 2;
-    const centerY = rect.height / 2;
-    
-    // Reduced tilt intensity from 15 to 8 for smoother, elegant hardware rendering
-    gsap.to(card.querySelector('.card-inner'), {
-      rotateX: ((y - centerY) / centerY) * -8,
-      rotateY: ((x - centerX) / centerX) * 8,
-      scale: 1.02,
-      transformPerspective: 1200,
-      duration: 0.4,
-      ease: "power2.out"
-    });
-  };
-
-  const handleMouseLeave = (e: ReactMouseEvent<HTMLDivElement>) => {
-    gsap.to(e.currentTarget.querySelector('.card-inner'), {
-      rotateX: 0, rotateY: 0, scale: 1, duration: 1.2, ease: "elastic.out(1.2, 0.3)"
-    });
-  };
-
+  // --- Purchase Handler ---
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 }).format(price);
   };
@@ -288,7 +259,6 @@ export default function HomeClient({ products, categories, banners }: HomeClient
       <style dangerouslySetInnerHTML={{__html: `
         html, body { scrollbar-width: none !important; -ms-overflow-style: none !important; cursor: none; }
         *::-webkit-scrollbar { display: none !important; }
-        .perspective-container { perspective: 2000px; transform-style: preserve-3d; }
       `}} />
 
       {/* HOLOGRAPHIC NOISE SURFACE */}
@@ -319,7 +289,7 @@ export default function HomeClient({ products, categories, banners }: HomeClient
       {/* NAVBAR */}
       <nav className="top-navbar fixed top-0 w-full z-50 bg-white/40 backdrop-blur-3xl border-b border-white/50 shadow-[0_4px_40px_rgba(0,0,0,0.02)] opacity-0">
         <div className="max-w-[90rem] mx-auto px-6 lg:px-12 h-24 flex items-center justify-between gap-8">
-          <div className="interactive-element flex items-center gap-4 shrink-0 group transition-opacity">
+          <div className="interactive-element flex items-center gap-4 shrink-0 group transition-opacity cursor-pointer" onClick={() => window.scrollTo({top: 0, behavior: 'smooth'})}>
             <div className="bg-gray-900 p-2.5 rounded-2xl text-white shadow-2xl shadow-gray-900/30 group-hover:rotate-90 transition-transform duration-700 ease-in-out hidden sm:block">
               <SparkleStarIcon className="w-6 h-6" />
             </div>
@@ -360,7 +330,7 @@ export default function HomeClient({ products, categories, banners }: HomeClient
         
         {/* HERO: PROMOTIONAL CAROUSEL BANNER */}
         {banners.length > 0 && (
-          <section className="carousel-container opacity-0 relative w-full aspect-[4/3] sm:aspect-[21/9] lg:aspect-[21/7] rounded-[3.5rem] overflow-hidden mb-20 border border-white/60 shadow-2xl shadow-fuchsia-900/5 group perspective-container">
+          <section className="carousel-container opacity-0 relative w-full aspect-[4/3] sm:aspect-[21/9] lg:aspect-[21/7] rounded-[3.5rem] overflow-hidden mb-20 border border-white/60 shadow-2xl shadow-fuchsia-900/5 group">
             <div className="carousel-track flex w-full h-full will-change-transform">
               {banners.map((banner, i) => (
                 <article key={banner.id} className={`carousel-item-${i+1} flex-shrink-0 w-full h-full relative`}>
@@ -386,12 +356,6 @@ export default function HomeClient({ products, categories, banners }: HomeClient
                     </div>
                   </div>
                 </article>
-              ))}
-            </div>
-            
-            <div className="absolute bottom-6 right-6 flex gap-2 z-10 interactive-element">
-              {banners.map((_, i) => (
-                <div key={i} className="w-2.5 h-2.5 rounded-full bg-white/40 border border-white group-hover:scale-125 transition-transform" />
               ))}
             </div>
           </section>
@@ -433,23 +397,17 @@ export default function HomeClient({ products, categories, banners }: HomeClient
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-10 gap-y-20 sm:gap-y-28 items-start">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 sm:gap-10 items-start">
             {filteredProducts.map((product, i) => (
               <div 
                 key={product.id} 
-                className={`product-card-wrapper perspective-container ${designPattern[i % designPattern.length]} ${i % 2 !== 0 ? 'lg:mt-32' : ''} ${i % 3 === 0 ? 'xl:mt-40' : ''}`}
-                onMouseMove={handleMouseMove}
-                onMouseLeave={handleMouseLeave}
+                className={`product-card-wrapper ${designPattern[i % designPattern.length]} ${i % 2 !== 0 ? 'lg:mt-16' : ''} ${i % 3 === 0 ? 'xl:mt-24' : ''}`}
               >
-                {/* UPGRADED CARD DESIGN: 
-                  - Flawless Hover Reveal 
-                  - Persistent Purchase Button
-                  - Graceful Glassmorphism
-                */}
-                <article className="card-inner group relative flex flex-col bg-white/50 backdrop-blur-2xl p-4 rounded-[3rem] shadow-[0_15px_35px_rgba(0,0,0,0.03)] border border-white/80 transition-all duration-700 hover:shadow-[0_30px_60px_rgba(192,132,252,0.12)] hover:bg-white/80 will-change-transform">
+                {/* NEW UNBREAKABLE CARD CSS PHYSICS */}
+                <article className="group relative flex flex-col bg-white/40 backdrop-blur-2xl p-4 sm:p-5 rounded-[3rem] shadow-[0_8px_30px_rgba(0,0,0,0.04)] border border-white/60 transition-all duration-500 ease-out hover:-translate-y-2 hover:shadow-[0_20px_60px_rgba(192,132,252,0.15)] hover:bg-white/70 hover:border-white">
                   
-                  {/* Image & Frosted Description Reveal */}
-                  <div className="relative w-full aspect-[4/5] rounded-[2.5rem] overflow-hidden bg-gray-100/50 mb-6 border border-white/30">
+                  {/* Image Container */}
+                  <div className="relative w-full aspect-[4/5] rounded-[2.5rem] overflow-hidden bg-gray-100/50 mb-6 border border-white/40">
                     <div className="absolute top-5 left-5 z-20 pointer-events-none">
                       <span className={`px-4 py-2 text-[9px] font-black tracking-[0.25em] uppercase rounded-full shadow-lg backdrop-blur-xl border ${
                         product.type === 'SERVICE' ? 'bg-fuchsia-500/20 text-fuchsia-900 border-fuchsia-200/50' : 
@@ -466,7 +424,7 @@ export default function HomeClient({ products, categories, banners }: HomeClient
                         alt={product.name} 
                         fill
                         sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
-                        className="object-cover transition-transform duration-[3s] ease-out group-hover:scale-110 pointer-events-none"
+                        className="object-cover transition-transform duration-[2s] ease-out group-hover:scale-105 pointer-events-none"
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center pointer-events-none">
@@ -474,31 +432,30 @@ export default function HomeClient({ products, categories, banners }: HomeClient
                       </div>
                     )}
 
-                    {/* NEW: Light Frosted Glass Description Reveal (Doesn't hide the image completely) */}
-                    <div className="absolute inset-0 bg-white/85 backdrop-blur-md opacity-0 group-hover:opacity-100 translate-y-8 group-hover:translate-y-0 transition-all duration-500 z-10 flex flex-col items-center justify-center p-8 text-center border-t border-white/50 pointer-events-none">
-                      <SparkleStarIcon className="w-6 h-6 text-fuchsia-400 mb-4 opacity-70" />
-                      <p className="text-gray-800 text-[13px] font-semibold leading-relaxed">
+                    {/* FLAWLESS CSS TEXT REVEAL OVERLAY */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-gray-900/95 via-gray-900/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-10 flex flex-col justify-end p-6 pointer-events-none">
+                      <p className="text-white/90 text-[14px] font-medium leading-relaxed translate-y-6 group-hover:translate-y-0 transition-transform duration-500 ease-out">
                         {product.description}
                       </p>
                     </div>
                   </div>
 
                   {/* Persistent Details & Action Area */}
-                  <div className="flex flex-col flex-1 px-3 pb-2 z-20">
+                  <div className="flex flex-col flex-1 px-2 pb-2 z-20">
                     <h2 className={`text-3xl sm:text-4xl font-medium text-gray-900 leading-[1.1] mb-2 transition-colors duration-500 group-hover:text-fuchsia-600 ${cormorant.className}`}>
                       {product.name}
                     </h2>
                     
-                    <div className="mt-auto pt-5 flex items-center justify-between border-t border-gray-900/5">
+                    <div className="mt-auto pt-6 flex items-center justify-between border-t border-gray-900/5">
                       <p className={`text-2xl text-gray-900 font-bold ${cormorant.className}`}>
                         {formatPrice(product.price)}
                       </p>
                       
-                      {/* NEW: Persistent, accessible buy button */}
+                      {/* PERSISTENT ACCESSIBLE BUY BUTTON */}
                       <button 
                         onClick={(e) => handleAddToCart(product, e)}
                         disabled={product.type === 'PHYSICAL' && product.stock === 0}
-                        className="interactive-element flex items-center gap-2 bg-gray-900 text-white px-5 py-3.5 rounded-[1.2rem] hover:bg-fuchsia-600 transition-all duration-300 shadow-xl shadow-gray-900/10 active:scale-95 disabled:opacity-50 disabled:bg-gray-300"
+                        className="interactive-element flex items-center gap-2 bg-gray-900 text-white px-5 py-3.5 rounded-2xl hover:bg-fuchsia-600 transition-all duration-300 shadow-xl shadow-gray-900/10 active:scale-95 disabled:opacity-50 disabled:bg-gray-300"
                       >
                         <span className="text-[10px] font-black tracking-widest uppercase">
                           {product.type === 'SERVICE' ? 'Agendar' : product.stock === 0 ? 'Agotado' : 'Añadir'}
