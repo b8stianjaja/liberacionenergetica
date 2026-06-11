@@ -1,16 +1,14 @@
-// liberacionenergetica/src/lib/prisma.ts
 import { PrismaClient } from '@prisma/client';
 import { Pool } from 'pg';
 import { PrismaPg } from '@prisma/adapter-pg';
 
 const connectionString = process.env.DATABASE_URL;
 
-// Next.js hot-reloading safe singleton pattern
 const prismaClientSingleton = () => {
-  // Configuración del pool de PostgreSQL
   const pool = new Pool({
     connectionString,
-    // Render requiere SSL en producción, pero en desarrollo local (localhost) suele fallar si está activo
+    max: 10, // CRÍTICO: Límite de conexiones concurrentes para evitar saturar Render
+    idleTimeoutMillis: 30000, // Cierra conexiones inactivas después de 30s
     ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : undefined,
   });
 
@@ -22,15 +20,12 @@ const prismaClientSingleton = () => {
   });
 };
 
-// Declaración de tipos segura para globalThis
 declare const globalThis: {
   prismaGlobal: ReturnType<typeof prismaClientSingleton>;
 } & typeof global;
 
-// Exportamos la instancia única
 export const prisma = globalThis.prismaGlobal ?? prismaClientSingleton();
 
-// Guardamos la instancia en globalThis solo en desarrollo
 if (process.env.NODE_ENV !== 'production') {
   globalThis.prismaGlobal = prisma;
 }
