@@ -1,74 +1,65 @@
 'use server';
 
-import { prisma } from "@/lib/prisma";
-import { redirect } from 'next/navigation';
+import { prisma } from '@/lib/prisma';
 import { v2 as cloudinary } from 'cloudinary';
+import { redirect } from 'next/navigation';
+import { revalidatePath } from 'next/cache';
 
-// Configuración a prueba de fallos leyendo la variable correcta
+// Configurar Cloudinary con tus variables de entorno
 cloudinary.config({
-  cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || process.env.CLOUDINARY_CLOUD_NAME,
+  cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-export async function createProduct(formData: FormData) {
-  const type = (formData.get('type') as string) || 'PHYSICAL';
-  const name = (formData.get('name') as string) || '';
-  const description = (formData.get('description') as string) || '';
-  const priceStr = formData.get('price') as string;
-  const price = priceStr ? parseFloat(priceStr) : 0;
+export async function createProduct(prevState: any, formData: FormData) {
+  try {
+    // 1. Extraer los datos de texto del formulario
+    const name = formData.get('name') as string;
+    const description = formData.get('description') as string;
+    const price = parseFloat(formData.get('price') as string);
+    const stock = parseInt(formData.get('stock') as string) || 0;
+    const type = formData.get('type') as string; // 'PHYSICAL' o 'DIGITAL'
+    
+    // 2. Extraer y procesar la imagen
+    const file = formData.get('image') as File;
+    let imageUrl = null;
 
-  let duration: number | null = null;
-  let stock = 0;
+    // Si el usuario subió un archivo y no está vacío
+    if (file && file.size > 0) {
+      // Convertir el archivo a un formato que Cloudinary entienda (Base64)
+      const arrayBuffer = await file.arrayBuffer();
+      const buffer = new Uint8Array(arrayBuffer);
+      const base64String = Buffer.from(buffer).toString('base64');
+      const dataURI = `data:${file.type};base64,${base64String}`;
 
-  if (type === 'SERVICE') {
-    const durationStr = formData.get('duration') as string;
-    duration = durationStr ? parseInt(durationStr, 10) : null; 
-  } else if (type === 'PHYSICAL') {
-    const stockStr = formData.get('stock') as string;
-    stock = stockStr ? parseInt(stockStr, 10) : 0;
-  }
-
-  if (!name || !description) {
-    throw new Error("Faltan campos obligatorios: Nombre y descripción.");
-  }
-
-  const imageFile = formData.get('image') as File | null;
-  let imageUrl: string | null = null;
-
-  if (imageFile && imageFile.size > 0) {
-    const bytes = await imageFile.arrayBuffer();
-    const buffer = Buffer.from(bytes);
-
-    try {
-      imageUrl = await new Promise<string>((resolve, reject) => {
-        const uploadStream = cloudinary.uploader.upload_stream(
-          { folder: 'liberacionenergetica/catalog' },
-          (error, result) => {
-            if (error) reject(error);
-            else resolve(result?.secure_url as string);
-          }
-        );
-        uploadStream.end(buffer);
+      // Subir a Cloudinary
+      const uploadResponse = await cloudinary.uploader.upload(dataURI, {
+        folder: 'liberacion_productos', // Se creará esta carpeta en tu Cloudinary
       });
-    } catch (error) {
-      console.error("Error subiendo imagen a Cloudinary:", error);
-      throw new Error("No se pudo subir la imagen.");
+      
+      imageUrl = uploadResponse.secure_url;
     }
+
+    // 3. Guardar en la Base de Datos con Prisma
+    await prisma.product.create({
+      data: {
+        name,
+        description,
+        price,
+        stock,
+        type,
+        imageUrl, // Guardamos la URL que nos dio Cloudinary
+        isActive: true,
+      },
+    });
+
+  } catch (error) {
+    console.error('Error al crear producto:', error);
+    return { error: 'Hubo un problema al crear el producto. Intenta de nuevo.' };
   }
 
-  await prisma.product.create({
-    data: {
-      name,
-      description,
-      price,
-      type,
-      duration,
-      stock,
-      imageUrl,
-      isActive: true,
-    }
-  });
-
+  // 4. Limpiar la caché y redirigir (Debe ir fuera del try/catch)
+  revalidatePath('/dashboard/store');
   redirect('/dashboard/store');
 }
