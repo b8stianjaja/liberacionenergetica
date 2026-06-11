@@ -1,13 +1,8 @@
 @import "tailwindcss";
 
-/* ========================================
-  THEME VARIABLES & CORE CONFIGURATION
-  ========================================
-*/
 :root {
-  /* Public side (home-client) base colors */
-  --background: #F7F7F9; 
-  --foreground: #171717;
+  --background: #030305; /* Deep Obsidian */
+  --foreground: #E4E4E7; /* Zinc 200 */
 }
 
 @theme inline {
@@ -17,69 +12,38 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    /* Deep obsidian for the esoteric admin side */
-    --background: #07050A; 
-    --foreground: #ededed;
-  }
-}
-
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
-  /* Prevents horizontal scrolling issues from absolute glowing orbs */
   overflow-x: hidden; 
 }
 
-/* ========================================
-  TEXT SELECTION (The Magic Touch)
-  ========================================
-*/
+/* Silver Magick Selection */
 ::selection {
-  background-color: rgba(192, 132, 252, 0.3); /* fuchsia-400 at 30% opacity */
-  color: #fdf4ff; /* fuchsia-50 */
+  background-color: rgba(255, 255, 255, 0.2); 
+  color: #ffffff; 
 }
 
-/* ========================================
-  SCROLLBAR ALCHEMY
-  ========================================
-*/
-
-/* Utility to completely hide scrollbars (used in your public client)
-*/
-.no-scrollbar {
-  -ms-overflow-style: none;  /* IE and Edge */
-  scrollbar-width: none;     /* Firefox */
-}
-.no-scrollbar::-webkit-scrollbar {
-  display: none;
-}
-
-/* Custom elegant scrollbar for the Admin Dashboard 
-  Matches the glassmorphic, fuchsia/indigo glowing aesthetic
-*/
+/* Chrome Scrollbar */
 .custom-scrollbar {
   scrollbar-width: thin;
-  scrollbar-color: rgba(192, 132, 252, 0.2) transparent; /* Firefox fallback */
+  scrollbar-color: rgba(255, 255, 255, 0.2) transparent; 
 }
 
 .custom-scrollbar::-webkit-scrollbar {
-  width: 6px;
-  height: 6px; /* For horizontal scrolls on mobile nav */
+  width: 4px;
+  height: 4px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-track {
   background: transparent;
-  margin-block: 4px; /* Adds slight padding at top and bottom */
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(192, 132, 252, 0.15); /* Soft, barely-there fuchsia */
+  background: rgba(255, 255, 255, 0.15); 
   border-radius: 10px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: rgba(192, 132, 252, 0.4); /* Brighter fuchsia when interacted with */
+  background: rgba(255, 255, 255, 0.4); 
 }
