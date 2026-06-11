@@ -199,7 +199,7 @@ export default function HomeClient({ products, categories, banners }: HomeClient
   }, { scope: container, dependencies: [banners] });
 
   // ==========================================
-  // HOOK 3: DYNAMIC PRODUCT CASCADES (STABILIZED)
+  // HOOK 3: DYNAMIC ARTIFACT REVEALS
   // ==========================================
   useGSAP(() => {
     const cards = gsap.utils.toArray('.product-card-wrapper') as HTMLElement[];
@@ -216,20 +216,18 @@ export default function HomeClient({ products, categories, banners }: HomeClient
     }
 
     cards.forEach((card, index) => {
-      // Cleaned up the animation: No rotation, just a smooth fade and upward slide.
       triggers.push(ScrollTrigger.create({
         trigger: card,
         start: "top 95%",
         animation: gsap.fromTo(card, 
           { opacity: 0, y: 100 },
-          { opacity: 1, y: 0, duration: 1.2, ease: "expo.out", delay: index * 0.05 }
+          { opacity: 1, y: 0, duration: 1.5, ease: "expo.out", delay: index * 0.05 }
         ),
         toggleActions: "play none none reverse"
       }));
     });
 
     ScrollTrigger.refresh(); 
-
     return () => { triggers.forEach(t => t.kill()); };
   }, { scope: container, dependencies: [filteredProducts] });
 
@@ -273,7 +271,7 @@ export default function HomeClient({ products, categories, banners }: HomeClient
       <div className="parallax-orb parallax-orb-2 absolute top-[20%] right-[-15%] w-[50vw] h-[50vw] bg-indigo-500/15 blur-[140px] rounded-full pointer-events-none z-0 will-change-transform" />
       <div className="parallax-orb parallax-orb-3 absolute bottom-[-20%] left-[20%] w-[55vw] h-[55vw] bg-purple-600/10 blur-[130px] rounded-full pointer-events-none z-0 will-change-transform" />
 
-      {/* ORIGINAL PRESERVED LOADER */}
+      {/* LOADER */}
       <div className="loader-screen fixed inset-0 z-[100] bg-[#FAFAFA] flex items-center justify-center pointer-events-none">
         <div className="loader-content flex flex-col items-center gap-6 opacity-0 translate-y-8">
           <div className="relative flex items-center justify-center w-20 h-20">
@@ -328,41 +326,31 @@ export default function HomeClient({ products, categories, banners }: HomeClient
 
       <main className="relative z-10 max-w-[90rem] mx-auto px-6 lg:px-12 pt-32 pb-40">
         
-        {/* HERO: PROMOTIONAL CAROUSEL BANNER */}
+        {/* CAROUSEL BANNER */}
         {banners.length > 0 && (
-          <section className="carousel-container opacity-0 relative w-full aspect-[4/3] sm:aspect-[21/9] lg:aspect-[21/7] rounded-[3.5rem] overflow-hidden mb-20 border border-white/60 shadow-2xl shadow-fuchsia-900/5 group">
+          <section className="carousel-container opacity-0 relative w-full aspect-[4/3] sm:aspect-[21/9] lg:aspect-[21/7] rounded-[3.5rem] overflow-hidden mb-24 border border-white/60 shadow-2xl shadow-fuchsia-900/5 group">
             <div className="carousel-track flex w-full h-full will-change-transform">
               {banners.map((banner, i) => (
                 <article key={banner.id} className={`carousel-item-${i+1} flex-shrink-0 w-full h-full relative`}>
-                  <Image 
-                    src={banner.imageUrl} 
-                    alt={banner.title} 
-                    fill 
-                    priority={i === 0}
-                    className="object-cover transition-transform duration-[10s] group-hover:scale-105" 
-                  />
+                  <Image src={banner.imageUrl} alt={banner.title} fill priority={i === 0} className="object-cover transition-transform duration-[10s] group-hover:scale-105" />
                   <div className="absolute inset-0 bg-gradient-to-t from-gray-900/90 via-gray-900/30 to-transparent" />
-                  
                   <div className="absolute bottom-10 sm:bottom-16 left-8 sm:left-16 max-w-2xl text-white z-10">
                     <div className="banner-text">
-                      <h3 className={`text-4xl sm:text-6xl md:text-7xl font-medium tracking-tighter leading-[1.1] mb-4 ${cormorant.className}`}>
-                        {banner.title}
-                      </h3>
-                      {banner.subtitle && (
-                        <p className="text-white/90 text-lg sm:text-xl font-medium max-w-md leading-relaxed">
-                          {banner.subtitle}
-                        </p>
-                      )}
+                      <h3 className={`text-4xl sm:text-6xl md:text-7xl font-medium tracking-tighter leading-[1.1] mb-4 ${cormorant.className}`}>{banner.title}</h3>
+                      {banner.subtitle && <p className="text-white/90 text-lg sm:text-xl font-medium max-w-md leading-relaxed">{banner.subtitle}</p>}
                     </div>
                   </div>
                 </article>
               ))}
             </div>
+            <div className="absolute bottom-6 right-6 flex gap-2 z-10 interactive-element">
+              {banners.map((_, i) => <div key={i} className="w-2.5 h-2.5 rounded-full bg-white/40 border border-white group-hover:scale-125 transition-transform" />)}
+            </div>
           </section>
         )}
 
         {/* BRIDGE: DYNAMIC FILTERS */}
-        <div className="filters-container flex flex-wrap justify-center gap-3 mb-16">
+        <div className="filters-container flex flex-wrap justify-center gap-3 mb-24">
           {dynamicFilters.map((filter) => (
             <button
               key={filter.id}
@@ -373,15 +361,13 @@ export default function HomeClient({ products, categories, banners }: HomeClient
                   : 'bg-white/50 backdrop-blur-md text-gray-500 hover:text-gray-900 border border-white hover:bg-white hover:shadow-xl hover:-translate-y-1'
               }`}
             >
-              {activeFilter === filter.id && (
-                <div className="absolute inset-0 bg-gradient-to-r from-gray-900 to-black -z-10" />
-              )}
+              {activeFilter === filter.id && <div className="absolute inset-0 bg-gradient-to-r from-gray-900 to-black -z-10" />}
               {filter.label}
             </button>
           ))}
         </div>
 
-        {/* PRODUCTS GRID */}
+        {/* UNBOXED ETHEREAL SHOWCASE */}
         {filteredProducts.length === 0 ? (
           <div className="flex-1 flex flex-col items-center justify-center py-20">
             <div className="w-40 h-40 bg-white/50 backdrop-blur-2xl rounded-[3rem] flex items-center justify-center mb-12 shadow-2xl border border-white rotate-12 animate-pulse">
@@ -397,22 +383,27 @@ export default function HomeClient({ products, categories, banners }: HomeClient
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 sm:gap-10 items-start">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-12 gap-y-32 sm:gap-y-40 items-start">
             {filteredProducts.map((product, i) => (
               <div 
                 key={product.id} 
-                className={`product-card-wrapper ${designPattern[i % designPattern.length]} ${i % 2 !== 0 ? 'lg:mt-16' : ''} ${i % 3 === 0 ? 'xl:mt-24' : ''}`}
+                className={`product-card-wrapper w-full ${designPattern[i % designPattern.length]} ${i % 2 !== 0 ? 'lg:mt-32' : ''} ${i % 3 === 0 ? 'xl:mt-48' : ''}`}
               >
-                {/* NEW UNBREAKABLE CARD CSS PHYSICS */}
-                <article className="group relative flex flex-col bg-white/40 backdrop-blur-2xl p-4 sm:p-5 rounded-[3rem] shadow-[0_8px_30px_rgba(0,0,0,0.04)] border border-white/60 transition-all duration-500 ease-out hover:-translate-y-2 hover:shadow-[0_20px_60px_rgba(192,132,252,0.15)] hover:bg-white/70 hover:border-white">
+                {/* THE PORTAL & LORE DESIGN
+                  Completely removed the "card box". 
+                  Image acts as a magical archway, text flows freely below.
+                */}
+                <article className="group relative flex flex-col gap-8 transition-all duration-700 ease-out will-change-transform">
                   
-                  {/* Image Container */}
-                  <div className="relative w-full aspect-[4/5] rounded-[2.5rem] overflow-hidden bg-gray-100/50 mb-6 border border-white/40">
-                    <div className="absolute top-5 left-5 z-20 pointer-events-none">
-                      <span className={`px-4 py-2 text-[9px] font-black tracking-[0.25em] uppercase rounded-full shadow-lg backdrop-blur-xl border ${
-                        product.type === 'SERVICE' ? 'bg-fuchsia-500/20 text-fuchsia-900 border-fuchsia-200/50' : 
-                        product.type === 'PHYSICAL' ? 'bg-orange-500/20 text-orange-900 border-orange-200/50' : 
-                        'bg-indigo-500/20 text-indigo-900 border-indigo-200/50'
+                  {/* The Portal (Image) */}
+                  <div className="relative w-full aspect-[3/4] rounded-t-[12rem] rounded-b-[2rem] overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.05)] border border-white/60 transition-all duration-700 group-hover:shadow-[0_40px_80px_rgba(192,132,252,0.2)] group-hover:-translate-y-4 bg-gray-100/50">
+                    
+                    {/* Floating Aura/Tag */}
+                    <div className="absolute top-8 left-1/2 -translate-x-1/2 z-20 pointer-events-none">
+                      <span className={`px-5 py-2 text-[10px] font-black tracking-[0.3em] uppercase rounded-full shadow-2xl backdrop-blur-xl border ${
+                        product.type === 'SERVICE' ? 'bg-white/90 text-fuchsia-900 border-white/50' : 
+                        product.type === 'PHYSICAL' ? 'bg-white/90 text-orange-900 border-white/50' : 
+                        'bg-white/90 text-indigo-900 border-white/50'
                       }`}>
                         {product.type === 'SERVICE' ? 'Terapia' : product.type === 'PHYSICAL' ? 'Materia' : 'Etéreo'}
                       </span>
@@ -424,43 +415,46 @@ export default function HomeClient({ products, categories, banners }: HomeClient
                         alt={product.name} 
                         fill
                         sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
-                        className="object-cover transition-transform duration-[2s] ease-out group-hover:scale-105 pointer-events-none"
+                        className="object-cover transition-transform duration-[3s] ease-out group-hover:scale-110 pointer-events-none"
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center pointer-events-none">
-                        <SparkleStarIcon className="w-16 h-16 text-gray-300" />
+                        <SparkleStarIcon className="w-20 h-20 text-gray-300" />
                       </div>
                     )}
-
-                    {/* FLAWLESS CSS TEXT REVEAL OVERLAY */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-gray-900/95 via-gray-900/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-10 flex flex-col justify-end p-6 pointer-events-none">
-                      <p className="text-white/90 text-[14px] font-medium leading-relaxed translate-y-6 group-hover:translate-y-0 transition-transform duration-500 ease-out">
-                        {product.description}
-                      </p>
-                    </div>
+                    
+                    {/* Soft Vignette Overlay */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-gray-900/40 via-transparent to-transparent pointer-events-none" />
                   </div>
 
-                  {/* Persistent Details & Action Area */}
-                  <div className="flex flex-col flex-1 px-2 pb-2 z-20">
-                    <h2 className={`text-3xl sm:text-4xl font-medium text-gray-900 leading-[1.1] mb-2 transition-colors duration-500 group-hover:text-fuchsia-600 ${cormorant.className}`}>
-                      {product.name}
-                    </h2>
+                  {/* The Lore (Unboxed Text Area) */}
+                  <div className="flex flex-col px-4 z-20">
+                    <div className="flex items-start gap-4 mb-4">
+                      <h2 className={`text-4xl sm:text-5xl font-medium text-gray-900 leading-[1.05] transition-colors duration-500 group-hover:text-fuchsia-600 ${cormorant.className}`}>
+                        {product.name}
+                      </h2>
+                    </div>
                     
-                    <div className="mt-auto pt-6 flex items-center justify-between border-t border-gray-900/5">
-                      <p className={`text-2xl text-gray-900 font-bold ${cormorant.className}`}>
+                    {/* Fully expanding text, never cut off */}
+                    <p className="text-[15px] text-gray-500 font-medium leading-relaxed mb-8">
+                      {product.description}
+                    </p>
+                    
+                    {/* Price and Bold Action Row */}
+                    <div className="mt-auto pt-6 flex items-center justify-between border-t border-gray-900/10">
+                      <p className={`text-3xl text-gray-900 font-semibold ${cormorant.className}`}>
                         {formatPrice(product.price)}
                       </p>
                       
-                      {/* PERSISTENT ACCESSIBLE BUY BUTTON */}
                       <button 
                         onClick={(e) => handleAddToCart(product, e)}
                         disabled={product.type === 'PHYSICAL' && product.stock === 0}
-                        className="interactive-element flex items-center gap-2 bg-gray-900 text-white px-5 py-3.5 rounded-2xl hover:bg-fuchsia-600 transition-all duration-300 shadow-xl shadow-gray-900/10 active:scale-95 disabled:opacity-50 disabled:bg-gray-300"
+                        className="interactive-element flex items-center gap-3 bg-gradient-to-r from-gray-900 to-black text-white px-7 py-4 rounded-full hover:from-fuchsia-600 hover:to-indigo-600 transition-all duration-500 shadow-xl shadow-gray-900/20 active:scale-95 disabled:opacity-50 disabled:from-gray-300 disabled:to-gray-400"
                       >
-                        <span className="text-[10px] font-black tracking-widest uppercase">
+                        <span className="text-[11px] font-black tracking-widest uppercase">
                           {product.type === 'SERVICE' ? 'Agendar' : product.stock === 0 ? 'Agotado' : 'Añadir'}
                         </span>
-                        <PlusIcon className="w-4 h-4 hidden sm:block" />
+                        <PlusIcon className="w-4 h-4" />
                       </button>
                     </div>
                   </div>
