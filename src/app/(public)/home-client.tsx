@@ -8,6 +8,7 @@ import { useGSAP } from "@gsap/react";
 import { Cormorant_Garamond, Montserrat } from "next/font/google";
 import { useCart } from "@/context/CartContext";
 
+// --- FONTS ---
 const cormorant = Cormorant_Garamond({ 
   subsets: ["latin"], 
   weight: ["300", "400", "500", "600", "700"],
@@ -25,23 +26,22 @@ if (typeof window !== "undefined") {
   gsap.registerPlugin(useGSAP, ScrollTrigger);
 }
 
+// --- TYPES ---
 export type Category = { id: string; name: string; };
+export type Banner = { id: string; title: string; subtitle: string; imageUrl: string; };
 export type Product = {
   id: string; name: string; description: string;
   price: number; type: string; categoryId: string | null;
   duration: number | null; stock: number; imageUrl: string | null;
 };
-export type Banner = { id: string; title: string; subtitle: string; imageUrl: string; };
 
-export default function HomeClient({ 
-  products, 
-  categories, 
-  banners 
-}: { 
-  products: Product[], 
-  categories: Category[], 
-  banners: Banner[] 
-}) {
+interface HomeClientProps {
+  products: Product[];
+  categories: Category[];
+  banners: Banner[];
+}
+
+export default function HomeClient({ products, categories, banners }: HomeClientProps) {
   const container = useRef<HTMLDivElement>(null);
   const cursorRef = useRef<HTMLDivElement>(null);
   const cursorAuraRef = useRef<HTMLDivElement>(null);
@@ -53,7 +53,7 @@ export default function HomeClient({
 
   useEffect(() => {
     setMounted(true);
-    // Lock scroll exclusively during initial load
+    // Lock scroll exclusively during initial load sequence
     document.documentElement.style.overflow = "hidden";
     document.body.style.overflow = "hidden";
     
@@ -81,9 +81,11 @@ export default function HomeClient({
     });
   }, [products, activeFilter, searchQuery]);
 
-  // HOOK 1: CORE ENGINE (Loader, Cursor, and Parallax Backgrounds)
+  // ==========================================
+  // HOOK 1: CORE ENGINE (Loader, Cursor, Parallax)
+  // ==========================================
   useGSAP(() => {
-    // Custom Cursor Physics
+    // --- 1. Custom Cursor Physics ---
     const xTo = gsap.quickTo(cursorRef.current, "x", {duration: 0.15, ease: "power3"});
     const yTo = gsap.quickTo(cursorRef.current, "y", {duration: 0.15, ease: "power3"});
     const xAuraTo = gsap.quickTo(cursorAuraRef.current, "x", {duration: 0.6, ease: "power3"});
@@ -98,7 +100,7 @@ export default function HomeClient({
 
     window.addEventListener("mousemove", moveCursor);
 
-    // Interactive cursor scaling
+    // Make cursor react to interactive elements
     const interactives = document.querySelectorAll('.interactive-element');
     const expandCursor = () => {
       gsap.to(cursorRef.current, { scale: 3, backgroundColor: "rgba(192, 132, 252, 0.4)", mixBlendMode: "difference", duration: 0.3 });
@@ -114,7 +116,7 @@ export default function HomeClient({
       el.addEventListener('mouseleave', shrinkCursor);
     });
 
-    // Timeline Animations (Loader to Hero Reveal)
+    // --- 2. Initial Load Timeline ---
     const tl = gsap.timeline({
       onComplete: () => {
         document.documentElement.style.overflow = "";
@@ -140,14 +142,9 @@ export default function HomeClient({
         { y: 100, opacity: 0, scale: 0.95 },
         { y: 0, opacity: 1, scale: 1, duration: 1.8, ease: "power4.out" },
         "-=1.5"
-      )
-      .fromTo(".filter-pill",
-        { opacity: 0, y: 20 },
-        { opacity: 1, y: 0, duration: 0.8, stagger: 0.05, ease: "back.out(1.5)" },
-        "-=1.2"
       );
 
-    // Deep Parallax Orbs (Triggered on Scroll)
+    // --- 3. Deep Parallax Background Orbs ---
     gsap.to('.parallax-orb-1', {
       yPercent: 40, ease: "none",
       scrollTrigger: { trigger: container.current, start: "top top", end: "bottom top", scrub: true }
@@ -156,14 +153,18 @@ export default function HomeClient({
       yPercent: -30, xPercent: 20, ease: "none",
       scrollTrigger: { trigger: container.current, start: "top top", end: "bottom top", scrub: true }
     });
+    gsap.to('.parallax-orb-3', {
+      yPercent: 60, ease: "none",
+      scrollTrigger: { trigger: container.current, start: "top top", end: "bottom top", scrub: true }
+    });
 
-    // Ambient floating
+    // Ambient floating mix
     gsap.to(".parallax-orb", {
       y: "+=random(-30, 30)", x: "+=random(-30, 30)", rotation: "+=random(-15, 15)",
       duration: "random(6, 10)", repeat: -1, yoyo: true, ease: "sine.inOut", stagger: 0.3
     });
 
-    // Strict Memory Cleanup
+    // Memory Leak Prevention
     return () => {
       window.removeEventListener("mousemove", moveCursor);
       interactives.forEach(el => {
@@ -173,11 +174,12 @@ export default function HomeClient({
     };
   }, { scope: container }); 
 
-  // HOOK 2: PROMOTIONAL CAROUSEL ENGINE
+  // ==========================================
+  // HOOK 2: CAROUSEL ENGINE
+  // ==========================================
   useGSAP(() => {
-    if (!banners || banners.length < 2) return;
+    if (banners.length < 2) return;
     
-    // Setup seamless loop cloning
     const track = document.querySelector('.carousel-track') as HTMLElement;
     if (track && track.children.length === banners.length) {
       const clone = track.children[0].cloneNode(true);
@@ -186,6 +188,7 @@ export default function HomeClient({
 
     const slideCount = banners.length;
     const slideWidth = 100; 
+    
     const carouselTL = gsap.timeline({ repeat: -1 });
 
     carouselTL.set('.carousel-track', { xPercent: 0 }); 
@@ -204,22 +207,38 @@ export default function HomeClient({
       .to(`.carousel-item-${i} .banner-text`, { y: -30, opacity: 0, duration: 1 }, "-=2.5");
     }
 
-    // Snap back to real first slide seamlessly
     carouselTL.set(".carousel-track", { xPercent: 0 }); 
   }, { scope: container, dependencies: [banners] });
 
+  // ==========================================
   // HOOK 3: DYNAMIC PRODUCT CASCADES
+  // ==========================================
   useGSAP(() => {
     const cards = gsap.utils.toArray('.product-card-wrapper') as HTMLElement[];
+    const filters = gsap.utils.toArray('.filter-pill') as HTMLElement[];
     
-    // Clear old scroll triggers to prevent stacking on re-render
+    // Kill old scroll triggers on re-render
     ScrollTrigger.getAll().forEach(t => {
-      if (t.vars.trigger && (t.vars.trigger as HTMLElement).classList?.contains('product-card-wrapper')) {
+      if (t.vars.trigger && (
+        (t.vars.trigger as HTMLElement).classList?.contains('product-card-wrapper') || 
+        (t.vars.trigger as HTMLElement).classList?.contains('filters-container')
+      )) {
         t.kill();
       }
     });
 
-    // Reveal cards dynamically on scroll
+    // Animate Filters on Scroll
+    if (filters.length > 0) {
+      gsap.fromTo(filters,
+        { opacity: 0, y: 30 },
+        {
+          opacity: 1, y: 0, duration: 0.8, stagger: 0.05, ease: "back.out(1.5)",
+          scrollTrigger: { trigger: ".filters-container", start: "top 95%", toggleActions: "play none none reverse" }
+        }
+      );
+    }
+
+    // Animate Cards on Scroll
     cards.forEach((card, index) => {
       gsap.fromTo(card,
         { opacity: 0, y: 150, scale: 0.9, rotateY: index % 2 === 0 ? -10 : 10, rotateX: 5 },
@@ -234,7 +253,7 @@ export default function HomeClient({
     ScrollTrigger.refresh(); 
   }, { scope: container, dependencies: [filteredProducts] });
 
-  // HARDWARE-ACCELERATED 3D HOVER EFFECT
+  // --- Handlers ---
   const handleMouseMove = (e: ReactMouseEvent<HTMLDivElement>) => {
     const card = e.currentTarget;
     const rect = card.getBoundingClientRect();
@@ -268,6 +287,7 @@ export default function HomeClient({
     addItem({
       id: product.id, name: product.name, price: product.price, imageUrl: product.imageUrl || null,
     });
+    
     gsap.fromTo(".cart-badge", 
       { scale: 3, rotation: 180, backgroundColor: "#c084fc", opacity: 0 }, 
       { scale: 1, rotation: 0, backgroundColor: "#111827", opacity: 1, duration: 1, ease: "elastic.out(1, 0.3)" }
@@ -286,18 +306,19 @@ export default function HomeClient({
         .perspective-container { perspective: 2000px; transform-style: preserve-3d; }
       `}} />
 
-      {/* HOLOGRAPHIC NOISE TEXTURE */}
+      {/* HOLOGRAPHIC NOISE SURFACE */}
       <div className="fixed inset-0 z-0 opacity-10 mix-blend-overlay pointer-events-none" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 400 400\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noiseFilter\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.85\' numOctaves=\'3\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23noiseFilter)\'/%3E%3C/svg%3E")' }}/>
 
-      {/* CUSTOM ETHEREAL CURSOR */}
+      {/* ETHEREAL CUSTOM CURSOR */}
       <div ref={cursorRef} className="fixed top-0 left-0 w-3 h-3 bg-fuchsia-400 rounded-full pointer-events-none z-[9999] -translate-x-1/2 -translate-y-1/2 will-change-transform shadow-[0_0_20px_rgba(232,121,249,0.8)]" />
       <div ref={cursorAuraRef} className="fixed top-0 left-0 w-12 h-12 border border-fuchsia-300/50 rounded-full pointer-events-none z-[9998] -translate-x-1/2 -translate-y-1/2 will-change-transform transition-opacity" />
 
       {/* DEEP PARALLAX AMBIENT ORBS */}
       <div className="parallax-orb parallax-orb-1 absolute top-[-5%] left-[-10%] w-[60vw] h-[60vw] bg-fuchsia-400/20 blur-[150px] rounded-full pointer-events-none z-0 will-change-transform" />
       <div className="parallax-orb parallax-orb-2 absolute top-[20%] right-[-15%] w-[50vw] h-[50vw] bg-indigo-500/15 blur-[140px] rounded-full pointer-events-none z-0 will-change-transform" />
+      <div className="parallax-orb parallax-orb-3 absolute bottom-[-20%] left-[20%] w-[55vw] h-[55vw] bg-purple-600/10 blur-[130px] rounded-full pointer-events-none z-0 will-change-transform" />
 
-      {/* LOADER SCREEN */}
+      {/* ORIGINAL PRESERVED LOADER */}
       <div className="loader-screen fixed inset-0 z-[100] bg-[#FAFAFA] flex items-center justify-center pointer-events-none">
         <div className="loader-content flex flex-col items-center gap-6 opacity-0 translate-y-8">
           <div className="relative flex items-center justify-center w-20 h-20">
@@ -310,7 +331,7 @@ export default function HomeClient({
         </div>
       </div>
 
-      {/* TOP NAVBAR */}
+      {/* NAVBAR */}
       <nav className="top-navbar fixed top-0 w-full z-50 bg-white/30 backdrop-blur-3xl border-b border-white/50 shadow-[0_4px_40px_rgba(0,0,0,0.02)] opacity-0">
         <div className="max-w-[90rem] mx-auto px-6 lg:px-12 h-24 flex items-center justify-between gap-8">
           <div className="interactive-element flex items-center gap-4 shrink-0 group transition-opacity">
@@ -350,12 +371,11 @@ export default function HomeClient({
         </div>
       </nav>
 
-      {/* MAIN CONTENT AREA */}
-      <main className="relative z-10 max-w-[90rem] mx-auto px-6 lg:px-12 pt-36 pb-40">
+      <main className="relative z-10 max-w-[90rem] mx-auto px-6 lg:px-12 pt-32 pb-40">
         
-        {/* HERO: PROMOTIONAL CAROUSEL BANNER (Replaces old text hero) */}
-        {banners && banners.length > 0 && (
-          <section className="carousel-container opacity-0 relative w-full aspect-[4/3] sm:aspect-[21/9] lg:aspect-[21/7] rounded-[3.5rem] overflow-hidden mb-16 border border-white/60 shadow-2xl shadow-fuchsia-900/5 group perspective-container">
+        {/* HERO: PROMOTIONAL CAROUSEL BANNER */}
+        {banners.length > 0 && (
+          <section className="carousel-container opacity-0 relative w-full aspect-[4/3] sm:aspect-[21/9] lg:aspect-[21/7] rounded-[3.5rem] overflow-hidden mb-20 border border-white/60 shadow-2xl shadow-fuchsia-900/5 group perspective-container">
             <div className="carousel-track flex w-full h-full will-change-transform">
               {banners.map((banner, i) => (
                 <article key={banner.id} className={`carousel-item-${i+1} flex-shrink-0 w-full h-full relative`}>
@@ -384,19 +404,16 @@ export default function HomeClient({
               ))}
             </div>
             
-            {/* Carousel navigation visual feedback */}
-            {banners.length > 1 && (
-              <div className="absolute bottom-6 right-6 flex gap-2 z-10 interactive-element">
-                {banners.map((_, i) => (
-                  <div key={i} className="w-2.5 h-2.5 rounded-full bg-white/40 border border-white group-hover:scale-125 transition-transform" />
-                ))}
-              </div>
-            )}
+            <div className="absolute bottom-6 right-6 flex gap-2 z-10 interactive-element">
+              {banners.map((_, i) => (
+                <div key={i} className="w-2.5 h-2.5 rounded-full bg-white/40 border border-white group-hover:scale-125 transition-transform" />
+              ))}
+            </div>
           </section>
         )}
 
         {/* BRIDGE: DYNAMIC FILTERS */}
-        <div className="filters-container flex flex-wrap justify-start xl:justify-center gap-3 mb-16">
+        <div className="filters-container flex flex-wrap justify-center gap-3 mb-16">
           {dynamicFilters.map((filter) => (
             <button
               key={filter.id}
@@ -415,7 +432,7 @@ export default function HomeClient({
           ))}
         </div>
 
-        {/* PRODUCT GRID OR EMPTY STATE */}
+        {/* PRODUCTS GRID */}
         {filteredProducts.length === 0 ? (
           <div className="flex-1 flex flex-col items-center justify-center py-20">
             <div className="w-40 h-40 bg-white/50 backdrop-blur-2xl rounded-[3rem] flex items-center justify-center mb-12 shadow-2xl border border-white rotate-12 animate-pulse">
@@ -441,6 +458,7 @@ export default function HomeClient({
               >
                 <article className="card-inner group flex flex-col bg-white/40 backdrop-blur-2xl p-5 rounded-[3.5rem] shadow-[0_20px_40px_rgba(0,0,0,0.03)] border border-white transition-all duration-700 hover:shadow-[0_40px_100px_rgba(192,132,252,0.2)] hover:bg-white/60">
                   
+                  {/* Image & Hover Description Container */}
                   <div className="relative w-full aspect-[4/5] rounded-[2.5rem] overflow-hidden bg-gray-100/50 transform-gpu mb-8">
                     <div className="absolute top-6 left-6 z-20 pointer-events-none">
                       <span className={`px-5 py-2 text-[10px] font-black tracking-[0.25em] uppercase rounded-full shadow-2xl backdrop-blur-xl border ${
@@ -466,7 +484,7 @@ export default function HomeClient({
                       </div>
                     )}
 
-                    {/* FOCUS FADE OVER IMAGE ON HOVER - Full Description Here */}
+                    {/* FOCUS FADE OVER IMAGE ON HOVER - Resolves "Text Cut-Out" */}
                     <div className="absolute inset-0 bg-gradient-to-t from-gray-900/90 via-gray-900/60 to-gray-900/20 text-white p-8 opacity-0 group-hover:opacity-100 transition-opacity duration-700 flex flex-col justify-end">
                       <p className="text-[14px] mb-8 font-medium leading-relaxed max-w-sm pointer-events-none">
                         {product.description}
@@ -492,6 +510,7 @@ export default function HomeClient({
                       <p className={`text-3xl text-gray-900 font-semibold ${cormorant.className}`}>
                         {formatPrice(product.price)}
                       </p>
+                      
                       <button 
                         onClick={(e) => handleAddToCart(product, e)}
                         disabled={product.type === 'PHYSICAL' && product.stock === 0}
@@ -511,6 +530,7 @@ export default function HomeClient({
   );
 }
 
+// --- ICONS ---
 function SearchIcon(props: React.SVGProps<SVGSVGElement>) {
   return <svg fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" {...props}><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" /></svg>;
 }
