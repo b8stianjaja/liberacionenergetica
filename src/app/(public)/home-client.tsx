@@ -96,11 +96,11 @@ export default function HomeClient({ products, categories, banners }: HomeClient
 
     const interactives = document.querySelectorAll('.interactive-element');
     const expandCursor = () => {
-      gsap.to(cursorRef.current, { scale: 3, backgroundColor: "rgba(192, 132, 252, 0.4)", mixBlendMode: "difference", duration: 0.3 });
+      gsap.to(cursorRef.current, { scale: 3, backgroundColor: "rgba(148, 163, 184, 0.4)", mixBlendMode: "difference", duration: 0.3 }); // Cool silver aura
       gsap.to(cursorAuraRef.current, { scale: 0, opacity: 0, duration: 0.3 });
     };
     const shrinkCursor = () => {
-      gsap.to(cursorRef.current, { scale: 1, backgroundColor: "#c084fc", mixBlendMode: "normal", duration: 0.3 });
+      gsap.to(cursorRef.current, { scale: 1, backgroundColor: "#cbd5e1", mixBlendMode: "normal", duration: 0.3 });
       gsap.to(cursorAuraRef.current, { scale: 1, opacity: 1, duration: 0.3 });
     };
 
@@ -168,33 +168,25 @@ export default function HomeClient({ products, categories, banners }: HomeClient
   // ==========================================
   useGSAP(() => {
     if (banners.length < 2) return;
-    
     const track = document.querySelector('.carousel-track') as HTMLElement;
     if (track && track.children.length === banners.length) {
       const clone = track.children[0].cloneNode(true);
       track.appendChild(clone);
     }
-
     const slideCount = banners.length;
     const slideWidth = 100; 
-    
     const carouselTL = gsap.timeline({ repeat: -1 });
     carouselTL.set('.carousel-track', { xPercent: 0 }); 
 
     for (let i = 1; i <= slideCount; i++) {
       carouselTL.fromTo(`.carousel-item-${i} .banner-text`,
-        { y: 40, opacity: 0 },
-        { y: 0, opacity: 1, duration: 1.5, ease: "expo.out" },
-        "+=0.5"
+        { y: 40, opacity: 0 }, { y: 0, opacity: 1, duration: 1.5, ease: "expo.out" }, "+=0.5"
       )
       .to(".carousel-track", {
-        xPercent: -slideWidth * i, 
-        duration: 2.5, 
-        ease: "power3.inOut"
+        xPercent: -slideWidth * i, duration: 2.5, ease: "power3.inOut"
       }, "+=4") 
       .to(`.carousel-item-${i} .banner-text`, { y: -30, opacity: 0, duration: 1 }, "-=2.5");
     }
-
     carouselTL.set(".carousel-track", { xPercent: 0 }); 
   }, { scope: container, dependencies: [banners] });
 
@@ -203,7 +195,7 @@ export default function HomeClient({ products, categories, banners }: HomeClient
   // ==========================================
   useGSAP(() => {
     const cards = gsap.utils.toArray('.product-card-wrapper') as HTMLElement[];
-    const filters = gsap.utils.toArray('.filter-pill') as HTMLElement[];
+    const filters = gsap.utils.toArray('.filter-plate-wrapper') as HTMLElement[];
     const triggers: ScrollTrigger[] = [];
     
     if (filters.length > 0) {
@@ -231,92 +223,98 @@ export default function HomeClient({ products, categories, banners }: HomeClient
     return () => { triggers.forEach(t => t.kill()); };
   }, { scope: container, dependencies: [filteredProducts] });
 
-  // --- Purchase Handler ---
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 }).format(price);
-  };
+  const formatPrice = (price: number) => new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 }).format(price);
 
   const handleAddToCart = (product: Product, e: ReactMouseEvent<HTMLButtonElement>) => {
     e.stopPropagation();
-    addItem({
-      id: product.id, name: product.name, price: product.price, imageUrl: product.imageUrl || null,
-    });
-    
+    addItem({ id: product.id, name: product.name, price: product.price, imageUrl: product.imageUrl || null });
     gsap.fromTo(".cart-badge", 
-      { scale: 3, rotation: 180, backgroundColor: "#c084fc", opacity: 0 }, 
-      { scale: 1, rotation: 0, backgroundColor: "#111827", opacity: 1, duration: 1, ease: "elastic.out(1, 0.3)" }
+      { scale: 3, rotation: 180, backgroundColor: "#94a3b8", opacity: 0 }, 
+      { scale: 1, rotation: 0, backgroundColor: "#1e293b", opacity: 1, duration: 1, ease: "elastic.out(1, 0.3)" }
     );
   };
 
   const designPattern = ["col-span-1", "col-span-2", "col-span-1", "col-span-1", "col-span-2", "col-span-1"];
 
   return (
-    <div ref={container} className={`relative min-h-screen bg-[#F7F7F9] text-gray-900 ${montserrat.className} selection:bg-purple-300 selection:text-purple-900 overflow-hidden cursor-none`}>
-      
-      {/* GLOBAL CSS INJECTION */}
+    <div ref={container} className={`relative min-h-screen bg-[#EBEBEF] text-gray-900 ${montserrat.className} selection:bg-gray-300 selection:text-gray-900 overflow-hidden cursor-none`}>
       <style dangerouslySetInnerHTML={{__html: `
         html, body { scrollbar-width: none !important; -ms-overflow-style: none !important; cursor: none; }
         *::-webkit-scrollbar { display: none !important; }
       `}} />
 
-      {/* HOLOGRAPHIC NOISE SURFACE */}
-      <div className="fixed inset-0 z-0 opacity-[0.15] mix-blend-overlay pointer-events-none" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 400 400\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noiseFilter\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.85\' numOctaves=\'3\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23noiseFilter)\'/%3E%3C/svg%3E")' }}/>
+      {/* 1. CUSTOM IMAGE BACKGROUND: Silver Canvas */}
+      <div className="fixed inset-0 z-0 pointer-events-none">
+        {/* Replace with your high-res silver texture. The CSS filter gives it a slight metallic sheen. */}
+        <Image src="/assets/bg-silver-texture.jpg" alt="Silver Texture" fill className="object-cover opacity-[0.85] mix-blend-luminosity brightness-110 contrast-125" priority />
+      </div>
 
       {/* ETHEREAL CUSTOM CURSOR */}
-      <div ref={cursorRef} className="fixed top-0 left-0 w-3 h-3 bg-fuchsia-400 rounded-full pointer-events-none z-[9999] -translate-x-1/2 -translate-y-1/2 will-change-transform shadow-[0_0_20px_rgba(232,121,249,0.8)]" />
-      <div ref={cursorAuraRef} className="fixed top-0 left-0 w-12 h-12 border border-fuchsia-300/50 rounded-full pointer-events-none z-[9998] -translate-x-1/2 -translate-y-1/2 will-change-transform transition-opacity" />
+      <div ref={cursorRef} className="fixed top-0 left-0 w-3 h-3 bg-slate-300 rounded-full pointer-events-none z-[9999] -translate-x-1/2 -translate-y-1/2 will-change-transform shadow-[0_0_20px_rgba(203,213,225,0.8)]" />
+      <div ref={cursorAuraRef} className="fixed top-0 left-0 w-12 h-12 border border-slate-400/50 rounded-full pointer-events-none z-[9998] -translate-x-1/2 -translate-y-1/2 will-change-transform transition-opacity" />
 
-      {/* DEEP PARALLAX AMBIENT ORBS */}
-      <div className="parallax-orb parallax-orb-1 absolute top-[-5%] left-[-10%] w-[60vw] h-[60vw] bg-fuchsia-400/20 blur-[150px] rounded-full pointer-events-none z-0 will-change-transform" />
-      <div className="parallax-orb parallax-orb-2 absolute top-[20%] right-[-15%] w-[50vw] h-[50vw] bg-indigo-500/15 blur-[140px] rounded-full pointer-events-none z-0 will-change-transform" />
-      <div className="parallax-orb parallax-orb-3 absolute bottom-[-20%] left-[20%] w-[55vw] h-[55vw] bg-purple-600/10 blur-[130px] rounded-full pointer-events-none z-0 will-change-transform" />
+      {/* DEEP PARALLAX AMBIENT ORBS (Cooler, platinum/indigo palette) */}
+      <div className="parallax-orb parallax-orb-1 absolute top-[-5%] left-[-10%] w-[60vw] h-[60vw] bg-slate-400/15 blur-[160px] rounded-full pointer-events-none z-0 will-change-transform" />
+      <div className="parallax-orb parallax-orb-2 absolute top-[20%] right-[-15%] w-[50vw] h-[50vw] bg-indigo-300/10 blur-[150px] rounded-full pointer-events-none z-0 will-change-transform" />
+      <div className="parallax-orb parallax-orb-3 absolute bottom-[-20%] left-[20%] w-[55vw] h-[55vw] bg-fuchsia-300/10 blur-[140px] rounded-full pointer-events-none z-0 will-change-transform" />
 
       {/* LOADER */}
-      <div className="loader-screen fixed inset-0 z-[100] bg-[#FAFAFA] flex items-center justify-center pointer-events-none">
+      <div className="loader-screen fixed inset-0 z-[100] bg-[#EBEBEF] flex items-center justify-center pointer-events-none">
         <div className="loader-content flex flex-col items-center gap-6 opacity-0 translate-y-8">
           <div className="relative flex items-center justify-center w-20 h-20">
-            <div className="absolute inset-0 border-t-2 border-indigo-200 rounded-full animate-spin"></div>
-            <SparkleStarIcon className="w-8 h-8 text-indigo-600 animate-pulse" />
+            <div className="absolute inset-0 border-t-2 border-slate-400 rounded-full animate-spin"></div>
+            <SparkleStarIcon className="w-8 h-8 text-slate-600 animate-pulse" />
           </div>
-          <h2 className={`text-4xl md:text-5xl text-gray-900 font-bold tracking-tight ${cormorant.className}`}>
-            Liberación Energética
-          </h2>
         </div>
       </div>
 
-      {/* NAVBAR */}
-      <nav className="top-navbar fixed top-0 w-full z-50 bg-white/40 backdrop-blur-3xl border-b border-white/50 shadow-[0_4px_40px_rgba(0,0,0,0.02)] opacity-0">
-        <div className="max-w-[90rem] mx-auto px-6 lg:px-12 h-24 flex items-center justify-between gap-8">
-          <div className="interactive-element flex items-center gap-4 shrink-0 group transition-opacity cursor-pointer" onClick={() => window.scrollTo({top: 0, behavior: 'smooth'})}>
-            <div className="bg-gray-900 p-2.5 rounded-2xl text-white shadow-2xl shadow-gray-900/30 group-hover:rotate-90 transition-transform duration-700 ease-in-out hidden sm:block">
-              <SparkleStarIcon className="w-6 h-6" />
-            </div>
-            <span className={`text-3xl font-bold text-gray-900 tracking-tighter ${cormorant.className}`}>
-              L.E. Boutique
-            </span>
+      {/* 2. CUSTOM IMAGE NAVBAR */}
+      <nav className="top-navbar fixed top-0 w-full z-50 h-28 opacity-0 flex items-center shadow-[0_10px_40px_rgba(0,0,0,0.05)]">
+        {/* Navbar Background Image: Represents the structural, masculine silver strip */}
+        <div className="absolute inset-0 z-[-1]">
+          <Image src="/assets/header-silver-bg.png" alt="Header Framework" fill className="object-cover opacity-90 backdrop-blur-2xl" />
+        </div>
+
+        <div className="max-w-[90rem] mx-auto px-6 lg:px-12 w-full flex items-center justify-between gap-8 h-full">
+          
+          {/* Logo Section: Image Swap */}
+          <div className="interactive-element relative w-[220px] h-[60px] shrink-0 group cursor-pointer" onClick={() => window.scrollTo({top: 0, behavior: 'smooth'})}>
+            {/* Normal Silver Logo */}
+            <Image src="/assets/logo-silver-normal.png" alt="L.E. Boutique" fill className="object-contain transition-opacity duration-700 ease-in-out group-hover:opacity-0" priority />
+            {/* Hover Glow/Refracted Silver Logo */}
+            <Image src="/assets/logo-silver-hover.png" alt="L.E. Boutique Glow" fill className="object-contain transition-opacity duration-700 ease-in-out opacity-0 group-hover:opacity-100" priority />
           </div>
 
-          <div className="flex-1 max-w-2xl relative group hidden sm:block interactive-element">
-            <div className="absolute inset-0 bg-gradient-to-r from-fuchsia-500/10 to-indigo-500/10 rounded-2xl blur-xl opacity-0 group-focus-within:opacity-100 transition-opacity duration-700" />
-            <div className="relative flex items-center">
-              <SearchIcon className="absolute left-6 w-5 h-5 text-gray-400 group-focus-within:text-fuchsia-500 transition-colors duration-500" />
+          {/* Search Bar Section: Structural Silver Image Assembly */}
+          <div className="flex-1 max-w-2xl relative group hidden sm:block interactive-element h-[65px]">
+            {/* The outer forged silver frame image */}
+            <Image src="/assets/search-frame-silver.png" alt="Search Frame" fill className="object-fill z-0 drop-shadow-xl" />
+            
+            <div className="relative z-10 flex items-center h-full px-6">
+              {/* Custom Search Icon Image */}
+              <div className="relative w-[24px] h-[24px] shrink-0 opacity-60 group-focus-within:opacity-100 transition-opacity duration-500">
+                <Image src="/assets/search-icon-silver.png" alt="Search Icon" fill className="object-contain" />
+              </div>
+              
               <input 
                 type="text" 
                 placeholder="Busca la frecuencia que tu alma necesita..." 
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-white/70 backdrop-blur-md border border-white rounded-2xl py-4 pl-16 pr-6 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-fuchsia-400/30 shadow-[0_8px_30px_rgba(0,0,0,0.04)] transition-all placeholder:text-gray-400"
+                className="w-full h-full bg-transparent border-none text-slate-800 py-4 pl-4 pr-6 text-[15px] font-medium focus:outline-none focus:ring-0 placeholder:text-slate-500"
               />
             </div>
           </div>
 
-          <button 
-            onClick={openCart} 
-            className="interactive-element relative p-4 bg-white/80 backdrop-blur-xl rounded-2xl text-gray-900 border border-white shadow-lg hover:bg-gray-900 hover:text-white transition-all duration-500 shrink-0 active:scale-90"
-          >
-            <CartIcon className="w-6 h-6" />
+          {/* Cart Button: Image Swap */}
+          <button onClick={openCart} className="interactive-element relative w-[65px] h-[65px] shrink-0 group active:scale-95 transition-transform duration-300">
+             {/* Normal Silver Cart Button */}
+             <Image src="/assets/cart-silver-normal.png" alt="Cart" fill className="object-contain transition-opacity duration-500 group-hover:opacity-0" />
+             {/* Hover Silver Cart Button */}
+             <Image src="/assets/cart-silver-hover.png" alt="Cart Hover" fill className="object-contain transition-opacity duration-500 opacity-0 group-hover:opacity-100" />
+            
             {mounted && totalItems > 0 && (
-              <span className="cart-badge absolute -top-2 -right-2 bg-fuchsia-500 text-white text-xs font-black w-7 h-7 rounded-xl flex items-center justify-center border-[3px] border-[#F7F7F9] shadow-xl">
+              <span className="cart-badge absolute -top-1 -right-1 bg-slate-800 text-white text-[11px] font-black w-7 h-7 rounded-full flex items-center justify-center border-[2px] border-[#EBEBEF] shadow-lg z-20">
                 {totalItems}
               </span>
             )}
@@ -324,11 +322,11 @@ export default function HomeClient({ products, categories, banners }: HomeClient
         </div>
       </nav>
 
-      <main className="relative z-10 max-w-[90rem] mx-auto px-6 lg:px-12 pt-32 pb-40">
+      <main className="relative z-10 max-w-[90rem] mx-auto px-6 lg:px-12 pt-40 pb-40">
         
-        {/* CAROUSEL BANNER */}
+        {/* CAROUSEL BANNER (Untouched layout as requested) */}
         {banners.length > 0 && (
-          <section className="carousel-container opacity-0 relative w-full aspect-[4/3] sm:aspect-[21/9] lg:aspect-[21/7] rounded-[3.5rem] overflow-hidden mb-24 border border-white/60 shadow-2xl shadow-fuchsia-900/5 group">
+          <section className="carousel-container opacity-0 relative w-full aspect-[4/3] sm:aspect-[21/9] lg:aspect-[21/7] rounded-[3.5rem] overflow-hidden mb-24 border border-slate-300/60 shadow-[0_20px_50px_rgba(0,0,0,0.1)] group">
             <div className="carousel-track flex w-full h-full will-change-transform">
               {banners.map((banner, i) => (
                 <article key={banner.id} className={`carousel-item-${i+1} flex-shrink-0 w-full h-full relative`}>
@@ -343,41 +341,62 @@ export default function HomeClient({ products, categories, banners }: HomeClient
                 </article>
               ))}
             </div>
-            <div className="absolute bottom-6 right-6 flex gap-2 z-10 interactive-element">
-              {banners.map((_, i) => <div key={i} className="w-2.5 h-2.5 rounded-full bg-white/40 border border-white group-hover:scale-125 transition-transform" />)}
-            </div>
           </section>
         )}
 
-        {/* BRIDGE: DYNAMIC FILTERS */}
-        <div className="filters-container flex flex-wrap justify-center gap-3 mb-24">
-          {dynamicFilters.map((filter) => (
-            <button
-              key={filter.id}
-              onClick={() => setActiveFilter(filter.id)}
-              className={`filter-pill interactive-element relative px-8 py-4 rounded-2xl text-[12px] font-black tracking-[0.2em] uppercase transition-all duration-500 overflow-hidden group ${
-                activeFilter === filter.id 
-                  ? 'text-white scale-105 shadow-xl shadow-fuchsia-500/30 border-transparent' 
-                  : 'bg-white/50 backdrop-blur-md text-gray-500 hover:text-gray-900 border border-white hover:bg-white hover:shadow-xl hover:-translate-y-1'
-              }`}
-            >
-              {activeFilter === filter.id && <div className="absolute inset-0 bg-gradient-to-r from-gray-900 to-black -z-10" />}
-              {filter.label}
-            </button>
-          ))}
+        {/* 3. CUSTOM IMAGE FILTERS (Silver Etched Plates) */}
+        <div className="filters-container flex flex-wrap justify-center gap-4 mb-24">
+          {dynamicFilters.map((filter) => {
+            const isActive = activeFilter === filter.id;
+            return (
+              <button
+                key={filter.id}
+                onClick={() => setActiveFilter(filter.id)}
+                className="filter-plate-wrapper interactive-element relative w-[160px] h-[55px] group active:scale-95 transition-transform duration-300"
+              >
+                {/* Instead of generating raw CSS buttons, we stack 3 images representing the physical silver states. 
+                  Make sure to name your files exactly like this in your assets folder. 
+                */}
+                
+                {/* Normal State: Inactive, neutral silver plate */}
+                <Image 
+                  src={`/assets/filter-${filter.id.toLowerCase()}-normal.png`} 
+                  alt={filter.label} 
+                  fill 
+                  className={`object-contain transition-opacity duration-500 ${isActive ? 'opacity-0' : 'group-hover:opacity-0'}`} 
+                />
+                
+                {/* Hover State: Glowing or highly polished silver plate */}
+                <Image 
+                  src={`/assets/filter-${filter.id.toLowerCase()}-hover.png`} 
+                  alt={`${filter.label} Hover`} 
+                  fill 
+                  className={`object-contain transition-opacity duration-500 opacity-0 ${isActive ? '' : 'group-hover:opacity-100'}`} 
+                />
+
+                {/* Active State: Pressed, distinctly different silver plate */}
+                <Image 
+                  src={`/assets/filter-${filter.id.toLowerCase()}-active.png`} 
+                  alt={`${filter.label} Active`} 
+                  fill 
+                  className={`object-contain transition-opacity duration-500 ${isActive ? 'opacity-100 z-10' : 'opacity-0'}`} 
+                />
+              </button>
+            );
+          })}
         </div>
 
-        {/* UNBOXED ETHEREAL SHOWCASE */}
+        {/* UNBOXED ETHEREAL SHOWCASE (Untouched layout as requested) */}
         {filteredProducts.length === 0 ? (
           <div className="flex-1 flex flex-col items-center justify-center py-20">
-            <div className="w-40 h-40 bg-white/50 backdrop-blur-2xl rounded-[3rem] flex items-center justify-center mb-12 shadow-2xl border border-white rotate-12 animate-pulse">
-              <SearchIcon className="w-16 h-16 text-fuchsia-300 -rotate-12" />
+            <div className="w-40 h-40 bg-white/30 backdrop-blur-2xl rounded-[3rem] flex items-center justify-center mb-12 shadow-2xl border border-white/50 rotate-12 animate-pulse">
+              <SparkleStarIcon className="w-16 h-16 text-slate-400 -rotate-12" />
             </div>
             <h3 className={`text-4xl sm:text-6xl text-gray-900 mb-6 font-medium ${cormorant.className}`}>Vacío Cuántico</h3>
-            <p className="text-gray-500 text-lg sm:text-2xl mb-12 text-center max-w-xl leading-relaxed">Las energías que buscas aún no se han manifestado en este plano.</p>
+            <p className="text-gray-600 text-lg sm:text-2xl mb-12 text-center max-w-xl leading-relaxed">Las energías que buscas aún no se han manifestado en este plano.</p>
             <button 
               onClick={() => {setSearchQuery(''); setActiveFilter('ALL');}}
-              className="interactive-element bg-gray-900 text-white px-12 py-5 rounded-2xl font-bold tracking-widest uppercase text-sm shadow-[0_20px_40px_rgba(0,0,0,0.2)] hover:shadow-[0_20px_60px_rgba(192,132,252,0.4)] hover:bg-fuchsia-600 transition-all duration-500 active:scale-90"
+              className="interactive-element bg-slate-800 text-white px-12 py-5 rounded-2xl font-bold tracking-widest uppercase text-sm shadow-[0_20px_40px_rgba(0,0,0,0.15)] hover:bg-slate-900 transition-all duration-500 active:scale-90"
             >
               Restaurar Visión
             </button>
@@ -389,21 +408,17 @@ export default function HomeClient({ products, categories, banners }: HomeClient
                 key={product.id} 
                 className={`product-card-wrapper w-full ${designPattern[i % designPattern.length]} ${i % 2 !== 0 ? 'lg:mt-32' : ''} ${i % 3 === 0 ? 'xl:mt-48' : ''}`}
               >
-                {/* THE PORTAL & LORE DESIGN
-                  Completely removed the "card box". 
-                  Image acts as a magical archway, text flows freely below.
-                */}
                 <article className="group relative flex flex-col gap-8 transition-all duration-700 ease-out will-change-transform">
                   
                   {/* The Portal (Image) */}
-                  <div className="relative w-full aspect-[3/4] rounded-t-[12rem] rounded-b-[2rem] overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.05)] border border-white/60 transition-all duration-700 group-hover:shadow-[0_40px_80px_rgba(192,132,252,0.2)] group-hover:-translate-y-4 bg-gray-100/50">
+                  <div className="relative w-full aspect-[3/4] rounded-t-[12rem] rounded-b-[2rem] overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.08)] border border-white/80 transition-all duration-700 group-hover:shadow-[0_40px_80px_rgba(148,163,184,0.3)] group-hover:-translate-y-4 bg-gray-200/50">
                     
                     {/* Floating Aura/Tag */}
                     <div className="absolute top-8 left-1/2 -translate-x-1/2 z-20 pointer-events-none">
                       <span className={`px-5 py-2 text-[10px] font-black tracking-[0.3em] uppercase rounded-full shadow-2xl backdrop-blur-xl border ${
-                        product.type === 'SERVICE' ? 'bg-white/90 text-fuchsia-900 border-white/50' : 
-                        product.type === 'PHYSICAL' ? 'bg-white/90 text-orange-900 border-white/50' : 
-                        'bg-white/90 text-indigo-900 border-white/50'
+                        product.type === 'SERVICE' ? 'bg-white/90 text-slate-800 border-white/50' : 
+                        product.type === 'PHYSICAL' ? 'bg-white/90 text-slate-800 border-white/50' : 
+                        'bg-white/90 text-slate-800 border-white/50'
                       }`}>
                         {product.type === 'SERVICE' ? 'Terapia' : product.type === 'PHYSICAL' ? 'Materia' : 'Etéreo'}
                       </span>
@@ -419,7 +434,7 @@ export default function HomeClient({ products, categories, banners }: HomeClient
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center pointer-events-none">
-                        <SparkleStarIcon className="w-20 h-20 text-gray-300" />
+                        <SparkleStarIcon className="w-20 h-20 text-gray-400" />
                       </div>
                     )}
                     
@@ -430,18 +445,16 @@ export default function HomeClient({ products, categories, banners }: HomeClient
                   {/* The Lore (Unboxed Text Area) */}
                   <div className="flex flex-col px-4 z-20">
                     <div className="flex items-start gap-4 mb-4">
-                      <h2 className={`text-4xl sm:text-5xl font-medium text-gray-900 leading-[1.05] transition-colors duration-500 group-hover:text-fuchsia-600 ${cormorant.className}`}>
+                      <h2 className={`text-4xl sm:text-5xl font-medium text-gray-900 leading-[1.05] transition-colors duration-500 group-hover:text-slate-600 ${cormorant.className}`}>
                         {product.name}
                       </h2>
                     </div>
                     
-                    {/* Fully expanding text, never cut off */}
-                    <p className="text-[15px] text-gray-500 font-medium leading-relaxed mb-8">
+                    <p className="text-[15px] text-gray-600 font-medium leading-relaxed mb-8">
                       {product.description}
                     </p>
                     
-                    {/* Price and Bold Action Row */}
-                    <div className="mt-auto pt-6 flex items-center justify-between border-t border-gray-900/10">
+                    <div className="mt-auto pt-6 flex items-center justify-between border-t border-slate-300">
                       <p className={`text-3xl text-gray-900 font-semibold ${cormorant.className}`}>
                         {formatPrice(product.price)}
                       </p>
@@ -449,7 +462,7 @@ export default function HomeClient({ products, categories, banners }: HomeClient
                       <button 
                         onClick={(e) => handleAddToCart(product, e)}
                         disabled={product.type === 'PHYSICAL' && product.stock === 0}
-                        className="interactive-element flex items-center gap-3 bg-gradient-to-r from-gray-900 to-black text-white px-7 py-4 rounded-full hover:from-fuchsia-600 hover:to-indigo-600 transition-all duration-500 shadow-xl shadow-gray-900/20 active:scale-95 disabled:opacity-50 disabled:from-gray-300 disabled:to-gray-400"
+                        className="interactive-element flex items-center gap-3 bg-gradient-to-r from-slate-800 to-slate-900 text-white px-7 py-4 rounded-full hover:from-slate-600 hover:to-slate-700 transition-all duration-500 shadow-xl shadow-slate-900/20 active:scale-95 disabled:opacity-50 disabled:from-gray-300 disabled:to-gray-400"
                       >
                         <span className="text-[11px] font-black tracking-widest uppercase">
                           {product.type === 'SERVICE' ? 'Agendar' : product.stock === 0 ? 'Agotado' : 'Añadir'}
@@ -468,13 +481,6 @@ export default function HomeClient({ products, categories, banners }: HomeClient
   );
 }
 
-// --- ICONS ---
-function SearchIcon(props: React.SVGProps<SVGSVGElement>) {
-  return <svg fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" {...props}><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" /></svg>;
-}
-function CartIcon(props: React.SVGProps<SVGSVGElement>) {
-  return <svg fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" {...props}><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0z" /></svg>;
-}
 function SparkleStarIcon(props: React.SVGProps<SVGSVGElement>) {
   return <svg fill="currentColor" viewBox="0 0 24 24" {...props}><path d="M12 2L14.09 9.91L22 12L14.09 14.09L12 22L9.91 14.09L2 12L9.91 9.91L12 2Z" /></svg>;
 }
