@@ -95,3 +95,14 @@ model FileAsset {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
+
+model Banner {
+  id        String   @id @default(cuid())
+  title     String
+  subtitle  String?
+  imageUrl  String
+  isActive  Boolean  @default(true)
+  order     Int      @default(0) // To control the sequence in the carousel
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
