@@ -3,10 +3,12 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
+// ADDED: 'Promociones' to the navigation items
 const navItems = [
   { name: 'Resumen', href: '/dashboard', icon: HomeIcon },
   { name: 'Mi Agenda', href: '/dashboard/agenda', icon: CalendarIcon },
   { name: 'Mi Tienda', href: '/dashboard/store', icon: ShoppingBagIcon }, 
+  { name: 'Promociones', href: '/dashboard/banners', icon: MegaphoneIcon }, // <-- NEW ROUTE
   { name: 'Mis Clientes', href: '/dashboard/clients', icon: UsersIcon },
 ];
 
@@ -42,7 +44,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </nav>
       </aside>
 
-      {/* 📱 Área de Contenido Principal */}
+      {/* 📄 Área de Contenido Principal */}
       <main className="flex-1 overflow-y-auto pb-24 md:pb-8 p-4 md:p-8">
         <div className="max-w-5xl mx-auto">
           {children}
@@ -50,21 +52,21 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       </main>
 
       {/* 📱 Mobile Bottom Navigation */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex justify-around items-center h-20 px-2 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] z-50 pb-safe">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex justify-around items-center h-20 px-2 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] z-50 pb-safe overflow-x-auto">
         {navItems.map((item) => {
           const isActive = pathname === item.href || (pathname.startsWith(item.href) && item.href !== '/dashboard');
           return (
             <Link
               key={item.name}
               href={item.href}
-              className={`flex flex-col items-center justify-center w-full h-full space-y-1.5 active:scale-95 transition-transform ${
+              className={`flex flex-col items-center justify-center min-w-[70px] h-full space-y-1.5 active:scale-95 transition-transform ${
                 isActive ? 'text-indigo-600' : 'text-gray-500'
               }`}
             >
               <div className={`p-1.5 rounded-full ${isActive ? 'bg-indigo-50' : 'bg-transparent'}`}>
-                 <item.icon className={`w-7 h-7 ${isActive ? 'text-indigo-600' : 'text-gray-500'}`} />
+                 <item.icon className={`w-6 h-6 ${isActive ? 'text-indigo-600' : 'text-gray-500'}`} />
               </div>
-              <span className={`text-[12px] tracking-wide ${isActive ? 'font-bold' : 'font-medium'}`}>
+              <span className={`text-[10px] tracking-wide ${isActive ? 'font-bold' : 'font-medium'}`}>
                 {item.name}
               </span>
             </Link>
@@ -75,7 +77,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   );
 }
 
-// Iconos SVG simples...
+// --- Iconos SVG ---
 function HomeIcon(props: React.SVGProps<SVGSVGElement>) {
   return <svg fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" /></svg>;
 }
@@ -87,4 +89,8 @@ function ShoppingBagIcon(props: React.SVGProps<SVGSVGElement>) {
 }
 function UsersIcon(props: React.SVGProps<SVGSVGElement>) {
   return <svg fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" /></svg>;
+}
+// NEW ICON FOR BANNERS
+function MegaphoneIcon(props: React.SVGProps<SVGSVGElement>) {
+  return <svg fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}><path strokeLinecap="round" strokeLinejoin="round" d="M10.34 15.84c-.688-.06-1.386-.09-2.09-.09H7.5a4.5 4.5 0 110-9h.75c.704 0 1.402-.03 2.09-.09m0 9.18c.253.962.584 1.892.985 2.783.247.55.06 1.21-.463 1.511l-.657.38c-.551.318-1.26.117-1.527-.461a20.845 20.845 0 01-1.44-4.282m3.102.069a18.03 18.03 0 013.656-.59m0-8.228a18.03 18.03 0 01-3.656-.59m0 8.228L21 14.625m0-8.25l-7.018 1.185" /></svg>;
 }
