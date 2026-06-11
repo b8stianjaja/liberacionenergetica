@@ -373,8 +373,8 @@ export default function HomeClient({ products, categories, banners }: HomeClient
             <div className="w-40 h-40 bg-white/50 backdrop-blur-2xl rounded-[3rem] flex items-center justify-center mb-12 shadow-2xl border border-white rotate-12 animate-pulse">
               <SearchIcon className="w-16 h-16 text-fuchsia-300 -rotate-12" />
             </div>
-            <h3 className={`text-4xl sm:text-6xl text-gray-900 mb-6 font-medium ${cormorant.className}`}>Vacío Cuántico</h3>
-            <p className="text-gray-500 text-lg sm:text-2xl mb-12 text-center max-w-xl leading-relaxed">Las energías que buscas aún no se han manifestado en este plano.</p>
+            <h3 className={`text-4xl sm:text-6xl text-gray-900 mb-6 font-medium ${cormorant.className}`}>*</h3>
+            <p className="text-gray-500 text-lg sm:text-2xl mb-12 text-center max-w-xl leading-relaxed">Las energías que busca aún están por manifestarse en este plano. Empiece por añadir un producto para su catálogo en su Dashboard.</p>
             <button 
               onClick={() => {setSearchQuery(''); setActiveFilter('ALL');}}
               className="interactive-element bg-gray-900 text-white px-12 py-5 rounded-2xl font-bold tracking-widest uppercase text-sm shadow-[0_20px_40px_rgba(0,0,0,0.2)] hover:shadow-[0_20px_60px_rgba(192,132,252,0.4)] hover:bg-fuchsia-600 transition-all duration-500 active:scale-90"
