@@ -12,7 +12,6 @@ cloudinary.config({
 });
 
 export async function createProduct(prevState: any, formData: FormData) {
-  // ... (Recuperación de datos iniciales queda igual que antes)
   const name = formData.get('name') as string;
   const description = formData.get('description') as string;
   const price = parseFloat(formData.get('price') as string) || 0;
@@ -25,7 +24,9 @@ export async function createProduct(prevState: any, formData: FormData) {
   let finalCategoryId = existingCategoryId || null;
 
   if (categoryName && categoryName.trim() !== '') {
-    const cleanName = categoryName.trim();
+    // Normalizamos: primera letra mayúscula para evitar duplicados como "amuleto" y "Amuleto"
+    const cleanName = categoryName.trim().charAt(0).toUpperCase() + categoryName.trim().slice(1).toLowerCase();
+    
     const newCategory = await prisma.category.upsert({
       where: { name: cleanName },
       update: {},
@@ -40,7 +41,8 @@ export async function createProduct(prevState: any, formData: FormData) {
   let imageUrl: string | null = null;
   const imageFile = formData.get('image') as File | null;
 
-  if (imageFile && imageFile.size > 0) {
+  // Validación extra: Asegurarnos de que realmente es un archivo y no un string vacío
+  if (imageFile && imageFile.size > 0 && imageFile.name !== 'undefined') {
     try {
       const bytes = await imageFile.arrayBuffer();
       const buffer = Buffer.from(bytes);
@@ -49,7 +51,6 @@ export async function createProduct(prevState: any, formData: FormData) {
         cloudinary.uploader.upload_stream(
           { 
             folder: 'liberacionenergetica/catalog',
-            // OPTIMIZACIÓN DE RAÍZ: Evita fotos pesadas. Las recorta inteligentemente.
             transformation: [
               { width: 1200, crop: "limit" },
               { quality: "auto", fetch_format: "auto" }
@@ -62,7 +63,7 @@ export async function createProduct(prevState: any, formData: FormData) {
         ).end(buffer);
       });
     } catch (error) {
-      return { error: "No se pudo subir la imagen a la nube." };
+      return { error: "No se pudo subir la imagen a la nube. Verifica tu conexión." };
     }
   }
 
@@ -70,13 +71,18 @@ export async function createProduct(prevState: any, formData: FormData) {
     await prisma.product.create({
       data: { name, description, price, type, duration, stock, imageUrl, isActive: true, categoryId: finalCategoryId }
     });
+    
+    // REVALIDACIÓN TOTAL: Limpiamos la caché de la tienda pública, el dashboard, y el formulario
+    revalidatePath('/');
+    revalidatePath('/dashboard/store');
+    revalidatePath('/dashboard/store/new');
+    
+    // En lugar de redirect() que causa colisiones, devolvemos success
+    return { success: true }; 
   } catch (error) {
+    console.error("Error Prisma:", error);
     return { error: "Error interno al guardar en la base de datos." };
   }
-
-  revalidatePath('/dashboard/store');
-  revalidatePath('/'); 
-  redirect('/dashboard/store');
 }
 
 export async function toggleProductStatus(id: string, currentStatus: boolean) {

@@ -22,14 +22,19 @@ export default function NewProductForm({ initialCategories }: { initialCategorie
     const formData = new FormData(e.currentTarget);
     
     startTransition(async () => {
-      // Pasamos null como estado previo para cumplir con la firma de la acción
-      const result = await createProduct(null, formData);
-      
-      if (result?.error) {
-        setError(result.error);
-      } else {
-        // Redirección manejada correctamente
-        router.push('/dashboard/store');
+      try {
+        const result = await createProduct(null, formData);
+        
+        if (result?.error) {
+          setError(result.error);
+        } else if (result?.success) {
+          // Navegación pura desde el cliente
+          router.push('/dashboard/store');
+          // Forzamos al router a limpiar su caché interna para que la nueva categoría aparezca
+          router.refresh(); 
+        }
+      } catch (err) {
+        setError('Ocurrió un problema de conexión. Inténtalo de nuevo.');
       }
     });
   };

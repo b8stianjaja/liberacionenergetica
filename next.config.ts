@@ -1,8 +1,13 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Aumentamos el límite de tamaño para Server Actions (imágenes pesadas)
+  experimental: {
+    serverActions: {
+      bodySizeLimit: '10mb',
+    },
+  },
   images: {
-    // Permite a Next.js convertir imágenes a estos formatos súper ligeros
     formats: ['image/avif', 'image/webp'], 
     remotePatterns: [
       {
@@ -12,7 +17,6 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  // Evita que el driver de Postgres haga lenta tu build en Next.js
   serverExternalPackages: ['@prisma/adapter-pg', 'pg'],
 };
 
