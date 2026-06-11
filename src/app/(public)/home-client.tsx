@@ -8,7 +8,6 @@ import { useGSAP } from "@gsap/react";
 import { Cormorant_Garamond, Montserrat } from "next/font/google";
 import { useCart } from "@/context/CartContext";
 
-// --- FONTS ---
 const cormorant = Cormorant_Garamond({ 
   subsets: ["latin"], 
   weight: ["300", "400", "500", "600", "700"],
@@ -26,7 +25,6 @@ if (typeof window !== "undefined") {
   gsap.registerPlugin(useGSAP, ScrollTrigger);
 }
 
-// --- TYPES ---
 export type Category = { id: string; name: string; };
 export type Banner = { id: string; title: string; subtitle: string; imageUrl: string; };
 export type Product = {
@@ -53,11 +51,8 @@ export default function HomeClient({ products, categories, banners }: HomeClient
 
   useEffect(() => {
     setMounted(true);
-    // Lock scroll exclusively during initial load sequence
     document.documentElement.style.overflow = "hidden";
     document.body.style.overflow = "hidden";
-    
-    // Forcefully scroll to top on reload to prevent ScrollTrigger miscalculations
     window.scrollTo(0, 0);
     
     return () => { 
@@ -85,7 +80,6 @@ export default function HomeClient({ products, categories, banners }: HomeClient
   // HOOK 1: CORE ENGINE (Loader, Cursor, Parallax)
   // ==========================================
   useGSAP(() => {
-    // --- 1. Custom Cursor Physics ---
     const xTo = gsap.quickTo(cursorRef.current, "x", {duration: 0.15, ease: "power3"});
     const yTo = gsap.quickTo(cursorRef.current, "y", {duration: 0.15, ease: "power3"});
     const xAuraTo = gsap.quickTo(cursorAuraRef.current, "x", {duration: 0.6, ease: "power3"});
@@ -100,7 +94,6 @@ export default function HomeClient({ products, categories, banners }: HomeClient
 
     window.addEventListener("mousemove", moveCursor);
 
-    // Make cursor react to interactive elements
     const interactives = document.querySelectorAll('.interactive-element');
     const expandCursor = () => {
       gsap.to(cursorRef.current, { scale: 3, backgroundColor: "rgba(192, 132, 252, 0.4)", mixBlendMode: "difference", duration: 0.3 });
@@ -116,7 +109,6 @@ export default function HomeClient({ products, categories, banners }: HomeClient
       el.addEventListener('mouseleave', shrinkCursor);
     });
 
-    // --- 2. Initial Load Timeline ---
     const tl = gsap.timeline({
       onComplete: () => {
         document.documentElement.style.overflow = "";
@@ -144,7 +136,6 @@ export default function HomeClient({ products, categories, banners }: HomeClient
         "-=1.5"
       );
 
-    // --- 3. Deep Parallax Background Orbs ---
     gsap.to('.parallax-orb-1', {
       yPercent: 40, ease: "none",
       scrollTrigger: { trigger: container.current, start: "top top", end: "bottom top", scrub: true }
@@ -158,13 +149,11 @@ export default function HomeClient({ products, categories, banners }: HomeClient
       scrollTrigger: { trigger: container.current, start: "top top", end: "bottom top", scrub: true }
     });
 
-    // Ambient floating mix
     gsap.to(".parallax-orb", {
       y: "+=random(-30, 30)", x: "+=random(-30, 30)", rotation: "+=random(-15, 15)",
       duration: "random(6, 10)", repeat: -1, yoyo: true, ease: "sine.inOut", stagger: 0.3
     });
 
-    // Memory Leak Prevention
     return () => {
       window.removeEventListener("mousemove", moveCursor);
       interactives.forEach(el => {
@@ -190,7 +179,6 @@ export default function HomeClient({ products, categories, banners }: HomeClient
     const slideWidth = 100; 
     
     const carouselTL = gsap.timeline({ repeat: -1 });
-
     carouselTL.set('.carousel-track', { xPercent: 0 }); 
 
     for (let i = 1; i <= slideCount; i++) {
@@ -211,49 +199,45 @@ export default function HomeClient({ products, categories, banners }: HomeClient
   }, { scope: container, dependencies: [banners] });
 
   // ==========================================
-  // HOOK 3: DYNAMIC PRODUCT CASCADES
+  // HOOK 3: DYNAMIC PRODUCT CASCADES (STABILIZED)
   // ==========================================
   useGSAP(() => {
     const cards = gsap.utils.toArray('.product-card-wrapper') as HTMLElement[];
     const filters = gsap.utils.toArray('.filter-pill') as HTMLElement[];
+    const triggers: ScrollTrigger[] = [];
     
-    // Kill old scroll triggers on re-render
-    ScrollTrigger.getAll().forEach(t => {
-      if (t.vars.trigger && (
-        (t.vars.trigger as HTMLElement).classList?.contains('product-card-wrapper') || 
-        (t.vars.trigger as HTMLElement).classList?.contains('filters-container')
-      )) {
-        t.kill();
-      }
-    });
-
     // Animate Filters on Scroll
     if (filters.length > 0) {
-      gsap.fromTo(filters,
-        { opacity: 0, y: 30 },
-        {
-          opacity: 1, y: 0, duration: 0.8, stagger: 0.05, ease: "back.out(1.5)",
-          scrollTrigger: { trigger: ".filters-container", start: "top 95%", toggleActions: "play none none reverse" }
-        }
-      );
+      triggers.push(ScrollTrigger.create({
+        trigger: ".filters-container",
+        start: "top 95%",
+        animation: gsap.fromTo(filters, { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.8, stagger: 0.05, ease: "back.out(1.5)" }),
+        toggleActions: "play none none reverse"
+      }));
     }
 
     // Animate Cards on Scroll
     cards.forEach((card, index) => {
-      gsap.fromTo(card,
-        { opacity: 0, y: 150, scale: 0.9, rotateY: index % 2 === 0 ? -10 : 10, rotateX: 5 },
-        {
-          opacity: 1, y: 0, scale: 1, rotateY: 0, rotateX: 0,
-          duration: 1.5, ease: "expo.out",
-          scrollTrigger: { trigger: card, start: "top 95%", toggleActions: "play none none reverse" }
-        }
-      );
+      triggers.push(ScrollTrigger.create({
+        trigger: card,
+        start: "top 95%",
+        animation: gsap.fromTo(card, 
+          { opacity: 0, y: 120, scale: 0.95 },
+          { opacity: 1, y: 0, scale: 1, duration: 1.2, ease: "expo.out" }
+        ),
+        toggleActions: "play none none reverse"
+      }));
     });
 
     ScrollTrigger.refresh(); 
+
+    // STRICT CLEANUP: Prevents glitching when filters change
+    return () => {
+      triggers.forEach(t => t.kill());
+    };
   }, { scope: container, dependencies: [filteredProducts] });
 
-  // --- Handlers ---
+  // --- Handlers (Smoothed Physics) ---
   const handleMouseMove = (e: ReactMouseEvent<HTMLDivElement>) => {
     const card = e.currentTarget;
     const rect = card.getBoundingClientRect();
@@ -262,11 +246,12 @@ export default function HomeClient({ products, categories, banners }: HomeClient
     const centerX = rect.width / 2;
     const centerY = rect.height / 2;
     
+    // Reduced tilt intensity from 15 to 8 for smoother, elegant hardware rendering
     gsap.to(card.querySelector('.card-inner'), {
-      rotateX: ((y - centerY) / centerY) * -15,
-      rotateY: ((x - centerX) / centerX) * 15,
-      scale: 1.03,
-      transformPerspective: 1000,
+      rotateX: ((y - centerY) / centerY) * -8,
+      rotateY: ((x - centerX) / centerX) * 8,
+      scale: 1.02,
+      transformPerspective: 1200,
       duration: 0.4,
       ease: "power2.out"
     });
@@ -307,7 +292,7 @@ export default function HomeClient({ products, categories, banners }: HomeClient
       `}} />
 
       {/* HOLOGRAPHIC NOISE SURFACE */}
-      <div className="fixed inset-0 z-0 opacity-10 mix-blend-overlay pointer-events-none" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 400 400\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noiseFilter\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.85\' numOctaves=\'3\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23noiseFilter)\'/%3E%3C/svg%3E")' }}/>
+      <div className="fixed inset-0 z-0 opacity-[0.15] mix-blend-overlay pointer-events-none" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 400 400\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noiseFilter\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.85\' numOctaves=\'3\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23noiseFilter)\'/%3E%3C/svg%3E")' }}/>
 
       {/* ETHEREAL CUSTOM CURSOR */}
       <div ref={cursorRef} className="fixed top-0 left-0 w-3 h-3 bg-fuchsia-400 rounded-full pointer-events-none z-[9999] -translate-x-1/2 -translate-y-1/2 will-change-transform shadow-[0_0_20px_rgba(232,121,249,0.8)]" />
@@ -332,7 +317,7 @@ export default function HomeClient({ products, categories, banners }: HomeClient
       </div>
 
       {/* NAVBAR */}
-      <nav className="top-navbar fixed top-0 w-full z-50 bg-white/30 backdrop-blur-3xl border-b border-white/50 shadow-[0_4px_40px_rgba(0,0,0,0.02)] opacity-0">
+      <nav className="top-navbar fixed top-0 w-full z-50 bg-white/40 backdrop-blur-3xl border-b border-white/50 shadow-[0_4px_40px_rgba(0,0,0,0.02)] opacity-0">
         <div className="max-w-[90rem] mx-auto px-6 lg:px-12 h-24 flex items-center justify-between gap-8">
           <div className="interactive-element flex items-center gap-4 shrink-0 group transition-opacity">
             <div className="bg-gray-900 p-2.5 rounded-2xl text-white shadow-2xl shadow-gray-900/30 group-hover:rotate-90 transition-transform duration-700 ease-in-out hidden sm:block">
@@ -352,14 +337,14 @@ export default function HomeClient({ products, categories, banners }: HomeClient
                 placeholder="Busca la frecuencia que tu alma necesita..." 
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-white/60 backdrop-blur-md border border-white rounded-2xl py-4 pl-16 pr-6 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-fuchsia-400/30 shadow-[0_8px_30px_rgba(0,0,0,0.04)] transition-all placeholder:text-gray-400"
+                className="w-full bg-white/70 backdrop-blur-md border border-white rounded-2xl py-4 pl-16 pr-6 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-fuchsia-400/30 shadow-[0_8px_30px_rgba(0,0,0,0.04)] transition-all placeholder:text-gray-400"
               />
             </div>
           </div>
 
           <button 
             onClick={openCart} 
-            className="interactive-element relative p-4 bg-white/70 backdrop-blur-xl rounded-2xl text-gray-900 border border-white shadow-lg hover:bg-gray-900 hover:text-white transition-all duration-500 shrink-0 active:scale-90"
+            className="interactive-element relative p-4 bg-white/80 backdrop-blur-xl rounded-2xl text-gray-900 border border-white shadow-lg hover:bg-gray-900 hover:text-white transition-all duration-500 shrink-0 active:scale-90"
           >
             <CartIcon className="w-6 h-6" />
             {mounted && totalItems > 0 && (
@@ -418,10 +403,10 @@ export default function HomeClient({ products, categories, banners }: HomeClient
             <button
               key={filter.id}
               onClick={() => setActiveFilter(filter.id)}
-              className={`filter-pill interactive-element relative px-8 py-4 rounded-2xl text-[12px] font-black tracking-[0.2em] uppercase transition-all duration-700 overflow-hidden group ${
+              className={`filter-pill interactive-element relative px-8 py-4 rounded-2xl text-[12px] font-black tracking-[0.2em] uppercase transition-all duration-500 overflow-hidden group ${
                 activeFilter === filter.id 
-                  ? 'text-white scale-105 shadow-2xl shadow-fuchsia-500/40 border-transparent' 
-                  : 'bg-white/40 backdrop-blur-md text-gray-500 hover:text-gray-900 border border-white hover:bg-white hover:shadow-2xl hover:-translate-y-1'
+                  ? 'text-white scale-105 shadow-xl shadow-fuchsia-500/30 border-transparent' 
+                  : 'bg-white/50 backdrop-blur-md text-gray-500 hover:text-gray-900 border border-white hover:bg-white hover:shadow-xl hover:-translate-y-1'
               }`}
             >
               {activeFilter === filter.id && (
@@ -448,23 +433,28 @@ export default function HomeClient({ products, categories, banners }: HomeClient
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-12 gap-y-24 sm:gap-y-32 items-start">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-10 gap-y-20 sm:gap-y-28 items-start">
             {filteredProducts.map((product, i) => (
               <div 
                 key={product.id} 
-                className={`product-card-wrapper perspective-container interactive-element ${designPattern[i % designPattern.length]} ${i % 2 !== 0 ? 'lg:mt-32' : ''} ${i % 3 === 0 ? 'xl:mt-40' : ''}`}
+                className={`product-card-wrapper perspective-container ${designPattern[i % designPattern.length]} ${i % 2 !== 0 ? 'lg:mt-32' : ''} ${i % 3 === 0 ? 'xl:mt-40' : ''}`}
                 onMouseMove={handleMouseMove}
                 onMouseLeave={handleMouseLeave}
               >
-                <article className="card-inner group flex flex-col bg-white/40 backdrop-blur-2xl p-5 rounded-[3.5rem] shadow-[0_20px_40px_rgba(0,0,0,0.03)] border border-white transition-all duration-700 hover:shadow-[0_40px_100px_rgba(192,132,252,0.2)] hover:bg-white/60">
+                {/* UPGRADED CARD DESIGN: 
+                  - Flawless Hover Reveal 
+                  - Persistent Purchase Button
+                  - Graceful Glassmorphism
+                */}
+                <article className="card-inner group relative flex flex-col bg-white/50 backdrop-blur-2xl p-4 rounded-[3rem] shadow-[0_15px_35px_rgba(0,0,0,0.03)] border border-white/80 transition-all duration-700 hover:shadow-[0_30px_60px_rgba(192,132,252,0.12)] hover:bg-white/80 will-change-transform">
                   
-                  {/* Image & Hover Description Container */}
-                  <div className="relative w-full aspect-[4/5] rounded-[2.5rem] overflow-hidden bg-gray-100/50 transform-gpu mb-8">
-                    <div className="absolute top-6 left-6 z-20 pointer-events-none">
-                      <span className={`px-5 py-2 text-[10px] font-black tracking-[0.25em] uppercase rounded-full shadow-2xl backdrop-blur-xl border ${
-                        product.type === 'SERVICE' ? 'bg-fuchsia-500/30 text-fuchsia-900 border-fuchsia-200/50' : 
-                        product.type === 'PHYSICAL' ? 'bg-orange-500/30 text-orange-900 border-orange-200/50' : 
-                        'bg-indigo-500/30 text-indigo-900 border-indigo-200/50'
+                  {/* Image & Frosted Description Reveal */}
+                  <div className="relative w-full aspect-[4/5] rounded-[2.5rem] overflow-hidden bg-gray-100/50 mb-6 border border-white/30">
+                    <div className="absolute top-5 left-5 z-20 pointer-events-none">
+                      <span className={`px-4 py-2 text-[9px] font-black tracking-[0.25em] uppercase rounded-full shadow-lg backdrop-blur-xl border ${
+                        product.type === 'SERVICE' ? 'bg-fuchsia-500/20 text-fuchsia-900 border-fuchsia-200/50' : 
+                        product.type === 'PHYSICAL' ? 'bg-orange-500/20 text-orange-900 border-orange-200/50' : 
+                        'bg-indigo-500/20 text-indigo-900 border-indigo-200/50'
                       }`}>
                         {product.type === 'SERVICE' ? 'Terapia' : product.type === 'PHYSICAL' ? 'Materia' : 'Etéreo'}
                       </span>
@@ -476,47 +466,44 @@ export default function HomeClient({ products, categories, banners }: HomeClient
                         alt={product.name} 
                         fill
                         sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
-                        className="object-cover transition-transform duration-[4s] ease-out group-hover:scale-110 pointer-events-none"
+                        className="object-cover transition-transform duration-[3s] ease-out group-hover:scale-110 pointer-events-none"
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center pointer-events-none">
-                        <SparkleStarIcon className="w-20 h-20 text-gray-300" />
+                        <SparkleStarIcon className="w-16 h-16 text-gray-300" />
                       </div>
                     )}
 
-                    {/* FOCUS FADE OVER IMAGE ON HOVER - Resolves "Text Cut-Out" */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-gray-900/90 via-gray-900/60 to-gray-900/20 text-white p-8 opacity-0 group-hover:opacity-100 transition-opacity duration-700 flex flex-col justify-end">
-                      <p className="text-[14px] mb-8 font-medium leading-relaxed max-w-sm pointer-events-none">
+                    {/* NEW: Light Frosted Glass Description Reveal (Doesn't hide the image completely) */}
+                    <div className="absolute inset-0 bg-white/85 backdrop-blur-md opacity-0 group-hover:opacity-100 translate-y-8 group-hover:translate-y-0 transition-all duration-500 z-10 flex flex-col items-center justify-center p-8 text-center border-t border-white/50 pointer-events-none">
+                      <SparkleStarIcon className="w-6 h-6 text-fuchsia-400 mb-4 opacity-70" />
+                      <p className="text-gray-800 text-[13px] font-semibold leading-relaxed">
                         {product.description}
                       </p>
-                      <button 
-                        onClick={(e) => handleAddToCart(product, e)}
-                        disabled={product.type === 'PHYSICAL' && product.stock === 0}
-                        className="interactive-element w-full bg-white text-gray-900 font-bold py-4.5 rounded-2xl shadow-2xl hover:bg-fuchsia-600 hover:text-white disabled:opacity-50 disabled:bg-white disabled:text-gray-400 transition-all active:scale-95 flex items-center justify-center gap-3 border border-white"
-                      >
-                        {product.type === 'SERVICE' ? 'Agendar Sesión' : product.stock === 0 ? 'Agotado' : (
-                          <><PlusIcon className="w-5 h-5" /> Manifestar</>
-                        )}
-                      </button>
                     </div>
                   </div>
 
-                  <div className="flex flex-col flex-1 px-3 pb-3 pointer-events-none">
-                    <h2 className={`text-4xl sm:text-5xl font-medium text-gray-900 leading-[1] mb-5 transition-colors duration-500 ${cormorant.className}`}>
+                  {/* Persistent Details & Action Area */}
+                  <div className="flex flex-col flex-1 px-3 pb-2 z-20">
+                    <h2 className={`text-3xl sm:text-4xl font-medium text-gray-900 leading-[1.1] mb-2 transition-colors duration-500 group-hover:text-fuchsia-600 ${cormorant.className}`}>
                       {product.name}
                     </h2>
                     
-                    <div className="mt-auto flex items-center justify-between pt-6 border-t border-gray-900/5">
-                      <p className={`text-3xl text-gray-900 font-semibold ${cormorant.className}`}>
+                    <div className="mt-auto pt-5 flex items-center justify-between border-t border-gray-900/5">
+                      <p className={`text-2xl text-gray-900 font-bold ${cormorant.className}`}>
                         {formatPrice(product.price)}
                       </p>
                       
+                      {/* NEW: Persistent, accessible buy button */}
                       <button 
                         onClick={(e) => handleAddToCart(product, e)}
                         disabled={product.type === 'PHYSICAL' && product.stock === 0}
-                        className="interactive-element xl:hidden w-12 h-12 bg-gray-900 text-white rounded-2xl flex items-center justify-center hover:bg-fuchsia-600 disabled:opacity-50 transition-all shadow-xl pointer-events-auto"
+                        className="interactive-element flex items-center gap-2 bg-gray-900 text-white px-5 py-3.5 rounded-[1.2rem] hover:bg-fuchsia-600 transition-all duration-300 shadow-xl shadow-gray-900/10 active:scale-95 disabled:opacity-50 disabled:bg-gray-300"
                       >
-                        <PlusIcon className="w-6 h-6" />
+                        <span className="text-[10px] font-black tracking-widest uppercase">
+                          {product.type === 'SERVICE' ? 'Agendar' : product.stock === 0 ? 'Agotado' : 'Añadir'}
+                        </span>
+                        <PlusIcon className="w-4 h-4 hidden sm:block" />
                       </button>
                     </div>
                   </div>
