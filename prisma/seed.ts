@@ -4,24 +4,27 @@ import bcrypt from 'bcryptjs';
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log('Iniciando el seeding de la base de datos...');
+  // Toma las credenciales de Render, o usa unas por defecto en local
+  const adminUsername = process.env.ADMIN_USERNAME || 'admin';
+  const adminPassword = process.env.ADMIN_PASSWORD || 'admin1234';
 
-  // Encriptamos la contraseña "admin1234" (o la que tú prefieras)
-  const hashedPassword = await bcrypt.hash('admin1234', 10);
+  const hashedPassword = await bcrypt.hash(adminPassword, 10);
 
-  // Upsert previene errores si ejecutas el seed múltiples veces
+  // upsert() buscará al admin. Si no existe, lo crea. Si existe, actualiza su contraseña.
   const superAdmin = await prisma.user.upsert({
-    where: { email: 'admin@liberacion.com' },
-    update: {},
+    where: { username: adminUsername },
+    update: { 
+      password: hashedPassword 
+    },
     create: {
-      email: 'admin@liberacion.com',
+      username: adminUsername,
       name: 'Admin Principal',
       password: hashedPassword,
       role: 'ADMIN', 
     },
   });
 
-  console.log('Usuario administrador listo:', superAdmin.email);
+  console.log('Usuario administrador sincronizado:', superAdmin.username);
 }
 
 main()

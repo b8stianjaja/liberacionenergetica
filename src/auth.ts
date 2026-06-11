@@ -32,16 +32,17 @@ export const { auth, signIn, signOut, handlers } = NextAuth({
         const parsedCredentials = UserRegistrationSchema.safeParse(credentials);
 
         if (parsedCredentials.success) {
-          const { email, password } = parsedCredentials.data;
+          const { username, password } = parsedCredentials.data;
           
-          const user = await prisma.user.findUnique({ where: { email } });
+          // Buscamos por username en lugar de email
+          const user = await prisma.user.findUnique({ where: { username } });
           if (!user) return null;
 
           const passwordsMatch = await bcrypt.compare(password, user.password);
           if (passwordsMatch) return user;
         }
 
-        return null; // Invalid credentials
+        return null; 
       },
     }),
   ],

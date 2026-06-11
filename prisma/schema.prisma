@@ -8,7 +8,8 @@ generator client {
 
 model User {
   id        String      @id @default(cuid())
-  email     String      @unique
+  username  String?     @unique  // Identificador para el Admin
+  email     String?     @unique  // Opcional para clientes de la tienda
   name      String?
   phone     String?     
   password  String

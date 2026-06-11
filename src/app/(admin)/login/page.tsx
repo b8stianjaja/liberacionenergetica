@@ -21,13 +21,13 @@ export default function LoginPage() {
         <div className="space-y-5">
           <div>
             <label className="block text-sm font-bold text-gray-700 mb-2">
-              Correo Electrónico
+              Usuario
             </label>
             <input 
-              type="email" 
-              name="email" 
+              type="text" 
+              name="username" 
               required 
-              placeholder="tu@correo.com"
+              placeholder="tu_usuario"
               className="w-full border border-gray-300 p-3 rounded-xl focus:ring-2 focus:ring-indigo-600 focus:border-transparent outline-none transition-all"
             />
           </div>
