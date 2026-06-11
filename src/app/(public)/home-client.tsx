@@ -42,13 +42,20 @@ export default function HomeClient({ products, categories }: { products: Product
   const [searchQuery, setSearchQuery] = useState('');
   const [mounted, setMounted] = useState(false);
 
+  // MOCK BANNER DATA - This would come from Liberacion-API/Cloudinary
+  const banners = useMemo(() => [
+    { id: 'b1', title: 'Cosmic Renewal Sale', subtitle: '30% off all services this month.', imageUrl: 'https://images.unsplash.com/photo-1518020382113-a7e8fc38eac9?q=80&w=1600' },
+    { id: 'b2', title: 'MANIFEST YOUR DESIRES', subtitle: 'Etéreo tools, special prices.', imageUrl: 'https://images.unsplash.com/photo-1543857778-c4a1a3e0b2eb?q=80&w=1600' },
+    { id: 'b3', title: 'Spiritual Synergy Pack', subtitle: 'Buy 2, Get 1 free on select products.', imageUrl: 'https://images.unsplash.com/photo-1550684376-efcbd6e3f031?q=80&w=1600' },
+  ], []);
+
   useEffect(() => {
     setMounted(true);
     // Lock scroll exclusively during initial load
     document.documentElement.style.overflow = "hidden";
     document.body.style.overflow = "hidden";
     
-    // Fallback: forcefully scroll to top on reload to prevent ScrollTrigger miscalculations
+    // Forcefully scroll to top on reload to prevent ScrollTrigger miscalculations
     window.scrollTo(0, 0);
     
     return () => { 
@@ -74,7 +81,7 @@ export default function HomeClient({ products, categories }: { products: Product
 
   // HOOK 1: CORE ENGINE (Loader, Hero, Cursor, and Parallax)
   useGSAP(() => {
-    // --- Custom Cursor Physics (Hardware Accelerated, no React State) ---
+    // --- Custom Cursor Physics (Hardware Accelerated) ---
     const xTo = gsap.quickTo(cursorRef.current, "x", {duration: 0.15, ease: "power3"});
     const yTo = gsap.quickTo(cursorRef.current, "y", {duration: 0.15, ease: "power3"});
     const xAuraTo = gsap.quickTo(cursorAuraRef.current, "x", {duration: 0.6, ease: "power3"});
@@ -114,7 +121,7 @@ export default function HomeClient({ products, categories }: { products: Product
       }
     });
 
-    // 1. Loader sequence
+    // 1. Original Loader sequence
     tl.to(".loader-content", { opacity: 1, y: 0, duration: 1, ease: "power3.out" })
       .to(".loader-content", { opacity: 0, y: -40, scale: 0.9, duration: 0.6, delay: 0.6, ease: "power2.in" })
       .to(".loader-screen", { height: 0, duration: 1.2, ease: "expo.inOut" })
@@ -159,18 +166,6 @@ export default function HomeClient({ products, categories }: { products: Product
       scrollTrigger: { trigger: container.current, start: "top top", end: "bottom top", scrub: true }
     });
 
-    // Ambient floating (Continuous)
-    gsap.to(".parallax-orb", {
-      y: "+=random(-30, 30)",
-      x: "+=random(-30, 30)",
-      rotation: "+=random(-15, 15)",
-      duration: "random(6, 10)",
-      repeat: -1,
-      yoyo: true,
-      ease: "sine.inOut",
-      stagger: 0.3
-    });
-
     // Cleanup memory leaks
     return () => {
       window.removeEventListener("mousemove", moveCursor);
@@ -181,7 +176,57 @@ export default function HomeClient({ products, categories }: { products: Product
     };
   }, { scope: container }); 
 
-  // HOOK 2: DYNAMIC PRODUCT CASCADES (Re-runs safely on filter change)
+  // HOOK 2: PROMOTIONAL CAROUSEL ENGINE
+  useGSAP(() => {
+    if (banners.length < 2) return;
+    
+    // Add cloned slide to the end for seamless loop
+    const track = document.querySelector('.carousel-track') as HTMLElement;
+    if (track && track.children.length === banners.length) {
+      const clone = track.children[0].cloneNode(true);
+      track.appendChild(clone);
+    }
+
+    const slideCount = banners.length;
+    const totalSlides = slideCount + 1;
+    const slideWidth = 100; // in percent
+    
+    const carouselTL = gsap.timeline({
+      repeat: -1, 
+      scrollTrigger: { 
+        trigger: ".carousel-container", 
+        start: "top 90%", 
+        toggleActions: "play none none none" 
+      }
+    });
+
+    carouselTL.set('.carousel-track', { xPercent: 0 }); // reset
+
+    // Animate slides and labels
+    for (let i = 1; i <= slideCount; i++) {
+      // Per slide text animation trigger
+      carouselTL.fromTo(`.carousel-item-${i} .banner-text`,
+        { y: 40, opacity: 0 },
+        { y: 0, opacity: 1, duration: 1.5, ease: "expo.out" },
+        "+=0.5"
+      )
+      .to(".carousel-track", {
+        xPercent: -slideWidth * i, 
+        duration: 2.5, 
+        ease: "power3.inOut"
+      }, "+=3") // slide speed, plus pause before moving
+      .addLabel(`slide-${i+1}`)
+      
+      // text out trigger
+      .to(`.carousel-item-${i} .banner-text`, { y: -30, opacity: 0, duration: 1 }, "-=2.5");
+    }
+
+    // Go to the cloned first slide, then snap back
+    carouselTL.set(".carousel-track", { xPercent: 0 }); // Seamless snap back
+
+  }, { scope: container, dependencies: [banners] });
+
+  // HOOK 3: DYNAMIC PRODUCT CASCADES (Re-runs safely on filter change)
   useGSAP(() => {
     const cards = gsap.utils.toArray('.product-card-wrapper') as HTMLElement[];
     
@@ -262,10 +307,13 @@ export default function HomeClient({ products, categories }: { products: Product
     );
   };
 
+  // ASYMMETRICAL EDITORIAL PATTERN
+  const designPattern = ["col-span-1", "col-span-2", "col-span-1", "col-span-1", "col-span-2", "col-span-1"];
+
   return (
     <div ref={container} className={`relative min-h-screen bg-[#F7F7F9] text-gray-900 ${montserrat.className} selection:bg-purple-300 selection:text-purple-900 overflow-hidden cursor-none`}>
       
-      {/* GLOBAL CSS INJECTION: Kills scrollbars natively and hides cursor */}
+      {/* GLOBAL CSS INJECTION: Kills scrollbars and cursor natively */}
       <style dangerouslySetInnerHTML={{__html: `
         html, body {
           scrollbar-width: none !important;
@@ -275,6 +323,9 @@ export default function HomeClient({ products, categories }: { products: Product
         *::-webkit-scrollbar { display: none !important; }
         .perspective-container { perspective: 2000px; transform-style: preserve-3d; }
       `}} />
+
+      {/* HOLOGRAPHIC NOISE SURFACE */}
+      <div className="fixed inset-0 z-0 opacity-10 mix-blend-overlay pointer-events-none" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 400 400\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noiseFilter\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.85\' numOctaves=\'3\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23noiseFilter)\'/%3E%3C/svg%3E")' }}/>
 
       {/* ETHEREAL CUSTOM CURSOR */}
       <div ref={cursorRef} className="fixed top-0 left-0 w-3 h-3 bg-fuchsia-400 rounded-full pointer-events-none z-[9999] -translate-x-1/2 -translate-y-1/2 will-change-transform shadow-[0_0_20px_rgba(232,121,249,0.8)]" />
@@ -386,6 +437,44 @@ export default function HomeClient({ products, categories }: { products: Product
           </div>
         </header>
 
+        {/* PROMOTIONAL CAROUSEL BANNER SECTION */}
+        {banners.length > 0 && (
+          <section className="carousel-container relative w-full aspect-[21/9] sm:aspect-[21/7] rounded-[3.5rem] overflow-hidden mb-40 border border-white/60 shadow-2xl shadow-fuchsia-900/5 group perspective-container">
+            <div className="carousel-track flex w-full h-full will-change-transform">
+              {banners.map((banner, i) => (
+                <article key={banner.id} className={`carousel-item-${i+1} flex-shrink-0 w-full h-full relative`}>
+                  <Image 
+                    src={banner.imageUrl} 
+                    alt={banner.title} 
+                    fill 
+                    className="object-cover transition-transform duration-[10s] group-hover:scale-110" 
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-gray-900/80 via-gray-900/20 to-transparent" />
+                  
+                  {/* Banner text overlays, targeted for per-slide animation */}
+                  <div className="absolute bottom-12 sm:bottom-16 left-12 sm:left-16 max-w-xl text-white z-10">
+                    <div className="banner-text">
+                      <h3 className={`text-4xl sm:text-6xl font-medium tracking-tighter leading-none mb-3 ${cormorant.className}`}>
+                        {banner.title}
+                      </h3>
+                      <p className="text-white/80 text-lg sm:text-xl font-medium max-w-sm">
+                        {banner.subtitle}
+                      </p>
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </div>
+            
+            {/* Carousel navigation visual feedback (automatic, just showing dots) */}
+            <div className="absolute bottom-6 right-6 flex gap-2 z-10 interactive-element">
+              {banners.map((_, i) => (
+                <div key={i} className="w-2.5 h-2.5 rounded-full bg-white/40 border border-white group-hover:scale-125 transition-transform" />
+              ))}
+            </div>
+          </section>
+        )}
+
         {filteredProducts.length === 0 ? (
           <div className="flex-1 flex flex-col items-center justify-center py-40">
             <div className="w-40 h-40 bg-white/50 backdrop-blur-2xl rounded-[3rem] flex items-center justify-center mb-12 shadow-2xl border border-white rotate-12 animate-pulse">
@@ -401,17 +490,18 @@ export default function HomeClient({ products, categories }: { products: Product
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-12 gap-y-24 sm:gap-y-32 items-start">
+          /* ASYMMETRICAL EDITORIAL GRID - Solves "Text Cut-Out" by editorializing the cards */
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-12 gap-y-24 sm:gap-y-32 items-start">
             {filteredProducts.map((product, i) => (
               <div 
                 key={product.id} 
-                className={`product-card-wrapper perspective-container interactive-element ${i % 2 !== 0 ? 'lg:mt-32' : ''} ${i % 3 === 0 ? 'xl:mt-40' : ''}`}
+                className={`product-card-wrapper perspective-container interactive-element ${designPattern[i % designPattern.length]} ${i % 2 !== 0 ? 'lg:mt-32' : ''} ${i % 3 === 0 ? 'xl:mt-40' : ''}`}
                 onMouseMove={handleMouseMove}
                 onMouseLeave={handleMouseLeave}
               >
                 <article className="card-inner group flex flex-col bg-white/40 backdrop-blur-2xl p-5 rounded-[3.5rem] shadow-[0_20px_40px_rgba(0,0,0,0.03)] border border-white transition-all duration-700 hover:shadow-[0_40px_100px_rgba(192,132,252,0.2)] hover:bg-white/60">
                   
-                  <div className="relative w-full aspect-[4/5] rounded-[2.5rem] overflow-hidden bg-gray-100/50 mb-8 transform-gpu">
+                  <div className="relative w-full aspect-[4/5] rounded-[2.5rem] overflow-hidden bg-gray-100/50 transform-gpu mb-8">
                     <div className="absolute top-6 left-6 z-20 pointer-events-none">
                       <span className={`px-5 py-2 text-[10px] font-black tracking-[0.25em] uppercase rounded-full shadow-2xl backdrop-blur-xl border ${
                         product.type === 'SERVICE' ? 'bg-fuchsia-500/30 text-fuchsia-900 border-fuchsia-200/50' : 
@@ -436,13 +526,15 @@ export default function HomeClient({ products, categories }: { products: Product
                       </div>
                     )}
 
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/0 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
-
-                    <div className="absolute inset-x-6 bottom-6 z-20 translate-y-16 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500 ease-out">
+                    {/* FOCUS FADE OVER IMAGE ON HOVER - The entire description is displayed here */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-gray-900/90 via-gray-900/60 to-gray-900/20 text-white p-8 opacity-0 group-hover:opacity-100 transition-opacity duration-700 flex flex-col justify-end">
+                      <p className="text-[14px] mb-8 font-medium leading-relaxed max-w-sm pointer-events-none">
+                        {product.description}
+                      </p>
                       <button 
                         onClick={(e) => handleAddToCart(product, e)}
                         disabled={product.type === 'PHYSICAL' && product.stock === 0}
-                        className="interactive-element w-full bg-white/95 backdrop-blur-3xl text-gray-900 font-bold py-4.5 rounded-2xl shadow-2xl hover:bg-gray-900 hover:text-white disabled:opacity-50 disabled:bg-white disabled:text-gray-400 transition-all active:scale-95 flex items-center justify-center gap-3"
+                        className="interactive-element w-full bg-white text-gray-900 font-bold py-4.5 rounded-2xl shadow-2xl hover:bg-fuchsia-600 hover:text-white disabled:opacity-50 disabled:bg-white disabled:text-gray-400 transition-all active:scale-95 flex items-center justify-center gap-3 border border-white"
                       >
                         {product.type === 'SERVICE' ? 'Agendar Sesión' : product.stock === 0 ? 'Agotado' : (
                           <><PlusIcon className="w-5 h-5" /> Manifestar</>
@@ -451,24 +543,23 @@ export default function HomeClient({ products, categories }: { products: Product
                     </div>
                   </div>
 
+                  {/* Card lower details, now cleaner */}
                   <div className="flex flex-col flex-1 px-3 pb-3 pointer-events-none">
-                    <h2 className={`text-4xl font-medium text-gray-900 leading-[1.1] mb-5 group-hover:text-fuchsia-600 transition-colors duration-500 ${cormorant.className}`}>
+                    {/* Larger, bolded title, and price are now the main visual detail */}
+                    <h2 className={`text-4xl sm:text-5xl font-medium text-gray-900 leading-[1] mb-5 transition-colors duration-500 ${cormorant.className}`}>
                       {product.name}
                     </h2>
-                    
-                    <p className="text-[14px] text-gray-500 line-clamp-2 mb-8 font-medium leading-relaxed">
-                      {product.description}
-                    </p>
                     
                     <div className="mt-auto flex items-center justify-between pt-6 border-t border-gray-900/5">
                       <p className={`text-3xl text-gray-900 font-semibold ${cormorant.className}`}>
                         {formatPrice(product.price)}
                       </p>
                       
+                      {/* Mobile quick add button */}
                       <button 
                         onClick={(e) => handleAddToCart(product, e)}
                         disabled={product.type === 'PHYSICAL' && product.stock === 0}
-                        className="interactive-element xl:hidden w-12 h-12 bg-gray-900 text-white rounded-2xl flex items-center justify-center hover:bg-fuchsia-600 disabled:opacity-50 transition-all shadow-xl pointer-events-auto"
+                        className="xl:hidden w-12 h-12 bg-gray-900 text-white rounded-2xl flex items-center justify-center hover:bg-fuchsia-600 disabled:opacity-50 transition-all shadow-xl pointer-events-auto"
                       >
                         <PlusIcon className="w-6 h-6" />
                       </button>
