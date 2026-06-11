@@ -22,29 +22,42 @@ const montserrat = Montserrat({
 
 gsap.registerPlugin(useGSAP);
 
-type Product = {
+// INTERFACES ACTUALIZADAS PARA ELIMINAR EL ERROR TS 2322
+export type Category = {
+  id: string;
+  name: string;
+};
+
+export type Product = {
   id: string;
   name: string;
   description: string;
   price: number;
   type: string;
+  categoryId: string | null;
   duration: number | null;
   stock: number;
-  imageUrl?: string | null;
+  imageUrl: string | null;
 };
 
-type FilterType = 'ALL' | 'SERVICE' | 'PHYSICAL' | 'DIGITAL';
-
-export default function HomeClient({ products }: { products: Product[] }) {
+export default function HomeClient({ products, categories }: { products: Product[], categories: Category[] }) {
   const container = useRef<HTMLDivElement>(null);
   const { addItem, totalItems, openCart, isHydrated } = useCart();
   
-  const [activeFilter, setActiveFilter] = useState<FilterType>('ALL');
+  const [activeFilter, setActiveFilter] = useState<string>('ALL');
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Generamos los filtros dinámicamente incluyendo las categorías de la base de datos
+  const dynamicFilters = useMemo(() => {
+    const baseFilters = [{ id: 'ALL', label: 'Todo' }];
+    const categoryFilters = categories.map(cat => ({ id: cat.id, label: cat.name }));
+    return [...baseFilters, ...categoryFilters];
+  }, [categories]);
 
   const filteredProducts = useMemo(() => {
     return products.filter((product) => {
-      const matchesFilter = activeFilter === 'ALL' || product.type === activeFilter;
+      // Filtramos por ID de categoría dinámica O por el tipo de producto
+      const matchesFilter = activeFilter === 'ALL' || product.categoryId === activeFilter || product.type === activeFilter;
       const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
                             product.description.toLowerCase().includes(searchQuery.toLowerCase());
       return matchesFilter && matchesSearch;
@@ -63,19 +76,14 @@ export default function HomeClient({ products }: { products: Product[] }) {
       }
     });
 
-    // Loader Premium
     tl.to(".loader-content", { opacity: 1, y: 0, duration: 1, ease: "power3.out" })
       .to(".loader-content", { opacity: 0, y: -30, duration: 0.6, delay: 0.6, ease: "power2.in" })
       .to(".loader-screen", { yPercent: -100, duration: 1.2, ease: "expo.inOut" })
-      
-      // Reveal de UI
       .fromTo([".ambient-glow", ".top-navbar", ".store-header"],
         { opacity: 0, y: 40 },
         { opacity: 1, y: 0, duration: 1.2, stagger: 0.15, ease: "expo.out" },
         "-=0.8"
       )
-      
-      // Stagger de productos ultra suave
       .fromTo(".store-card",
         { opacity: 0, y: 60, scale: 0.95 },
         { 
@@ -113,12 +121,9 @@ export default function HomeClient({ products }: { products: Product[] }) {
 
   return (
     <div ref={container} className={`relative min-h-screen bg-[#FAFAFA] text-gray-900 ${montserrat.className} overflow-hidden`}>
-      
-      {/* ================= BACKGROUND MÍSTICO ================= */}
       <div className="ambient-glow absolute top-[-10%] left-[-10%] w-[50vw] h-[50vw] bg-purple-300/20 blur-[120px] rounded-full pointer-events-none z-0" />
       <div className="ambient-glow absolute top-[20%] right-[-10%] w-[40vw] h-[40vw] bg-indigo-300/20 blur-[100px] rounded-full pointer-events-none z-0" />
 
-      {/* ================= LOADER ================= */}
       <div className="loader-screen fixed inset-0 z-[100] bg-[#FAFAFA] flex items-center justify-center pointer-events-none">
         <div className="loader-content flex flex-col items-center gap-6 opacity-0 translate-y-8">
           <div className="relative flex items-center justify-center w-20 h-20">
@@ -131,11 +136,8 @@ export default function HomeClient({ products }: { products: Product[] }) {
         </div>
       </div>
 
-      {/* ================= NAVBAR E-COMMERCE ================= */}
       <nav className="top-navbar fixed top-0 w-full z-50 bg-white/60 backdrop-blur-2xl border-b border-white/40 shadow-[0_8px_30px_rgba(0,0,0,0.04)] opacity-0">
         <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between gap-6">
-          
-          {/* Brand */}
           <div className="flex items-center gap-3 shrink-0 cursor-pointer hover:opacity-80 transition-opacity">
             <div className="bg-indigo-600 p-2 rounded-xl text-white shadow-lg shadow-indigo-200 hidden sm:block">
               <SparkleStarIcon className="w-5 h-5" />
@@ -145,7 +147,6 @@ export default function HomeClient({ products }: { products: Product[] }) {
             </span>
           </div>
 
-          {/* Search Bar Premium */}
           <div className="flex-1 max-w-xl relative group">
             <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/10 to-purple-500/10 rounded-full blur opacity-0 group-focus-within:opacity-100 transition-opacity duration-500" />
             <div className="relative flex items-center">
@@ -160,7 +161,6 @@ export default function HomeClient({ products }: { products: Product[] }) {
             </div>
           </div>
 
-          {/* Cart Button */}
           <button 
             onClick={openCart} 
             className="relative p-3 bg-white rounded-full text-gray-700 border border-gray-100 shadow-sm hover:shadow-md hover:border-indigo-100 hover:text-indigo-600 transition-all shrink-0 active:scale-95"
@@ -175,10 +175,7 @@ export default function HomeClient({ products }: { products: Product[] }) {
         </div>
       </nav>
 
-      {/* ================= CONTENIDO PRINCIPAL ================= */}
       <main className="relative z-10 max-w-7xl mx-auto px-6 pt-36 pb-24 min-h-screen flex flex-col">
-        
-        {/* HERO HEADER */}
         <header className="store-header flex flex-col md:flex-row md:items-end justify-between gap-10 mb-16 opacity-0">
           <div className="max-w-2xl">
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-indigo-50 border border-indigo-100 text-indigo-700 text-xs font-bold tracking-widest uppercase mb-6">
@@ -192,17 +189,11 @@ export default function HomeClient({ products }: { products: Product[] }) {
             </p>
           </div>
 
-          {/* FILTROS TIPO "PILL" */}
           <div className="flex overflow-x-auto pb-4 -mx-6 px-6 md:mx-0 md:px-0 hide-scrollbar gap-3 shrink-0">
-            {[
-              { id: 'ALL', label: 'Todo' },
-              { id: 'SERVICE', label: 'Terapias' },
-              { id: 'PHYSICAL', label: 'Físicos' },
-              { id: 'DIGITAL', label: 'Digitales' }
-            ].map((filter) => (
+            {dynamicFilters.map((filter) => (
               <button
                 key={filter.id}
-                onClick={() => setActiveFilter(filter.id as FilterType)}
+                onClick={() => setActiveFilter(filter.id)}
                 className={`relative whitespace-nowrap px-6 py-3 rounded-full text-sm font-bold transition-all duration-300 overflow-hidden ${
                   activeFilter === filter.id 
                     ? 'text-white shadow-lg shadow-indigo-200' 
@@ -218,7 +209,6 @@ export default function HomeClient({ products }: { products: Product[] }) {
           </div>
         </header>
 
-        {/* ================= GRILLA DE PRODUCTOS ================= */}
         {filteredProducts.length === 0 ? (
           <div className="flex-1 flex flex-col items-center justify-center py-20 animate-in zoom-in-95 duration-500">
             <div className="w-24 h-24 bg-white rounded-full flex items-center justify-center mb-6 shadow-sm border border-gray-100">
@@ -236,18 +226,8 @@ export default function HomeClient({ products }: { products: Product[] }) {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-8 gap-y-12">
             {filteredProducts.map((product) => (
-              <article 
-                key={product.id} 
-                className="store-card group flex flex-col cursor-pointer"
-                onClick={() => {
-                  // Opcional: Podrías abrir un modal aquí en el futuro. 
-                  // Por ahora dejamos que el botón de añadir haga el trabajo.
-                }}
-              >
-                {/* CONTENEDOR DE IMAGEN */}
+              <article key={product.id} className="store-card group flex flex-col cursor-pointer">
                 <div className="relative w-full aspect-[4/5] rounded-[2rem] overflow-hidden bg-gray-100 mb-6 shadow-[0_4px_20px_rgba(0,0,0,0.03)] group-hover:shadow-[0_20px_40px_rgba(0,0,0,0.08)] transition-all duration-500">
-                  
-                  {/* Badges Glassmorphism Ultra Premium */}
                   <div className="absolute top-4 left-4 z-20">
                     <span className={`px-4 py-1.5 text-[10px] font-black tracking-widest uppercase rounded-full shadow-sm backdrop-blur-md border ${
                       product.type === 'SERVICE' ? 'bg-purple-500/10 text-purple-700 border-purple-200/50' : 
@@ -272,29 +252,24 @@ export default function HomeClient({ products }: { products: Product[] }) {
                     </div>
                   )}
 
-                  {/* Gradient Overlay sutil inferior */}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
-                  {/* Botón flotante al hacer hover */}
                   <div className="absolute inset-x-4 bottom-4 z-20 translate-y-8 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500 ease-out">
                     <button 
                       onClick={(e) => {
-                        e.stopPropagation(); // Evita que se dispare el onClick del article si agregas uno
+                        e.stopPropagation();
                         handleAddToCart(product);
                       }}
                       disabled={product.type === 'PHYSICAL' && product.stock === 0}
                       className="w-full bg-white/95 backdrop-blur-xl text-gray-900 font-bold py-3.5 rounded-2xl shadow-xl hover:bg-gray-900 hover:text-white disabled:opacity-50 disabled:bg-white disabled:text-gray-400 disabled:cursor-not-allowed transition-all active:scale-95 flex items-center justify-center gap-2"
                     >
                       {product.type === 'SERVICE' ? 'Reservar Cita' : product.stock === 0 ? 'Agotado' : (
-                        <>
-                          <PlusIcon className="w-5 h-5" /> Añadir a la Bolsa
-                        </>
+                        <><PlusIcon className="w-5 h-5" /> Añadir a la Bolsa</>
                       )}
                     </button>
                   </div>
                 </div>
 
-                {/* INFO DEL PRODUCTO */}
                 <div className="flex flex-col flex-1 px-1">
                   <div className="flex justify-between items-start gap-4 mb-2">
                     <h2 className={`text-2xl font-bold text-gray-900 leading-tight group-hover:text-indigo-600 transition-colors ${cormorant.className}`}>
@@ -315,8 +290,6 @@ export default function HomeClient({ products }: { products: Product[] }) {
                     <p className={`text-2xl text-gray-900 font-bold ${cormorant.className}`}>
                       {formatPrice(product.price)}
                     </p>
-                    
-                    {/* Botón Mobile Siempre Visible */}
                     <button 
                       onClick={(e) => {
                         e.stopPropagation();
@@ -329,7 +302,6 @@ export default function HomeClient({ products }: { products: Product[] }) {
                     </button>
                   </div>
                 </div>
-                
               </article>
             ))}
           </div>
@@ -337,21 +309,13 @@ export default function HomeClient({ products }: { products: Product[] }) {
       </main>
 
       <style dangerouslySetInnerHTML={{__html: `
-        .hide-scrollbar::-webkit-scrollbar {
-          display: none;
-        }
-        .hide-scrollbar {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
-        }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
       `}} />
     </div>
   );
 }
 
-// ==========================================
-// Iconos Premium
-// ==========================================
 function SearchIcon(props: React.SVGProps<SVGSVGElement>) {
   return <svg fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" {...props}><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" /></svg>;
 }

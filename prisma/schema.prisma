@@ -1,5 +1,6 @@
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 generator client {
@@ -8,8 +9,8 @@ generator client {
 
 model User {
   id        String      @id @default(cuid())
-  username  String?     @unique  // Identificador para el Admin
-  email     String?     @unique  // Opcional para clientes de la tienda
+  username  String?     @unique
+  email     String?     @unique
   name      String?
   phone     String?     
   password  String
@@ -21,6 +22,16 @@ model User {
   updatedAt DateTime    @updatedAt
 }
 
+// NUEVO: Modelo de Categorías
+model Category {
+  id          String    @id @default(cuid())
+  name        String    @unique
+  description String?
+  products    Product[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
 model Product {
   id          String      @id @default(cuid())
   name        String
@@ -30,7 +41,12 @@ model Product {
   imageUrl    String?
   isActive    Boolean     @default(true)
   type        String      @default("PHYSICAL") 
-  duration    Int?        
+  duration    Int?
+  
+  // NUEVO: Relación opcional para no romper productos antiguos
+  categoryId  String?
+  category    Category?   @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+
   orderItems  OrderItem[]
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt

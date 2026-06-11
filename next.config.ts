@@ -1,8 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Permite cargar imágenes desde Cloudinary
   images: {
+    // Permite a Next.js convertir imágenes a estos formatos súper ligeros
+    formats: ['image/avif', 'image/webp'], 
     remotePatterns: [
       {
         protocol: 'https',
@@ -11,7 +12,7 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  // Tu configuración previa para Prisma/Postgres
+  // Evita que el driver de Postgres haga lenta tu build en Next.js
   serverExternalPackages: ['@prisma/adapter-pg', 'pg'],
 };
 
