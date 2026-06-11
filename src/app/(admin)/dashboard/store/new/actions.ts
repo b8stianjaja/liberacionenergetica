@@ -2,34 +2,42 @@
 
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from 'next/cache';
+import { redirect } from 'next/navigation';
 import { v2 as cloudinary } from 'cloudinary';
 
 cloudinary.config({
-  cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
+  cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-// Este es el estado que devolveremos al formulario
-export type ActionResponse = {
-  success?: boolean;
-  error?: string;
-};
+export async function createProduct(prevState: any, formData: FormData) {
+  // 1. Validaciones iniciales
+  const name = (formData.get('name') as string) || '';
+  const description = (formData.get('description') as string) || '';
+  const price = parseFloat(formData.get('price') as string) || 0;
+  const type = (formData.get('type') as string) || 'PHYSICAL';
+  
+  if (!name || !description) {
+    return { error: "Nombre y descripción son obligatorios." };
+  }
 
-export async function createProduct(prevState: ActionResponse, formData: FormData): Promise<ActionResponse> {
-  try {
-    const name = formData.get('name') as string;
-    const description = formData.get('description') as string;
-    const price = parseFloat(formData.get('price') as string);
-    const type = formData.get('type') as string;
-    const stock = parseInt(formData.get('stock') as string) || 0;
-    const duration = parseInt(formData.get('duration') as string) || null;
-    
-    const file = formData.get('image') as File | null;
-    let imageUrl: string | null = null;
+  let duration: number | null = null;
+  let stock = 0;
 
-    if (file && file.size > 0) {
-      const bytes = await file.arrayBuffer();
+  if (type === 'SERVICE') {
+    duration = parseInt(formData.get('duration') as string, 10) || null;
+  } else if (type === 'PHYSICAL') {
+    stock = parseInt(formData.get('stock') as string, 10) || 0;
+  }
+
+  let imageUrl: string | null = null;
+  const imageFile = formData.get('image') as File | null;
+
+  // 2. Lógica de subida a Cloudinary
+  if (imageFile && imageFile.size > 0) {
+    try {
+      const bytes = await imageFile.arrayBuffer();
       const buffer = Buffer.from(bytes);
 
       imageUrl = await new Promise<string>((resolve, reject) => {
@@ -41,16 +49,23 @@ export async function createProduct(prevState: ActionResponse, formData: FormDat
           }
         ).end(buffer);
       });
+    } catch (error) {
+      console.error("Error en Cloudinary:", error);
+      return { error: "No se pudo subir la imagen." };
     }
-
-    await prisma.product.create({
-      data: { name, description, price, type, duration, stock, imageUrl, isActive: true },
-    });
-
-    revalidatePath('/dashboard/store');
-    return { success: true }; // Éxito
-  } catch (error) {
-    console.error("Error completo:", error);
-    return { error: "Error al crear el producto. Revisa los logs." };
   }
+
+  // 3. Persistencia en DB
+  try {
+    await prisma.product.create({
+      data: { name, description, price, type, duration, stock, imageUrl, isActive: true }
+    });
+  } catch (error) {
+    console.error("Error en Prisma:", error);
+    return { error: "Error interno al guardar en la base de datos." };
+  }
+
+  // 4. Limpieza y Redirección (Fuera del try/catch para que sea exitosa)
+  revalidatePath('/dashboard/store');
+  redirect('/dashboard/store');
 }
