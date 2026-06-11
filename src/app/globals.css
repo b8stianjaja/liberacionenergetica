@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 :root {
-  --background: #030305; /* Deep Obsidian */
-  --foreground: #E4E4E7; /* Zinc 200 */
+  --background: #FCFCFD; /* Soft Pearl / Off-white */
+  --foreground: #27272A; /* Zinc 800 for elegant readability */
 }
 
 @theme inline {
@@ -18,16 +18,16 @@ body {
   overflow-x: hidden; 
 }
 
-/* Silver Magick Selection */
+/* Ethereal Silver Selection */
 ::selection {
-  background-color: rgba(255, 255, 255, 0.2); 
-  color: #ffffff; 
+  background-color: rgba(161, 161, 170, 0.2); /* Zinc-400 */
+  color: #09090B; 
 }
 
-/* Chrome Scrollbar */
+/* Delicate Chrome Scrollbar */
 .custom-scrollbar {
   scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.2) transparent; 
+  scrollbar-color: rgba(212, 212, 216, 0.6) transparent; /* Zinc-300 */
 }
 
 .custom-scrollbar::-webkit-scrollbar {
@@ -40,10 +40,10 @@ body {
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.15); 
+  background: rgba(212, 212, 216, 0.8); 
   border-radius: 10px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.4); 
+  background: rgba(161, 161, 170, 0.8); 
 }
