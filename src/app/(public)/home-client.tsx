@@ -8,7 +8,6 @@ import { useGSAP } from "@gsap/react";
 import { useCart } from "@/context/CartContext";
 import EnergyScene from "@/components/canvas/EnergyScene";
 
-// FIX CLAVE PARA MÓVILES: Evita el lagazo de recalcular cuando la barra de navegación del celular se esconde
 if (typeof window !== "undefined") {
   gsap.registerPlugin(useGSAP, ScrollTrigger);
   ScrollTrigger.config({ ignoreMobileResize: true }); 
@@ -193,7 +192,7 @@ export default function HomeClient({ products, categories, banners }: HomeClient
       <main className="relative z-10 max-w-[90rem] mx-auto px-4 sm:px-6 lg:px-12 pt-28 sm:pt-36 pb-32 sm:pb-40">
         
         {banners.length > 0 && (
-          <section className="carousel-container relative w-full aspect-[4/3] sm:aspect-[21/9] lg:aspect-[21/7] rounded-[1.5rem] sm:rounded-[2.5rem] overflow-hidden mb-16 sm:mb-24 shadow-[0_20px_50px_rgba(0,0,0,0.15)] group cursor-ew-resize">
+          <section className="carousel-container relative w-full h-[55vh] min-h-[400px] max-h-[650px] sm:min-h-[500px] rounded-[1.5rem] sm:rounded-[2.5rem] overflow-hidden mb-16 sm:mb-24 shadow-[0_20px_50px_rgba(0,0,0,0.15)] group cursor-ew-resize">
             <div className="absolute inset-0 border border-white/40 rounded-[1.5rem] sm:rounded-[2.5rem] pointer-events-none z-30" />
             
             <div className="carousel-track flex h-full will-change-transform w-max">
@@ -209,17 +208,16 @@ export default function HomeClient({ products, categories, banners }: HomeClient
                       priority={i === 0} 
                       sizes="100vw"
                       unoptimized={isAnimated}
-                      className={`object-cover transform-gpu ${isAnimated ? '' : 'animate-[kenBurns_25s_ease-in-out_infinite_alternate]'}`} 
+                      className={`object-cover object-center transform-gpu ${isAnimated ? '' : 'animate-[kenBurns_25s_ease-in-out_infinite_alternate]'}`} 
                     />
-                    {/* FIX: mix-blend-multiply purgado de aquí */}
                     <div className="absolute inset-0 bg-gradient-to-t from-zinc-900/95 via-zinc-900/40 to-transparent pointer-events-none" />
                     
-                    <div className="absolute bottom-10 sm:bottom-24 left-6 sm:left-20 max-w-3xl text-white z-10 drop-shadow-[0_4px_10px_rgba(0,0,0,0.5)] pointer-events-none">
-                      <h3 className="text-4xl sm:text-6xl md:text-8xl font-light tracking-wide mb-2 sm:mb-4 text-silver-shimmer font-cormorant">
+                    <div className="absolute bottom-8 sm:bottom-16 left-6 sm:left-12 lg:left-20 w-full max-w-[90%] md:max-w-3xl pr-4 sm:pr-8 text-white z-10 drop-shadow-[0_4px_10px_rgba(0,0,0,0.5)] pointer-events-none">
+                      <h3 className="text-3xl sm:text-5xl md:text-7xl font-light tracking-wide mb-3 sm:mb-4 text-silver-shimmer font-cormorant text-balance line-clamp-3 leading-tight sm:leading-tight">
                         {banner.title}
                       </h3>
                       {banner.subtitle && (
-                        <p className="text-zinc-200 text-[10px] sm:text-[13px] font-bold tracking-[0.4em] uppercase opacity-90">
+                        <p className="text-zinc-200 text-[10px] sm:text-[13px] font-bold tracking-[0.3em] sm:tracking-[0.4em] uppercase opacity-90 line-clamp-2 leading-relaxed">
                           {banner.subtitle}
                         </p>
                       )}
@@ -256,8 +254,8 @@ export default function HomeClient({ products, categories, banners }: HomeClient
         {filteredProducts.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 sm:py-40 text-center relative z-20">
             <TetragrammatonIcon className="w-16 h-16 sm:w-20 sm:h-20 text-zinc-200 mb-6 sm:mb-8 animate-[spin_15s_linear_infinite]" />
-            <h3 className="text-3xl sm:text-4xl text-zinc-400 mb-4 tracking-widest uppercase font-cormorant">Banners y Productos</h3>
-            <p className="text-zinc-400 text-[10px] sm:text-xs font-bold tracking-[0.3em] uppercase">Empiece por añadir productos desde su Panel.</p>
+            <h3 className="text-3xl sm:text-4xl text-zinc-400 mb-4 tracking-widest uppercase font-cormorant">El Vacío</h3>
+            <p className="text-zinc-400 text-[10px] sm:text-xs font-bold tracking-[0.3em] uppercase">No hay manifestaciones para esta búsqueda.</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-6 gap-y-10 sm:gap-y-16 items-start relative z-20">

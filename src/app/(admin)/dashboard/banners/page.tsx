@@ -31,29 +31,38 @@ export default async function BannersPage() {
             No hay visiones configuradas en este momento.
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left">
+          <div className="overflow-x-auto custom-scrollbar">
+            {/* SOLUCIÓN ESTRUCTURAL: table-fixed obliga a respetar los anchos declarados. min-w garantiza que no se aplaste en pantallas chicas. */}
+            <table className="w-full text-left table-fixed min-w-[800px]">
               <thead>
                 <tr className="border-b border-zinc-200/50 bg-zinc-50/50">
-                  <th className="p-6 font-black text-zinc-400 text-[10px] tracking-[0.2em] uppercase">Reflejo</th>
-                  <th className="p-6 font-black text-zinc-400 text-[10px] tracking-[0.2em] uppercase">Invocación</th>
-                  <th className="p-6 font-black text-zinc-400 text-[10px] tracking-[0.2em] uppercase text-right">Ritual</th>
+                  <th className="p-6 font-black text-zinc-400 text-[10px] tracking-[0.2em] uppercase w-[25%]">Reflejo</th>
+                  <th className="p-6 font-black text-zinc-400 text-[10px] tracking-[0.2em] uppercase w-[50%]">Invocación</th>
+                  <th className="p-6 font-black text-zinc-400 text-[10px] tracking-[0.2em] uppercase text-right w-[25%]">Ritual</th>
                 </tr>
               </thead>
               <tbody>
                 {banners.map((banner) => (
                   <tr key={banner.id} className="border-b border-zinc-100 hover:bg-zinc-50/50 transition-colors">
-                    <td className="p-6">
-                      <div className="relative w-40 h-20 rounded-xl overflow-hidden bg-gradient-to-br from-zinc-100 to-zinc-200 border border-white shadow-inner">
-                        <Image src={banner.imageUrl} alt={banner.title} fill className="object-cover" sizes="160px" />
+                    <td className="p-6 align-top">
+                      {/* aspect-video (16:9) recorta cualquier imagen elegante, object-center asegura que la parte vital se vea */}
+                      <div className="relative w-full aspect-video rounded-xl overflow-hidden bg-gradient-to-br from-zinc-100 to-zinc-200 border border-white shadow-inner">
+                        <Image src={banner.imageUrl} alt={banner.title} fill className="object-cover object-center" sizes="(max-width: 768px) 100vw, 250px" />
                       </div>
                     </td>
-                    <td className="p-6">
-                      <p className={`text-xl text-zinc-800 ${cormorant.className}`}>{banner.title}</p>
-                      <p className="text-[10px] text-zinc-500 font-bold tracking-widest uppercase mt-1">{banner.subtitle || 'Silencio'}</p>
+                    <td className="p-6 align-top overflow-hidden">
+                      {/* break-words salva la tabla si alguien escribe sin usar barras espaciadoras */}
+                      <div className="flex flex-col gap-2 w-full pr-4">
+                        <p className={`text-xl text-zinc-800 line-clamp-2 break-words leading-tight ${cormorant.className}`} title={banner.title}>
+                          {banner.title}
+                        </p>
+                        <p className="text-[10px] text-zinc-500 font-bold tracking-widest uppercase line-clamp-3 break-words leading-relaxed" title={banner.subtitle || ''}>
+                          {banner.subtitle || 'Silencio'}
+                        </p>
+                      </div>
                     </td>
-                    <td className="p-6">
-                      <div className="flex justify-end">
+                    <td className="p-6 align-top">
+                      <div className="flex justify-end mt-1">
                         <BannerControls id={banner.id} isActive={banner.isActive} />
                       </div>
                     </td>
