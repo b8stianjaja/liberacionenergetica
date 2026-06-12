@@ -37,11 +37,10 @@ export default function HomeClient({ products, categories, banners }: HomeClient
     window.scrollTo(0, 0); 
   }, []);
 
-  // Bloquear scroll de manera segura cuando el lightbox está abierto
   useEffect(() => {
     if (selectedProduct) {
       document.body.style.overflow = 'hidden';
-      document.body.style.paddingRight = '8px'; // Prevenir salto por el scrollbar
+      document.body.style.paddingRight = '8px';
     } else {
       document.body.style.overflow = '';
       document.body.style.paddingRight = '';
@@ -63,10 +62,8 @@ export default function HomeClient({ products, categories, banners }: HomeClient
   const infiniteBanners = useMemo(() => [...banners, ...banners], [banners]);
 
   useGSAP(() => {
-    // 1. Configurar centrado con GSAP (Evita conflictos con clases de Tailwind como -translate-x)
     gsap.set([cursorRef.current, cursorAuraRef.current], { xPercent: -50, yPercent: -50 });
 
-    // 2. Cursores ultra fluidos sin CSS transitions
     const xTo = gsap.quickTo(cursorRef.current, "x", { duration: 0.1, ease: "power3" });
     const yTo = gsap.quickTo(cursorRef.current, "y", { duration: 0.1, ease: "power3" });
     const xAuraTo = gsap.quickTo(cursorAuraRef.current, "x", { duration: 0.5, ease: "power3.out" });
@@ -78,7 +75,6 @@ export default function HomeClient({ products, categories, banners }: HomeClient
     };
     window.addEventListener("mousemove", moveCursor, { passive: true });
 
-    // Secuencia de entrada etérea
     const tl = gsap.timeline();
     tl.to(".loader-content", { opacity: 1, y: 0, duration: 1, ease: "power3.out" })
       .to(".loader-screen", { opacity: 0, duration: 1.2, ease: "power2.inOut", delay: 0.6, display: "none" })
@@ -87,14 +83,29 @@ export default function HomeClient({ products, categories, banners }: HomeClient
     return () => { window.removeEventListener("mousemove", moveCursor); };
   }, { scope: container }); 
 
+  // --- CAROUSEL ANIMATION ENHANCEMENT ---
   useGSAP(() => {
     if (banners.length < 2) return;
-    gsap.to(".carousel-track", {
+    
+    const trackTween = gsap.to(".carousel-track", {
       xPercent: -50,
-      duration: banners.length * 8, 
+      duration: banners.length * 15, // Ralentizado drásticamente para un efecto majestuoso
       ease: "none",
       repeat: -1,
     });
+
+    // Efecto interactivo: Pausar suavemente si el usuario pasa el mouse para leer
+    const carouselContainer = document.querySelector('.carousel-container');
+    const pauseTrack = () => gsap.to(trackTween, { timeScale: 0, duration: 1, ease: "power2.out" });
+    const playTrack = () => gsap.to(trackTween, { timeScale: 1, duration: 1, ease: "power2.in" });
+
+    carouselContainer?.addEventListener('mouseenter', pauseTrack);
+    carouselContainer?.addEventListener('mouseleave', playTrack);
+
+    return () => {
+      carouselContainer?.removeEventListener('mouseenter', pauseTrack);
+      carouselContainer?.removeEventListener('mouseleave', playTrack);
+    };
   }, { scope: container, dependencies: [banners] });
 
   useGSAP(() => {
@@ -130,13 +141,11 @@ export default function HomeClient({ products, categories, banners }: HomeClient
       <div className="fixed top-[-10%] left-[-10%] w-[60vw] h-[60vw] bg-white rounded-full blur-[120px] pointer-events-none z-0 opacity-80" />
       <div className="fixed bottom-[-10%] right-[-10%] w-[50vw] h-[50vw] bg-zinc-200/40 rounded-full blur-[150px] pointer-events-none z-0" />
 
-      {/* Cursores Personalizados: Removidas las transiciones CSS y transformaciones conflictivas */}
       <div className="hidden md:block pointer-events-none z-[9999]">
         <div ref={cursorRef} className="fixed top-0 left-0 w-2 h-2 bg-zinc-600 rounded-full shadow-[0_0_10px_rgba(161,161,170,0.5)] will-change-transform" />
         <div ref={cursorAuraRef} className="fixed top-0 left-0 w-12 h-12 border-[0.5px] border-zinc-400/40 bg-white/10 backdrop-blur-[1px] rounded-full will-change-transform" />
       </div>
 
-      {/* Pantalla de Carga */}
       <div className="loader-screen fixed inset-0 z-[100] bg-[#FAFAFB] flex items-center justify-center pointer-events-none">
         <div className="loader-content flex flex-col items-center gap-8 opacity-0 translate-y-8">
           <TetragrammatonIcon className="w-16 h-16 text-zinc-400 animate-[spin_10s_linear_infinite]" />
@@ -147,7 +156,6 @@ export default function HomeClient({ products, categories, banners }: HomeClient
       <nav className="top-navbar fixed top-0 w-full z-40 bg-white/60 backdrop-blur-xl shadow-[0_1px_30px_rgba(0,0,0,0.02)] border-b border-white/50">
         <div className="max-w-[90rem] mx-auto px-4 sm:px-6 lg:px-12 h-16 sm:h-20 lg:h-24 flex items-center justify-between gap-3 sm:gap-8">
           
-          {/* Logo y Nombre Adaptativo para Móvil */}
           <div className="flex items-center gap-2 sm:gap-4 group cursor-pointer shrink-0 min-w-0" onClick={() => window.scrollTo({top: 0, behavior: 'smooth'})}>
             <div className="relative p-1.5 sm:p-2 bg-white/80 rounded-full shadow-sm border border-zinc-100 group-hover:rotate-180 transition-transform duration-[1.5s] ease-in-out shrink-0">
               <TetragrammatonIcon className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-zinc-600" />
@@ -157,7 +165,6 @@ export default function HomeClient({ products, categories, banners }: HomeClient
             </span>
           </div>
 
-          {/* Buscador central */}
           <div className="flex-1 max-w-xl relative group hidden md:block">
             <div className="absolute inset-0 bg-white/60 rounded-full blur-md opacity-0 group-focus-within:opacity-100 transition-opacity" />
             <div className="relative flex items-center">
@@ -172,7 +179,6 @@ export default function HomeClient({ products, categories, banners }: HomeClient
             </div>
           </div>
 
-          {/* Botón Carrito */}
           <button onClick={openCart} className="relative p-2.5 sm:p-3.5 bg-white/80 backdrop-blur-md rounded-full border border-zinc-200/80 hover:shadow-lg transition-all duration-300 active:scale-95 group shrink-0">
             <CartIcon className="w-4 h-4 sm:w-5 sm:h-5 text-zinc-600 group-hover:text-black transition-colors" />
             {mounted && totalItems > 0 && (
@@ -186,29 +192,53 @@ export default function HomeClient({ products, categories, banners }: HomeClient
 
       <main className="relative z-10 max-w-[90rem] mx-auto px-4 sm:px-6 lg:px-12 pt-28 sm:pt-36 pb-32 sm:pb-40">
         
+        {/* --- CAROUSEL ENHANCED --- */}
         {banners.length > 0 && (
-          <section className="carousel-container relative w-full aspect-[4/3] sm:aspect-[21/9] lg:aspect-[21/7] rounded-[1.5rem] sm:rounded-[2.5rem] overflow-hidden mb-16 sm:mb-24 border-[2px] sm:border-[4px] border-white shadow-2xl shadow-zinc-200/50 group">
+          <section className="carousel-container relative w-full aspect-[4/3] sm:aspect-[21/9] lg:aspect-[21/7] rounded-[1.5rem] sm:rounded-[2.5rem] overflow-hidden mb-16 sm:mb-24 shadow-[0_20px_50px_rgba(0,0,0,0.15)] group cursor-ew-resize">
+            {/* Inner glow border instead of solid white to look more seamless */}
+            <div className="absolute inset-0 border border-white/40 rounded-[1.5rem] sm:rounded-[2.5rem] pointer-events-none z-30" />
+            
             <div className="carousel-track flex h-full will-change-transform w-max">
               {infiniteBanners.map((banner, i) => (
-                <article key={`${banner.id}-${i}`} className="w-[100vw] max-w-[90rem] h-full relative shrink-0 px-0">
-                  <Image src={banner.imageUrl} alt={banner.title} fill priority={i === 0} className="object-cover" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent mix-blend-multiply" />
-                  <div className="absolute bottom-8 sm:bottom-24 left-6 sm:left-20 max-w-2xl text-white z-10">
-                    <h3 className={`text-3xl sm:text-6xl md:text-7xl font-light tracking-wide mb-2 sm:mb-4 text-silver-shimmer drop-shadow-lg ${cormorant.className}`}>
+                <article key={`${banner.id}-${i}`} className="w-[100vw] max-w-[90rem] h-full relative shrink-0 px-0 overflow-hidden">
+                  
+                  {/* Ken Burns Animation applied directly to the image */}
+                  <Image 
+                    src={banner.imageUrl} 
+                    alt={banner.title} 
+                    fill 
+                    priority={i === 0} 
+                    className="object-cover animate-[kenBurns_25s_ease-in-out_infinite_alternate]" 
+                  />
+                  
+                  {/* Cinematic Deep Gradient Overlay for better contrast */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-zinc-900/90 via-zinc-900/30 to-transparent mix-blend-multiply" />
+                  
+                  {/* Content Container */}
+                  <div className="absolute bottom-10 sm:bottom-24 left-6 sm:left-20 max-w-3xl text-white z-10 drop-shadow-[0_4px_10px_rgba(0,0,0,0.5)]">
+                    <h3 className={`text-4xl sm:text-6xl md:text-8xl font-light tracking-wide mb-2 sm:mb-4 text-silver-shimmer ${cormorant.className}`}>
                       {banner.title}
                     </h3>
-                    {banner.subtitle && <p className="text-zinc-200 text-[10px] sm:text-sm font-medium tracking-[0.3em] uppercase">{banner.subtitle}</p>}
+                    {banner.subtitle && (
+                      <p className="text-zinc-200 text-[10px] sm:text-[13px] font-bold tracking-[0.4em] uppercase opacity-90">
+                        {banner.subtitle}
+                      </p>
+                    )}
                   </div>
                 </article>
               ))}
             </div>
-            <div className="absolute bottom-4 sm:bottom-8 right-6 sm:right-12 flex gap-2 sm:gap-3 z-20">
-              {banners.map((_, i) => <div key={i} className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-white/60 shadow-sm" />)}
+            
+            {/* Refined Indicators */}
+            <div className="absolute bottom-6 sm:bottom-10 right-6 sm:right-12 flex gap-2 sm:gap-3 z-20">
+              {banners.map((_, i) => (
+                <div key={i} className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-white/40 backdrop-blur-md shadow-sm border-[0.5px] border-white/20" />
+              ))}
             </div>
           </section>
         )}
 
-        {/* Filtros Limpios y Flexibles */}
+        {/* Grilla y Filtros continúan igual... */}
         <div className="flex flex-wrap justify-center gap-3 sm:gap-4 mb-16 sm:mb-24 relative z-20">
           {dynamicFilters.map((filter) => (
             <button
@@ -225,7 +255,6 @@ export default function HomeClient({ products, categories, banners }: HomeClient
           ))}
         </div>
 
-        {/* Grilla de Productos */}
         {filteredProducts.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 sm:py-40 text-center relative z-20">
             <TetragrammatonIcon className="w-16 h-16 sm:w-20 sm:h-20 text-zinc-200 mb-6 sm:mb-8 animate-[spin_15s_linear_infinite]" />
@@ -359,11 +388,15 @@ export default function HomeClient({ products, categories, banners }: HomeClient
         </div>
       )}
 
-      {/* Estilos CSS Inline para Animaciones clave (Optimizadas para Móvil y Escritorio) */}
+      {/* Estilos Animaciones: Se agrega Ken Burns para el efecto "respiración" en el fondo de las imágenes */}
       <style dangerouslySetInnerHTML={{__html: `
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         @keyframes scaleUp { from { opacity: 0; transform: scale(0.95) translateY(20px); } to { opacity: 1; transform: scale(1) translateY(0); } }
         @keyframes slideUpMobile { from { opacity: 0; transform: translateY(100%); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes kenBurns {
+          0% { transform: scale(1.05) translate(0, 0); }
+          100% { transform: scale(1.12) translate(-1%, -1%); }
+        }
       `}} />
     </div>
   );
