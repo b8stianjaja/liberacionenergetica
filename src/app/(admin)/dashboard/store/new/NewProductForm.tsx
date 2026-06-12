@@ -15,7 +15,6 @@ export default function NewProductForm({ initialCategories }: { initialCategorie
   const [productType, setProductType] = useState('PHYSICAL');
   const [isNewCategory, setIsNewCategory] = useState(false);
 
-  // Manejador de envío seguro a prueba de versiones de React
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
@@ -28,9 +27,7 @@ export default function NewProductForm({ initialCategories }: { initialCategorie
         if (result?.error) {
           setError(result.error);
         } else if (result?.success) {
-          // Navegación pura desde el cliente
           router.push('/dashboard/store');
-          // Forzamos al router a limpiar su caché interna para que la nueva categoría aparezca
           router.refresh(); 
         }
       } catch (err) {
@@ -58,7 +55,6 @@ export default function NewProductForm({ initialCategories }: { initialCategorie
       <form onSubmit={handleSubmit} className="bg-white p-8 sm:p-10 rounded-[2.5rem] shadow-sm border border-gray-100 space-y-8">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           
-          {/* Columna Izquierda: Datos Básicos */}
           <div className="space-y-6">
             <div>
               <label className="block text-sm font-bold text-gray-700 mb-2">Nombre de Terapia o Producto</label>
@@ -86,7 +82,6 @@ export default function NewProductForm({ initialCategories }: { initialCategorie
             </div>
           </div>
 
-          {/* Columna Derecha: Configuración Específica */}
           <div className="space-y-6">
             
             <div className="bg-indigo-50/40 p-6 rounded-[2rem] border border-indigo-100/50 space-y-4">
@@ -126,11 +121,11 @@ export default function NewProductForm({ initialCategories }: { initialCategorie
             )}
 
             <div>
-              <label className="block text-sm font-bold text-gray-700 mb-2">Imagen Visual</label>
+              <label className="block text-sm font-bold text-gray-700 mb-2">Imagen o GIF Animado</label>
               <input 
                 type="file" 
                 name="image" 
-                accept="image/jpeg, image/png, image/webp" 
+                accept="image/jpeg, image/png, image/webp, image/gif" 
                 className="w-full text-sm text-gray-500 file:mr-4 file:py-3 file:px-6 file:rounded-xl file:border-0 file:text-sm file:font-bold file:bg-gray-900 file:text-white hover:file:bg-indigo-600 file:transition-colors file:cursor-pointer" 
               />
                 </div>

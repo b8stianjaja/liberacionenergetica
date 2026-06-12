@@ -59,16 +59,16 @@ export default function NewBannerForm() {
           </div>
 
           <div>
-            <label className="block text-sm font-bold text-gray-700 mb-2">Imagen de Fondo</label>
+            <label className="block text-sm font-bold text-gray-700 mb-2">Imagen de Fondo o GIF Animado</label>
             <div className="p-4 bg-fuchsia-50 border border-fuchsia-100 rounded-2xl">
               <input 
                 type="file" 
                 name="image" 
                 required
-                accept="image/jpeg, image/png, image/webp" 
+                accept="image/jpeg, image/png, image/webp, image/gif" 
                 className="w-full text-sm text-gray-600 file:mr-4 file:py-3 file:px-6 file:rounded-xl file:border-0 file:text-sm file:font-bold file:bg-gray-900 file:text-white hover:file:bg-fuchsia-600 file:transition-colors file:cursor-pointer" 
               />
-              <p className="text-xs text-gray-500 mt-3 font-medium">Se recomienda una imagen en formato horizontal (16:9 o ultra-ancha) para adaptarse mejor al carrusel.</p>
+              <p className="text-xs text-gray-500 mt-3 font-medium">Se recomienda una imagen en formato horizontal (16:9 o ultra-ancha) o un GIF para adaptarse mejor al carrusel.</p>
             </div>
           </div>
         </div>

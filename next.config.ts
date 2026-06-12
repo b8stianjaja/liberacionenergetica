@@ -1,7 +1,6 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Aumentamos el límite de tamaño para Server Actions (imágenes pesadas)
   experimental: {
     serverActions: {
       bodySizeLimit: '10mb',
@@ -16,6 +15,9 @@ const nextConfig: NextConfig = {
         pathname: '/**',
       },
     ],
+    // ESTA ES LA CLAVE PARA LOS GIFS:
+    // Evita que Next.js intente re-comprimir GIFs y otras imágenes que ya vienen de Cloudinary.
+    unoptimized: true, 
   },
   serverExternalPackages: ['@prisma/adapter-pg', 'pg'],
 };
