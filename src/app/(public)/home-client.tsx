@@ -61,27 +61,35 @@ export default function HomeClient({ products, categories, banners }: HomeClient
 
   const infiniteBanners = useMemo(() => [...banners, ...banners], [banners]);
 
+  // ANIMACIÓN DE CARGA INDEPENDIENTE
   useGSAP(() => {
-    gsap.set([cursorRef.current, cursorAuraRef.current], { xPercent: -50, yPercent: -50 });
-
-    const xTo = gsap.quickTo(cursorRef.current, "x", { duration: 0.1, ease: "power3" });
-    const yTo = gsap.quickTo(cursorRef.current, "y", { duration: 0.1, ease: "power3" });
-    const xAuraTo = gsap.quickTo(cursorAuraRef.current, "x", { duration: 0.4, ease: "power3.out" });
-    const yAuraTo = gsap.quickTo(cursorAuraRef.current, "y", { duration: 0.4, ease: "power3.out" });
-
-    const moveCursor = (e: MouseEvent) => { 
-      xTo(e.clientX); yTo(e.clientY); 
-      xAuraTo(e.clientX); yAuraTo(e.clientY); 
-    };
-    window.addEventListener("mousemove", moveCursor, { passive: true });
-
     const tl = gsap.timeline();
     tl.to(".loader-content", { opacity: 1, y: 0, duration: 1, ease: "power3.out" })
       .to(".loader-screen", { opacity: 0, duration: 1.2, ease: "power2.inOut", delay: 0.6, display: "none" })
       .fromTo(".top-navbar", { y: -30, opacity: 0 }, { y: 0, opacity: 1, duration: 1.5, ease: "expo.out" }, "-=0.5");
-
-    return () => { window.removeEventListener("mousemove", moveCursor); };
   }, { scope: container }); 
+
+  // LÓGICA DE CURSOR EXCLUSIVA PARA PC (Evita el lag masivo en móviles)
+  useGSAP(() => {
+    const isTouchDevice = window.matchMedia('(hover: none), (pointer: coarse)').matches;
+    
+    if (!isTouchDevice && cursorRef.current && cursorAuraRef.current) {
+      gsap.set([cursorRef.current, cursorAuraRef.current], { xPercent: -50, yPercent: -50 });
+
+      const xTo = gsap.quickTo(cursorRef.current, "x", { duration: 0.1, ease: "power3" });
+      const yTo = gsap.quickTo(cursorRef.current, "y", { duration: 0.1, ease: "power3" });
+      const xAuraTo = gsap.quickTo(cursorAuraRef.current, "x", { duration: 0.4, ease: "power3.out" });
+      const yAuraTo = gsap.quickTo(cursorAuraRef.current, "y", { duration: 0.4, ease: "power3.out" });
+
+      const moveCursor = (e: MouseEvent) => { 
+        xTo(e.clientX); yTo(e.clientY); 
+        xAuraTo(e.clientX); yAuraTo(e.clientY); 
+      };
+      
+      window.addEventListener("mousemove", moveCursor, { passive: true });
+      return () => window.removeEventListener("mousemove", moveCursor);
+    }
+  }, { scope: container });
 
   useGSAP(() => {
     if (banners.length < 2) return;
@@ -93,17 +101,21 @@ export default function HomeClient({ products, categories, banners }: HomeClient
       repeat: -1,
     });
 
-    const carouselContainer = document.querySelector('.carousel-container');
-    const pauseTrack = () => gsap.to(trackTween, { timeScale: 0, duration: 1, ease: "power2.out" });
-    const playTrack = () => gsap.to(trackTween, { timeScale: 1, duration: 1, ease: "power2.in" });
+    const isTouchDevice = window.matchMedia('(hover: none), (pointer: coarse)').matches;
+    
+    if (!isTouchDevice) {
+      const carouselContainer = document.querySelector('.carousel-container');
+      const pauseTrack = () => gsap.to(trackTween, { timeScale: 0, duration: 1, ease: "power2.out" });
+      const playTrack = () => gsap.to(trackTween, { timeScale: 1, duration: 1, ease: "power2.in" });
 
-    carouselContainer?.addEventListener('mouseenter', pauseTrack);
-    carouselContainer?.addEventListener('mouseleave', playTrack);
+      carouselContainer?.addEventListener('mouseenter', pauseTrack);
+      carouselContainer?.addEventListener('mouseleave', playTrack);
 
-    return () => {
-      carouselContainer?.removeEventListener('mouseenter', pauseTrack);
-      carouselContainer?.removeEventListener('mouseleave', playTrack);
-    };
+      return () => {
+        carouselContainer?.removeEventListener('mouseenter', pauseTrack);
+        carouselContainer?.removeEventListener('mouseleave', playTrack);
+      };
+    }
   }, { scope: container, dependencies: [banners] });
 
   useGSAP(() => {
@@ -136,13 +148,13 @@ export default function HomeClient({ products, categories, banners }: HomeClient
       
       <EnergyScene />
 
-      {/* OPTIMIZACIÓN: Cambio de blur-[120px] por gradientes radiales puros. Esto ahorra un ~60% de uso de GPU. */}
+      {/* Uso de transform-gpu y will-change para evitar cuellos de botella de renderizado en iOS/Android */}
       <div 
-        className="fixed top-[-10%] left-[-10%] w-[60vw] h-[60vw] rounded-full pointer-events-none z-0 opacity-80" 
+        className="fixed top-[-10%] left-[-10%] w-[60vw] h-[60vw] rounded-full pointer-events-none z-0 opacity-80 transform-gpu will-change-transform" 
         style={{ background: 'radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(255,255,255,0) 70%)' }}
       />
       <div 
-        className="fixed bottom-[-10%] right-[-10%] w-[50vw] h-[50vw] rounded-full pointer-events-none z-0" 
+        className="fixed bottom-[-10%] right-[-10%] w-[50vw] h-[50vw] rounded-full pointer-events-none z-0 transform-gpu will-change-transform" 
         style={{ background: 'radial-gradient(circle, rgba(228,228,231,0.4) 0%, rgba(228,228,231,0) 70%)' }}
       />
 
@@ -210,11 +222,11 @@ export default function HomeClient({ products, categories, banners }: HomeClient
                     fill 
                     priority={i === 0} 
                     sizes="100vw"
-                    className="object-cover animate-[kenBurns_25s_ease-in-out_infinite_alternate]" 
+                    className="object-cover animate-[kenBurns_25s_ease-in-out_infinite_alternate] transform-gpu" 
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-zinc-900/90 via-zinc-900/30 to-transparent mix-blend-multiply" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-zinc-900/90 via-zinc-900/30 to-transparent mix-blend-multiply pointer-events-none" />
                   
-                  <div className="absolute bottom-10 sm:bottom-24 left-6 sm:left-20 max-w-3xl text-white z-10 drop-shadow-[0_4px_10px_rgba(0,0,0,0.5)]">
+                  <div className="absolute bottom-10 sm:bottom-24 left-6 sm:left-20 max-w-3xl text-white z-10 drop-shadow-[0_4px_10px_rgba(0,0,0,0.5)] pointer-events-none">
                     <h3 className={`text-4xl sm:text-6xl md:text-8xl font-light tracking-wide mb-2 sm:mb-4 text-silver-shimmer ${cormorant.className}`}>
                       {banner.title}
                     </h3>
@@ -228,7 +240,7 @@ export default function HomeClient({ products, categories, banners }: HomeClient
               ))}
             </div>
             
-            <div className="absolute bottom-6 sm:bottom-10 right-6 sm:right-12 flex gap-2 sm:gap-3 z-20">
+            <div className="absolute bottom-6 sm:bottom-10 right-6 sm:right-12 flex gap-2 sm:gap-3 z-20 pointer-events-none">
               {banners.map((_, i) => (
                 <div key={i} className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-white/40 backdrop-blur-md shadow-sm border-[0.5px] border-white/20" />
               ))}
@@ -278,7 +290,7 @@ export default function HomeClient({ products, categories, banners }: HomeClient
                         alt={product.name} 
                         fill
                         sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                        className="object-cover transition-all duration-700 ease-out group-hover:scale-105 group-hover:brightness-105" 
+                        className="object-cover transition-transform duration-700 ease-out group-hover:scale-105" 
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center bg-zinc-100/30">
@@ -324,7 +336,7 @@ export default function HomeClient({ products, categories, banners }: HomeClient
       {selectedProduct && (
         <div className="fixed inset-0 z-[99999] flex items-end sm:items-center justify-center p-0 sm:p-8">
           <div 
-            className="absolute inset-0 bg-zinc-900/80 backdrop-blur-xl animate-[fadeIn_0.3s_ease-out]"
+            className="absolute inset-0 bg-zinc-900/80 backdrop-blur-xl animate-[fadeIn_0.3s_ease-out] transform-gpu"
             onClick={() => setSelectedProduct(null)}
           />
           
@@ -385,7 +397,6 @@ export default function HomeClient({ products, categories, banners }: HomeClient
         </div>
       )}
 
-      {/* OPTIMIZACIÓN: Añadido translate3d y scale3d a las animaciones para forzar la aceleración por Hardware GPU */}
       <style dangerouslySetInnerHTML={{__html: `
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         @keyframes scaleUp { from { opacity: 0; transform: scale3d(0.95, 0.95, 1) translate3d(0, 20px, 0); } to { opacity: 1; transform: scale3d(1, 1, 1) translate3d(0, 0, 0); } }
