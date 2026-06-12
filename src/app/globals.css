@@ -18,6 +18,12 @@ body {
   overflow-x: hidden; 
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  font-family: var(--font-montserrat), sans-serif;
+}
+
+/* Clase global para invocar Cormorant donde la necesitemos */
+.font-cormorant {
+  font-family: var(--font-cormorant), serif;
 }
 
 ::selection {
@@ -31,15 +37,7 @@ body {
 }
 
 .text-silver-shimmer {
-  background: linear-gradient(
-    110deg,
-    #71717A 0%,    
-    #D4D4D8 20%,   
-    #FFFFFF 40%,    
-    #D4D4D8 60%,    
-    #71717A 80%,    
-    #A1A1AA 100%    
-  );
+  background: linear-gradient(110deg, #71717A 0%, #D4D4D8 20%, #FFFFFF 40%, #D4D4D8 60%, #71717A 80%, #A1A1AA 100%);
   background-size: 200% auto;
   color: transparent;
   -webkit-background-clip: text;
@@ -55,13 +53,8 @@ body {
 }
 .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
 .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-.custom-scrollbar::-webkit-scrollbar-thumb {
-  background: #D4D4D8; 
-  border-radius: 99px; 
-}
-.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: #A1A1AA;
-}
+.custom-scrollbar::-webkit-scrollbar-thumb { background: #D4D4D8; border-radius: 99px; }
+.custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #A1A1AA; }
 
 /* --- OPTIMIZED HARDWARE-ACCELERATED ANIMATIONS --- */
 @keyframes wave-shift-1 {
@@ -86,33 +79,6 @@ body {
   100% { transform: translate3d(0, -110vh, 0) scale(1.2); opacity: 0; }
 }
 
-@keyframes fadeIn { 
-  from { opacity: 0; } 
-  to { opacity: 1; } 
-}
-
-@keyframes scaleUp { 
-  from { opacity: 0; transform: scale3d(0.95, 0.95, 1) translate3d(0, 20px, 0); } 
-  to { opacity: 1; transform: scale3d(1, 1, 1) translate3d(0, 0, 0); } 
-}
-
-@keyframes slideUpMobile { 
-  from { opacity: 0; transform: translate3d(0, 100%, 0); } 
-  to { opacity: 1; transform: translate3d(0, 0, 0); } 
-}
-
-@keyframes kenBurns {
-  0% { transform: scale3d(1.05, 1.05, 1) translate3d(0, 0, 0); }
-  100% { transform: scale3d(1.12, 1.12, 1) translate3d(-1%, -1%, 0); }
-}
-
-/* Helper Classes for Canvas */
-.astral-wave-1 {
-  animation: wave-shift-1 25s ease-in-out infinite alternate;
-}
-.astral-wave-2 {
-  animation: wave-shift-2 30s ease-in-out infinite alternate;
-}
-.astral-pulse {
-  animation: pulse-light 15s ease-in-out infinite alternate;
-}
+.astral-wave-1 { animation: wave-shift-1 25s ease-in-out infinite alternate; }
+.astral-wave-2 { animation: wave-shift-2 30s ease-in-out infinite alternate; }
+.astral-pulse { animation: pulse-light 15s ease-in-out infinite alternate; }

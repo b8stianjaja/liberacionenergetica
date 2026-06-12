@@ -5,14 +5,14 @@ import Image from "next/image";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
-import { Cormorant_Garamond, Montserrat } from "next/font/google";
 import { useCart } from "@/context/CartContext";
 import EnergyScene from "@/components/canvas/EnergyScene";
 
-const cormorant = Cormorant_Garamond({ subsets: ["latin"], weight: ["300", "400", "500", "600", "700"], style: ["normal", "italic"], display: "swap" });
-const montserrat = Montserrat({ subsets: ["latin"], weight: ["300", "400", "500", "600"], display: "swap" });
-
-if (typeof window !== "undefined") gsap.registerPlugin(useGSAP, ScrollTrigger);
+// FIX CLAVE PARA MÓVILES: Evita el lagazo de recalcular cuando la barra de navegación del celular se esconde
+if (typeof window !== "undefined") {
+  gsap.registerPlugin(useGSAP, ScrollTrigger);
+  ScrollTrigger.config({ ignoreMobileResize: true }); 
+}
 
 export type Category = { id: string; name: string; };
 export type Banner = { id: string; title: string; subtitle: string; imageUrl: string; };
@@ -70,7 +70,6 @@ export default function HomeClient({ products, categories, banners }: HomeClient
 
   useGSAP(() => {
     const isTouchDevice = window.matchMedia('(hover: none), (pointer: coarse)').matches;
-    
     if (!isTouchDevice && cursorRef.current && cursorAuraRef.current) {
       gsap.set([cursorRef.current, cursorAuraRef.current], { xPercent: -50, yPercent: -50 });
 
@@ -91,16 +90,10 @@ export default function HomeClient({ products, categories, banners }: HomeClient
 
   useGSAP(() => {
     if (banners.length < 2) return;
-    
     const trackTween = gsap.to(".carousel-track", {
-      xPercent: -50,
-      duration: banners.length * 15,
-      ease: "none",
-      repeat: -1,
+      xPercent: -50, duration: banners.length * 15, ease: "none", repeat: -1,
     });
-
     const isTouchDevice = window.matchMedia('(hover: none), (pointer: coarse)').matches;
-    
     if (!isTouchDevice) {
       const carouselContainer = document.querySelector('.carousel-container');
       const pauseTrack = () => gsap.to(trackTween, { timeScale: 0, duration: 1, ease: "power2.out" });
@@ -137,7 +130,6 @@ export default function HomeClient({ products, categories, banners }: HomeClient
     if (e) e.stopPropagation();
     addItem({ id: product.id, name: product.name, price: product.price, imageUrl: product.imageUrl || null });
     
-    // Timeout para asegurar que el badge esté en el DOM antes de animarlo (React batching fix)
     setTimeout(() => {
       gsap.fromTo(".cart-badge", { scale: 1.5, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.8, ease: "elastic.out(1, 0.5)" });
     }, 50);
@@ -146,46 +138,35 @@ export default function HomeClient({ products, categories, banners }: HomeClient
   const designPattern = ["col-span-1", "col-span-2", "col-span-1", "col-span-1", "col-span-2", "col-span-1"];
 
   return (
-    <div ref={container} className={`relative min-h-screen bg-[#FAFAFB] text-zinc-800 ${montserrat.className} overflow-hidden md:cursor-none selection:bg-zinc-200 selection:text-black`}>
+    <div ref={container} className="relative min-h-screen overflow-hidden md:cursor-none selection:bg-zinc-200 selection:text-black">
       
       <EnergyScene />
 
-      <div 
-        className="fixed top-[-10%] left-[-10%] w-[60vw] h-[60vw] rounded-full pointer-events-none z-0 opacity-80 transform-gpu will-change-transform" 
-        style={{ background: 'radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(255,255,255,0) 70%)' }}
-      />
-      <div 
-        className="fixed bottom-[-10%] right-[-10%] w-[50vw] h-[50vw] rounded-full pointer-events-none z-0 transform-gpu will-change-transform" 
-        style={{ background: 'radial-gradient(circle, rgba(228,228,231,0.4) 0%, rgba(228,228,231,0) 70%)' }}
-      />
-
       <div className="hidden md:block pointer-events-none z-[9999]">
         <div ref={cursorRef} className="fixed top-0 left-0 w-2 h-2 bg-zinc-600 rounded-full shadow-[0_0_10px_rgba(161,161,170,0.5)] will-change-transform" />
-        {/* Eliminado backdrop-blur-[1px] aquí */}
         <div ref={cursorAuraRef} className="fixed top-0 left-0 w-12 h-12 border-[0.5px] border-zinc-400/40 bg-zinc-400/20 rounded-full will-change-transform" />
       </div>
 
       <div className="loader-screen fixed inset-0 z-[100] bg-[#FAFAFB] flex items-center justify-center pointer-events-none">
         <div className="loader-content flex flex-col items-center gap-8 opacity-0 translate-y-8">
           <TetragrammatonIcon className="w-16 h-16 text-zinc-400 animate-[spin_10s_linear_infinite]" />
-          <h2 className={`text-xl md:text-2xl text-silver-shimmer font-light tracking-[0.5em] uppercase ${cormorant.className}`}>Alineando</h2>
+          <h2 className="text-xl md:text-2xl text-silver-shimmer font-light tracking-[0.5em] uppercase font-cormorant">Alineando</h2>
         </div>
       </div>
 
-      <nav className="top-navbar fixed top-0 w-full z-40 bg-white/60 backdrop-blur-xl shadow-[0_1px_30px_rgba(0,0,0,0.02)] border-b border-white/50">
+      <nav className="top-navbar fixed top-0 w-full z-40 bg-white/90 backdrop-blur-md shadow-[0_1px_30px_rgba(0,0,0,0.02)] border-b border-white/50">
         <div className="max-w-[90rem] mx-auto px-4 sm:px-6 lg:px-12 h-16 sm:h-20 lg:h-24 flex items-center justify-between gap-3 sm:gap-8">
           
           <div className="flex items-center gap-2 sm:gap-4 group cursor-pointer shrink-0 min-w-0" onClick={() => window.scrollTo({top: 0, behavior: 'smooth'})}>
-            <div className="relative p-1.5 sm:p-2 bg-white/80 rounded-full shadow-sm border border-zinc-100 group-hover:rotate-180 transition-transform duration-[1.5s] ease-in-out shrink-0">
+            <div className="relative p-1.5 sm:p-2 bg-white/90 rounded-full shadow-sm border border-zinc-100 group-hover:rotate-180 transition-transform duration-[1.5s] ease-in-out shrink-0">
               <TetragrammatonIcon className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-zinc-600" />
             </div>
-            <span className={`text-[12px] sm:text-xl lg:text-3xl font-medium tracking-[0.05em] sm:tracking-widest text-silver-shimmer truncate ${cormorant.className}`}>
+            <span className="text-[12px] sm:text-xl lg:text-3xl font-medium tracking-[0.05em] sm:tracking-widest text-silver-shimmer truncate font-cormorant">
               liberacionenergetica™ Boutique
             </span>
           </div>
 
           <div className="flex-1 max-w-xl relative group hidden md:block">
-            <div className="absolute inset-0 bg-white/60 rounded-full blur-md opacity-0 group-focus-within:opacity-100 transition-opacity" />
             <div className="relative flex items-center">
               <SearchIcon className="absolute left-6 w-4 h-4 text-zinc-400" />
               <input 
@@ -193,12 +174,12 @@ export default function HomeClient({ products, categories, banners }: HomeClient
                 placeholder="Buscar artefactos o servicios..." 
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-white/70 backdrop-blur-md border border-zinc-200/80 shadow-[inset_0_2px_10px_rgba(0,0,0,0.01)] rounded-full py-2.5 sm:py-3 pl-14 pr-6 text-[11px] font-bold tracking-[0.15em] text-zinc-700 focus:outline-none focus:ring-1 focus:ring-zinc-300 transition-all placeholder:text-zinc-400 uppercase"
+                className="w-full bg-white/90 border border-zinc-200/80 shadow-[inset_0_2px_10px_rgba(0,0,0,0.01)] rounded-full py-2.5 sm:py-3 pl-14 pr-6 text-[11px] font-bold tracking-[0.15em] text-zinc-700 focus:outline-none focus:ring-1 focus:ring-zinc-300 transition-all placeholder:text-zinc-400 uppercase"
               />
             </div>
           </div>
 
-          <button onClick={openCart} className="relative p-2.5 sm:p-3.5 bg-white/80 backdrop-blur-md rounded-full border border-zinc-200/80 hover:shadow-lg transition-all duration-300 active:scale-95 group shrink-0">
+          <button onClick={openCart} className="relative p-2.5 sm:p-3.5 bg-white/90 rounded-full border border-zinc-200/80 hover:shadow-lg transition-all duration-300 active:scale-95 group shrink-0">
             <CartIcon className="w-4 h-4 sm:w-5 sm:h-5 text-zinc-600 group-hover:text-black transition-colors" />
             {mounted && totalItems > 0 && (
               <span className="cart-badge absolute -top-1 -right-1 bg-zinc-800 text-white text-[9px] sm:text-[10px] font-black w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center border-[2px] border-white shadow-sm">
@@ -230,10 +211,11 @@ export default function HomeClient({ products, categories, banners }: HomeClient
                       unoptimized={isAnimated}
                       className={`object-cover transform-gpu ${isAnimated ? '' : 'animate-[kenBurns_25s_ease-in-out_infinite_alternate]'}`} 
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-zinc-900/90 via-zinc-900/30 to-transparent mix-blend-multiply pointer-events-none" />
+                    {/* FIX: mix-blend-multiply purgado de aquí */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-zinc-900/95 via-zinc-900/40 to-transparent pointer-events-none" />
                     
                     <div className="absolute bottom-10 sm:bottom-24 left-6 sm:left-20 max-w-3xl text-white z-10 drop-shadow-[0_4px_10px_rgba(0,0,0,0.5)] pointer-events-none">
-                      <h3 className={`text-4xl sm:text-6xl md:text-8xl font-light tracking-wide mb-2 sm:mb-4 text-silver-shimmer ${cormorant.className}`}>
+                      <h3 className="text-4xl sm:text-6xl md:text-8xl font-light tracking-wide mb-2 sm:mb-4 text-silver-shimmer font-cormorant">
                         {banner.title}
                       </h3>
                       {banner.subtitle && (
@@ -249,7 +231,7 @@ export default function HomeClient({ products, categories, banners }: HomeClient
             
             <div className="absolute bottom-6 sm:bottom-10 right-6 sm:right-12 flex gap-2 sm:gap-3 z-20 pointer-events-none">
               {banners.map((_, i) => (
-                <div key={i} className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-white/40 backdrop-blur-md shadow-sm border-[0.5px] border-white/20" />
+                <div key={i} className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-white/40 shadow-sm border-[0.5px] border-white/20" />
               ))}
             </div>
           </section>
@@ -263,7 +245,7 @@ export default function HomeClient({ products, categories, banners }: HomeClient
               className={`px-5 py-2.5 sm:px-8 sm:py-3.5 rounded-full text-[10px] sm:text-[11px] font-bold tracking-[0.15em] sm:tracking-[0.2em] uppercase transition-all duration-500 ${
                 activeFilter === filter.id 
                   ? 'bg-zinc-800 text-white shadow-xl shadow-zinc-300 border border-zinc-800 scale-105' 
-                  : 'bg-white/60 backdrop-blur-md text-zinc-500 border border-zinc-200/80 hover:bg-white hover:text-zinc-900 hover:shadow-md'
+                  : 'bg-white/90 text-zinc-500 border border-zinc-200/80 hover:bg-white hover:text-zinc-900 hover:shadow-md shadow-sm'
               }`}
             >
               {filter.label}
@@ -274,7 +256,7 @@ export default function HomeClient({ products, categories, banners }: HomeClient
         {filteredProducts.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 sm:py-40 text-center relative z-20">
             <TetragrammatonIcon className="w-16 h-16 sm:w-20 sm:h-20 text-zinc-200 mb-6 sm:mb-8 animate-[spin_15s_linear_infinite]" />
-            <h3 className={`text-3xl sm:text-4xl text-zinc-400 mb-4 tracking-widest uppercase ${cormorant.className}`}>El Vacío</h3>
+            <h3 className="text-3xl sm:text-4xl text-zinc-400 mb-4 tracking-widest uppercase font-cormorant">El Vacío</h3>
             <p className="text-zinc-400 text-[10px] sm:text-xs font-bold tracking-[0.3em] uppercase">No hay manifestaciones para esta búsqueda.</p>
           </div>
         ) : (
@@ -282,12 +264,12 @@ export default function HomeClient({ products, categories, banners }: HomeClient
             {filteredProducts.map((product, i) => (
               <div key={product.id} className={`product-card-wrapper w-full ${designPattern[i % designPattern.length]} ${i % 2 !== 0 ? 'lg:mt-16' : ''}`}>
                 <article 
-                  className="group relative flex flex-col gap-4 p-4 sm:p-5 rounded-[2rem] sm:rounded-[2.5rem] bg-white/50 backdrop-blur-xl border border-white hover:border-zinc-200/80 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_20px_40px_rgb(0,0,0,0.08)] hover:-translate-y-2 transition-all duration-500 cursor-pointer"
+                  className="group relative flex flex-col gap-4 p-4 sm:p-5 rounded-[2rem] sm:rounded-[2.5rem] bg-white/90 border border-white hover:border-zinc-200/80 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_20px_40px_rgb(0,0,0,0.08)] hover:-translate-y-2 transition-all duration-500 cursor-pointer"
                   onClick={() => setSelectedProduct(product)}
                 >
                   <div className="relative w-full aspect-[4/5] rounded-[1.5rem] sm:rounded-[2rem] overflow-hidden bg-zinc-100/50 transform-gpu">
                     <div className="absolute top-4 left-4 z-20 pointer-events-none">
-                      <span className="px-3 py-1.5 sm:px-4 sm:py-2 text-[8px] sm:text-[9px] font-bold tracking-[0.2em] sm:tracking-[0.25em] uppercase rounded-full bg-white/90 backdrop-blur-md text-zinc-800 shadow-sm">
+                      <span className="px-3 py-1.5 sm:px-4 sm:py-2 text-[8px] sm:text-[9px] font-bold tracking-[0.2em] sm:tracking-[0.25em] uppercase rounded-full bg-white/95 text-zinc-800 shadow-sm">
                         {product.type === 'SERVICE' ? 'Terapia' : product.type === 'PHYSICAL' ? 'Materia' : 'Etéreo'}
                       </span>
                     </div>
@@ -312,7 +294,7 @@ export default function HomeClient({ products, categories, banners }: HomeClient
                   </div>
 
                   <div className="flex flex-col z-20 px-2 sm:px-3 pb-2">
-                    <h2 className={`text-xl sm:text-2xl text-zinc-800 mb-2 group-hover:text-black transition-colors leading-tight ${cormorant.className}`}>
+                    <h2 className="text-xl sm:text-2xl text-zinc-800 mb-2 group-hover:text-black transition-colors leading-tight font-cormorant">
                       {product.name}
                     </h2>
                     <p className="text-[12px] sm:text-[13px] text-zinc-500 font-medium leading-relaxed mb-4 sm:mb-6 line-clamp-2">
@@ -320,7 +302,7 @@ export default function HomeClient({ products, categories, banners }: HomeClient
                     </p>
                     
                     <div className="mt-auto flex items-center justify-between pt-4 sm:pt-5 border-t border-zinc-200/50">
-                      <p className={`text-xl sm:text-2xl text-zinc-900 ${cormorant.className}`}>
+                      <p className="text-xl sm:text-2xl text-zinc-900 font-cormorant">
                         {formatPrice(product.price)}
                       </p>
                       <button 
@@ -343,7 +325,7 @@ export default function HomeClient({ products, categories, banners }: HomeClient
       {selectedProduct && (
         <div className="fixed inset-0 z-[99999] flex items-end sm:items-center justify-center p-0 sm:p-8">
           <div 
-            className="absolute inset-0 bg-zinc-900/80 backdrop-blur-xl animate-[fadeIn_0.3s_ease-out] transform-gpu"
+            className="absolute inset-0 bg-zinc-900/95 animate-[fadeIn_0.3s_ease-out] transform-gpu"
             onClick={() => setSelectedProduct(null)}
           />
           
@@ -351,7 +333,7 @@ export default function HomeClient({ products, categories, banners }: HomeClient
             
             <button 
               onClick={() => setSelectedProduct(null)}
-              className="absolute top-4 right-4 sm:top-6 sm:right-6 z-50 p-2 sm:p-3 bg-white/60 backdrop-blur-md rounded-full text-zinc-600 hover:text-black hover:bg-white shadow-sm transition-all"
+              className="absolute top-4 right-4 sm:top-6 sm:right-6 z-50 p-2 sm:p-3 bg-white/90 rounded-full text-zinc-600 hover:text-black hover:bg-white shadow-sm transition-all"
             >
               <CloseIcon className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
@@ -366,12 +348,12 @@ export default function HomeClient({ products, categories, banners }: HomeClient
               )}
             </div>
 
-            <div className="w-full md:w-1/2 p-6 sm:p-12 md:p-16 flex flex-col overflow-y-auto custom-scrollbar bg-white/80">
+            <div className="w-full md:w-1/2 p-6 sm:p-12 md:p-16 flex flex-col overflow-y-auto custom-scrollbar bg-white">
               <span className="inline-block px-3 py-1.5 sm:px-4 sm:py-2 text-[9px] sm:text-[10px] font-bold tracking-[0.3em] uppercase rounded-full bg-zinc-100 text-zinc-600 w-max mb-4 sm:mb-6">
                 {selectedProduct.type === 'SERVICE' ? 'Terapia' : selectedProduct.type === 'PHYSICAL' ? 'Materia' : 'Etéreo'}
               </span>
               
-              <h2 className={`text-3xl sm:text-5xl text-zinc-900 mb-4 sm:mb-6 leading-tight ${cormorant.className}`}>
+              <h2 className="text-3xl sm:text-5xl text-zinc-900 mb-4 sm:mb-6 leading-tight font-cormorant">
                 {selectedProduct.name}
               </h2>
               
@@ -388,7 +370,7 @@ export default function HomeClient({ products, categories, banners }: HomeClient
               )}
               
               <div className="mt-auto pt-6 sm:pt-8 flex items-center justify-between border-t border-zinc-200">
-                <p className={`text-3xl sm:text-4xl text-zinc-900 ${cormorant.className}`}>
+                <p className="text-3xl sm:text-4xl text-zinc-900 font-cormorant">
                   {formatPrice(selectedProduct.price)}
                 </p>
                 <button 
