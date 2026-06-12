@@ -7,7 +7,7 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
 import { Cormorant_Garamond, Montserrat } from "next/font/google";
 import { useCart } from "@/context/CartContext";
-import EnergyScene from "@/components/canvas/EnergyScene"; // <-- Import the 3D Scene
+import EnergyScene from "@/components/canvas/EnergyScene";
 
 const cormorant = Cormorant_Garamond({ subsets: ["latin"], weight: ["300", "400", "500", "600", "700"], style: ["normal", "italic"], display: "swap" });
 const montserrat = Montserrat({ subsets: ["latin"], weight: ["300", "400", "500", "600"], display: "swap" });
@@ -24,16 +24,27 @@ export default function HomeClient({ products, categories, banners }: HomeClient
   const container = useRef<HTMLDivElement>(null);
   const cursorRef = useRef<HTMLDivElement>(null);
   const cursorAuraRef = useRef<HTMLDivElement>(null);
+  
   const { addItem, totalItems, openCart } = useCart();
   
   const [activeFilter, setActiveFilter] = useState<string>('ALL');
   const [searchQuery, setSearchQuery] = useState('');
   const [mounted, setMounted] = useState(false);
+  
+  // Estado para el Lightbox interactivo
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
   useEffect(() => { 
     setMounted(true); 
     window.scrollTo(0, 0); 
   }, []);
+
+  // Bloquear scroll cuando el lightbox está abierto
+  useEffect(() => {
+    if (selectedProduct) document.body.style.overflow = 'hidden';
+    else document.body.style.overflow = 'auto';
+    return () => { document.body.style.overflow = 'auto'; };
+  }, [selectedProduct]);
 
   const dynamicFilters = useMemo(() => [{ id: 'ALL', label: 'El Todo' }, ...categories.map(cat => ({ id: cat.id, label: cat.name }))], [categories]);
   
@@ -43,15 +54,14 @@ export default function HomeClient({ products, categories, banners }: HomeClient
       (product.name.toLowerCase().includes(searchQuery.toLowerCase()) || product.description.toLowerCase().includes(searchQuery.toLowerCase()))
     ), [products, activeFilter, searchQuery]);
 
-  // Duplicated banners for seamless, infinite CSS/GSAP scrolling (No DOM mutation required)
   const infiniteBanners = useMemo(() => [...banners, ...banners], [banners]);
 
   useGSAP(() => {
-    // Highly optimized custom cursor
-    const xTo = gsap.quickTo(cursorRef.current, "x", {duration: 0.1, ease: "power3"});
-    const yTo = gsap.quickTo(cursorRef.current, "y", {duration: 0.1, ease: "power3"});
-    const xAuraTo = gsap.quickTo(cursorAuraRef.current, "x", {duration: 0.4, ease: "power3"});
-    const yAuraTo = gsap.quickTo(cursorAuraRef.current, "y", {duration: 0.4, ease: "power3"});
+    // Cursor magnético optimizado (sólo visible en desktop)
+    const xTo = gsap.quickTo(cursorRef.current, "x", {duration: 0.15, ease: "power3"});
+    const yTo = gsap.quickTo(cursorRef.current, "y", {duration: 0.15, ease: "power3"});
+    const xAuraTo = gsap.quickTo(cursorAuraRef.current, "x", {duration: 0.5, ease: "power3"});
+    const yAuraTo = gsap.quickTo(cursorAuraRef.current, "y", {duration: 0.5, ease: "power3"});
 
     const moveCursor = (e: MouseEvent) => { 
       xTo(e.clientX); yTo(e.clientY); 
@@ -59,7 +69,7 @@ export default function HomeClient({ products, categories, banners }: HomeClient
     };
     window.addEventListener("mousemove", moveCursor, { passive: true });
 
-    // Initial Loading Sequence
+    // Secuencia de entrada etérea
     const tl = gsap.timeline();
     tl.to(".loader-content", { opacity: 1, y: 0, duration: 1, ease: "power3.out" })
       .to(".loader-screen", { opacity: 0, duration: 1.2, ease: "power2.inOut", delay: 0.8, display: "none" })
@@ -68,21 +78,16 @@ export default function HomeClient({ products, categories, banners }: HomeClient
     return () => { window.removeEventListener("mousemove", moveCursor); };
   }, { scope: container }); 
 
-  // Optimized Carousel Engine (Pure translation, no appendChild)
   useGSAP(() => {
     if (banners.length < 2) return;
-    
-    // We translate the track by exactly 50% (the width of the original banner array)
-    // When it hits 50%, GSAP instantly resets it to 0, creating a perfect infinite loop.
     gsap.to(".carousel-track", {
       xPercent: -50,
-      duration: banners.length * 6, // 6 seconds per slide
+      duration: banners.length * 8, // Movimiento más lento y relajante
       ease: "none",
       repeat: -1,
     });
   }, { scope: container, dependencies: [banners] });
 
-  // Scroll Animations for Products
   useGSAP(() => {
     const cards = gsap.utils.toArray('.product-card-wrapper') as HTMLElement[];
     cards.forEach((card, index) => {
@@ -90,8 +95,8 @@ export default function HomeClient({ products, categories, banners }: HomeClient
         trigger: card, 
         start: "top 90%",
         animation: gsap.fromTo(card, 
-          { opacity: 0, y: 30 }, 
-          { opacity: 1, y: 0, duration: 1.2, ease: "expo.out", delay: index * 0.05 }
+          { opacity: 0, y: 40, scale: 0.98 }, 
+          { opacity: 1, y: 0, scale: 1, duration: 1.2, ease: "power3.out", delay: index * 0.05 }
         ),
         toggleActions: "play none none reverse"
       });
@@ -100,8 +105,8 @@ export default function HomeClient({ products, categories, banners }: HomeClient
 
   const formatPrice = (price: number) => new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 }).format(price);
 
-  const handleAddToCart = (product: Product, e: ReactMouseEvent<HTMLButtonElement>) => {
-    e.stopPropagation();
+  const handleAddToCart = (product: Product, e?: ReactMouseEvent<HTMLButtonElement>) => {
+    if (e) e.stopPropagation();
     addItem({ id: product.id, name: product.name, price: product.price, imageUrl: product.imageUrl || null });
     gsap.fromTo(".cart-badge", { scale: 1.5, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.8, ease: "elastic.out(1, 0.5)" });
   };
@@ -109,59 +114,57 @@ export default function HomeClient({ products, categories, banners }: HomeClient
   const designPattern = ["col-span-1", "col-span-2", "col-span-1", "col-span-1", "col-span-2", "col-span-1"];
 
   return (
-    <div ref={container} className={`relative min-h-screen bg-[#FAFAFB] text-zinc-800 ${montserrat.className} overflow-hidden cursor-none selection:bg-zinc-300 selection:text-black`}>
+    <div ref={container} className={`relative min-h-screen bg-[#FAFAFB] text-zinc-800 ${montserrat.className} overflow-hidden md:cursor-none selection:bg-zinc-200 selection:text-black`}>
       
-      {/* --- INJECTED 3D SCENE --- */}
       <EnergyScene />
 
-      {/* Optimized Background Elements */}
-      <div className="fixed top-[10%] -left-[10%] w-[50vw] h-[50vw] bg-white rounded-full blur-[100px] pointer-events-none z-0 opacity-70 will-change-transform" />
-      <div className="fixed bottom-[20%] -right-[10%] w-[60vw] h-[60vw] bg-zinc-200/30 rounded-full blur-[120px] pointer-events-none z-0 will-change-transform" />
+      {/* Sombras difusas de fondo para dar profundidad de cristal */}
+      <div className="fixed top-[-10%] left-[-10%] w-[60vw] h-[60vw] bg-white rounded-full blur-[120px] pointer-events-none z-0 opacity-80" />
+      <div className="fixed bottom-[-10%] right-[-10%] w-[50vw] h-[50vw] bg-zinc-200/40 rounded-full blur-[150px] pointer-events-none z-0" />
 
-      {/* Hardware Accelerated Cursors */}
-      <div ref={cursorRef} className="fixed top-0 left-0 w-2 h-2 bg-zinc-500 rounded-full pointer-events-none z-[9999] -translate-x-1/2 -translate-y-1/2 shadow-[0_0_15px_rgba(161,161,170,0.8)] mix-blend-difference will-change-transform" />
-      <div ref={cursorAuraRef} className="fixed top-0 left-0 w-10 h-10 border border-zinc-400/50 rounded-full pointer-events-none z-[9998] -translate-x-1/2 -translate-y-1/2 will-change-transform" />
+      {/* Cursores Personalizados (Ocultos en móvil) */}
+      <div className="hidden md:block">
+        <div ref={cursorRef} className="fixed top-0 left-0 w-2 h-2 bg-zinc-600 rounded-full pointer-events-none z-[9999] -translate-x-1/2 -translate-y-1/2 shadow-[0_0_10px_rgba(161,161,170,0.5)] will-change-transform" />
+        <div ref={cursorAuraRef} className="fixed top-0 left-0 w-12 h-12 border-[0.5px] border-zinc-400/40 bg-white/10 backdrop-blur-[1px] rounded-full pointer-events-none z-[9998] -translate-x-1/2 -translate-y-1/2 will-change-transform transition-all" />
+      </div>
 
-      {/* Loader */}
+      {/* Pantalla de Carga Estética */}
       <div className="loader-screen fixed inset-0 z-[100] bg-[#FAFAFB] flex items-center justify-center pointer-events-none">
-        <div className="loader-content flex flex-col items-center gap-6 opacity-0 translate-y-4">
-          <div className="relative flex items-center justify-center w-32 h-32">
-            <TetragrammatonIcon className="w-20 h-20 text-zinc-400 animate-[spin_8s_linear_infinite]" />
-            <div className="absolute inset-0 bg-gradient-to-t from-white/90 to-transparent rounded-full animate-pulse" />
-          </div>
-          <h2 className={`text-2xl text-silver-shimmer font-medium tracking-[0.4em] uppercase ${cormorant.className}`}>Alineando</h2>
+        <div className="loader-content flex flex-col items-center gap-8 opacity-0 translate-y-8">
+          <TetragrammatonIcon className="w-16 h-16 text-zinc-400 animate-[spin_10s_linear_infinite]" />
+          <h2 className={`text-xl md:text-2xl text-silver-shimmer font-light tracking-[0.5em] uppercase ${cormorant.className}`}>Alineando</h2>
         </div>
       </div>
 
-      <nav className="top-navbar fixed top-0 w-full z-50 bg-white/60 backdrop-blur-xl shadow-[0_4px_20px_rgba(0,0,0,0.02)] border-b border-zinc-200/50">
+      <nav className="top-navbar fixed top-0 w-full z-40 bg-white/40 backdrop-blur-2xl shadow-[0_1px_30px_rgba(0,0,0,0.02)] border-b border-white/50">
         <div className="max-w-[90rem] mx-auto px-6 lg:px-12 h-20 sm:h-24 flex items-center justify-between gap-4 sm:gap-8">
           <div className="flex items-center gap-3 sm:gap-4 group cursor-pointer" onClick={() => window.scrollTo({top: 0, behavior: 'smooth'})}>
-            <div className="relative p-2.5 bg-gradient-to-br from-white to-zinc-100 rounded-full border border-zinc-200 group-hover:rotate-180 transition-all duration-1000 shrink-0">
-              <TetragrammatonIcon className="w-5 h-5 sm:w-6 sm:h-6 text-zinc-500 group-hover:text-zinc-900 transition-colors" />
+            <div className="relative p-2 bg-white/80 rounded-full shadow-sm border border-zinc-100 group-hover:rotate-180 transition-all duration-[1.5s] ease-in-out shrink-0">
+              <TetragrammatonIcon className="w-5 h-5 sm:w-6 sm:h-6 text-zinc-600" />
             </div>
-            <span className={`text-[16px] sm:text-xl md:text-2xl font-medium tracking-wide text-silver-shimmer whitespace-nowrap ${cormorant.className}`}>
-              liberacionenergetica™
+            <span className={`text-[16px] sm:text-2xl md:text-3xl font-medium tracking-widest text-silver-shimmer whitespace-nowrap ${cormorant.className}`}>
+              liberacionenergetica
             </span>
           </div>
 
           <div className="flex-1 max-w-xl relative group hidden md:block">
-            <div className="absolute inset-0 bg-zinc-100/50 rounded-full blur-md opacity-0 group-focus-within:opacity-100 transition-opacity" />
+            <div className="absolute inset-0 bg-white/60 rounded-full blur-md opacity-0 group-focus-within:opacity-100 transition-opacity" />
             <div className="relative flex items-center">
-              <SearchIcon className="absolute left-6 w-4 h-4 text-zinc-400 group-focus-within:text-zinc-800 transition-colors" />
+              <SearchIcon className="absolute left-6 w-4 h-4 text-zinc-400" />
               <input 
                 type="text" 
-                placeholder="Revelar artefactos..." 
+                placeholder="Buscar artefactos o servicios..." 
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-white/90 border border-zinc-200 shadow-sm rounded-full py-3 pl-14 pr-6 text-[11px] font-bold tracking-widest text-zinc-800 focus:outline-none focus:ring-1 focus:ring-zinc-300 transition-all placeholder:text-zinc-400 uppercase"
+                className="w-full bg-white/70 backdrop-blur-md border border-zinc-200/80 shadow-[inset_0_2px_10px_rgba(0,0,0,0.01)] rounded-full py-3 pl-14 pr-6 text-[11px] font-bold tracking-[0.15em] text-zinc-700 focus:outline-none focus:ring-1 focus:ring-zinc-300 transition-all placeholder:text-zinc-400 uppercase"
               />
             </div>
           </div>
 
-          <button onClick={openCart} className="relative p-3.5 bg-gradient-to-b from-white to-zinc-50 rounded-full border border-zinc-200 hover:shadow-md transition-all active:scale-95 group shrink-0">
+          <button onClick={openCart} className="relative p-3.5 bg-white/80 backdrop-blur-md rounded-full border border-zinc-200/80 hover:shadow-lg transition-all duration-300 active:scale-95 group shrink-0">
             <CartIcon className="w-5 h-5 text-zinc-600 group-hover:text-black transition-colors" />
             {mounted && totalItems > 0 && (
-              <span className="cart-badge absolute -top-1.5 -right-1.5 bg-zinc-900 text-white text-[10px] font-black w-6 h-6 rounded-full flex items-center justify-center border-2 border-white shadow-md">
+              <span className="cart-badge absolute -top-1 -right-1 bg-zinc-800 text-white text-[10px] font-black w-6 h-6 rounded-full flex items-center justify-center border-[2px] border-white shadow-sm">
                 {totalItems}
               </span>
             )}
@@ -169,45 +172,42 @@ export default function HomeClient({ products, categories, banners }: HomeClient
         </div>
       </nav>
 
-      <main className="relative z-10 max-w-[90rem] mx-auto px-6 lg:px-12 pt-32 pb-40">
+      <main className="relative z-10 max-w-[90rem] mx-auto px-6 lg:px-12 pt-36 pb-40">
         
-        {/* Infinite CSS/GSAP Carousel */}
+        {/* Carrusel Infinito (Estilo Galería de Arte) */}
         {banners.length > 0 && (
-          <section className="carousel-container relative w-full aspect-[4/3] sm:aspect-[21/9] lg:aspect-[21/7] rounded-[2rem] overflow-hidden mb-24 border border-zinc-200 shadow-xl shadow-zinc-200/50 group">
-            {/* The track is exactly 200% width if duplicated once, dynamically set by flex */}
+          <section className="carousel-container relative w-full aspect-[4/3] sm:aspect-[21/9] lg:aspect-[21/7] rounded-[2.5rem] overflow-hidden mb-24 border-[4px] border-white shadow-2xl shadow-zinc-200/50 group">
             <div className="carousel-track flex h-full will-change-transform w-max">
               {infiniteBanners.map((banner, i) => (
                 <article key={`${banner.id}-${i}`} className="w-[100vw] max-w-[90rem] h-full relative shrink-0 px-0">
                   <Image src={banner.imageUrl} alt={banner.title} fill priority={i === 0} className="object-cover" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-zinc-900/90 via-zinc-900/30 to-transparent" />
-                  <div className="absolute bottom-12 sm:bottom-20 left-8 sm:left-16 max-w-2xl text-white z-10">
-                    <div className="banner-text">
-                      <h3 className={`text-4xl sm:text-5xl md:text-6xl font-medium tracking-wide mb-4 text-silver-shimmer ${cormorant.className}`}>{banner.title}</h3>
-                      {banner.subtitle && <p className="text-zinc-200 text-xs sm:text-sm font-bold tracking-[0.2em] uppercase">{banner.subtitle}</p>}
-                    </div>
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent mix-blend-multiply" />
+                  <div className="absolute bottom-12 sm:bottom-24 left-8 sm:left-20 max-w-2xl text-white z-10">
+                    <h3 className={`text-4xl sm:text-6xl md:text-7xl font-light tracking-wide mb-4 text-silver-shimmer drop-shadow-lg ${cormorant.className}`}>
+                      {banner.title}
+                    </h3>
+                    {banner.subtitle && <p className="text-zinc-200 text-xs sm:text-sm font-medium tracking-[0.3em] uppercase">{banner.subtitle}</p>}
                   </div>
                 </article>
               ))}
             </div>
-            
-            {/* UI Overlay */}
-            <div className="absolute inset-0 border-[1px] border-white/20 rounded-[2rem] pointer-events-none z-20" />
-            <div className="absolute bottom-6 right-8 flex gap-2 z-20">
-              {banners.map((_, i) => <div key={i} className="w-2 h-2 rounded-full bg-white/40 border border-white/50" />)}
+            {/* Indicadores Minimalistas */}
+            <div className="absolute bottom-8 right-12 flex gap-3 z-20">
+              {banners.map((_, i) => <div key={i} className="w-1.5 h-1.5 rounded-full bg-white/60 shadow-sm" />)}
             </div>
           </section>
         )}
 
-        {/* Filters */}
-        <div className="flex flex-wrap justify-center gap-3 mb-20 relative z-20">
+        {/* Filtros Limpios */}
+        <div className="flex flex-wrap justify-center gap-4 mb-24 relative z-20">
           {dynamicFilters.map((filter) => (
             <button
               key={filter.id}
               onClick={() => setActiveFilter(filter.id)}
-              className={`px-6 py-3 rounded-full text-[10px] font-bold tracking-[0.2em] uppercase transition-all duration-300 shadow-sm ${
+              className={`px-8 py-3.5 rounded-full text-[11px] font-bold tracking-[0.2em] uppercase transition-all duration-500 ${
                 activeFilter === filter.id 
-                  ? 'bg-zinc-800 text-white shadow-[0_5px_15px_rgba(0,0,0,0.1)] border border-zinc-900' 
-                  : 'bg-white/80 backdrop-blur-sm text-zinc-500 border border-zinc-200 hover:border-zinc-300 hover:text-zinc-900'
+                  ? 'bg-zinc-800 text-white shadow-xl shadow-zinc-300 border border-zinc-800 scale-105' 
+                  : 'bg-white/60 backdrop-blur-md text-zinc-500 border border-zinc-200/80 hover:bg-white hover:text-zinc-900 hover:shadow-md'
               }`}
             >
               {filter.label}
@@ -215,47 +215,66 @@ export default function HomeClient({ products, categories, banners }: HomeClient
           ))}
         </div>
 
-        {/* Product Grid */}
+        {/* Grilla de Productos */}
         {filteredProducts.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-32 text-center relative z-20">
-            <TetragrammatonIcon className="w-24 h-24 text-zinc-300 mb-8 animate-[spin_20s_linear_infinite] drop-shadow-md" />
-            <h3 className={`text-3xl text-zinc-800 mb-4 tracking-widest uppercase ${cormorant.className}`}>Silencio Cuántico</h3>
-            <p className="text-zinc-500 text-xs font-bold tracking-[0.2em] uppercase">La materia aún no se ha manifestado.</p>
+          <div className="flex flex-col items-center justify-center py-40 text-center relative z-20">
+            <TetragrammatonIcon className="w-20 h-20 text-zinc-200 mb-8 animate-[spin_15s_linear_infinite]" />
+            <h3 className={`text-4xl text-zinc-400 mb-4 tracking-widest uppercase ${cormorant.className}`}>El Vacío</h3>
+            <p className="text-zinc-400 text-xs font-bold tracking-[0.3em] uppercase">No hay manifestaciones para esta búsqueda.</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-8 gap-y-16 items-start relative z-20">
             {filteredProducts.map((product, i) => (
-              <div key={product.id} className={`product-card-wrapper w-full ${designPattern[i % designPattern.length]} ${i % 2 !== 0 ? 'lg:mt-16' : ''}`}>
-                <article className="group relative flex flex-col gap-4 p-4 rounded-[2rem] bg-white/80 backdrop-blur-md shadow-sm border border-zinc-200/80 hover:shadow-2xl hover:shadow-zinc-200/50 hover:-translate-y-2 transition-all duration-500">
-                  <div className="relative w-full aspect-[3/4] rounded-[1.5rem] overflow-hidden bg-zinc-100">
-                    <div className="absolute top-4 left-4 z-20 pointer-events-none">
-                      <span className="px-3 py-1.5 text-[8px] font-bold tracking-[0.2em] uppercase rounded-full bg-white/95 text-zinc-800 shadow-sm">
+              <div key={product.id} className={`product-card-wrapper w-full ${designPattern[i % designPattern.length]} ${i % 2 !== 0 ? 'lg:mt-24' : ''}`}>
+                <article 
+                  className="group relative flex flex-col gap-5 p-5 rounded-[2.5rem] bg-white/40 backdrop-blur-xl border border-white hover:border-zinc-200/80 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_20px_40px_rgb(0,0,0,0.08)] hover:-translate-y-3 transition-all duration-700 cursor-pointer"
+                  onClick={() => setSelectedProduct(product)}
+                >
+                  <div className="relative w-full aspect-[4/5] rounded-[2rem] overflow-hidden bg-zinc-100/50">
+                    <div className="absolute top-5 left-5 z-20 pointer-events-none">
+                      <span className="px-4 py-2 text-[9px] font-bold tracking-[0.25em] uppercase rounded-full bg-white/90 backdrop-blur-md text-zinc-800 shadow-sm">
                         {product.type === 'SERVICE' ? 'Terapia' : product.type === 'PHYSICAL' ? 'Materia' : 'Etéreo'}
                       </span>
                     </div>
                     {product.imageUrl ? (
-                      <Image src={product.imageUrl} alt={product.name} fill className="object-cover transition-transform duration-[4s] ease-out group-hover:scale-105" />
+                      <Image 
+                        src={product.imageUrl} 
+                        alt={product.name} 
+                        fill 
+                        className="object-cover transition-all duration-[2s] ease-out group-hover:scale-110 group-hover:brightness-105" 
+                      />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center">
-                        <TetragrammatonIcon className="w-12 h-12 text-zinc-300 group-hover:scale-110 transition-transform duration-[3s]" />
+                        <TetragrammatonIcon className="w-12 h-12 text-zinc-300 group-hover:rotate-180 transition-transform duration-[2s]" />
                       </div>
                     )}
+                    {/* Overlay al hacer hover para invitar al clic */}
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-500 flex items-center justify-center">
+                      <span className="opacity-0 group-hover:opacity-100 text-white text-xs font-bold tracking-[0.2em] uppercase transition-opacity duration-500 drop-shadow-md">
+                        Ver Visión
+                      </span>
+                    </div>
                   </div>
 
-                  <div className="flex flex-col z-20 px-2 pb-2">
-                    <h2 className={`text-2xl text-zinc-900 mb-2 group-hover:text-black transition-colors leading-tight ${cormorant.className}`}>
+                  <div className="flex flex-col z-20 px-3 pb-2">
+                    <h2 className={`text-2xl text-zinc-800 mb-2 group-hover:text-black transition-colors leading-tight ${cormorant.className}`}>
                       {product.name}
                     </h2>
                     <p className="text-[13px] text-zinc-500 font-medium leading-relaxed mb-6 line-clamp-2">
                       {product.description}
                     </p>
                     
-                    <div className="mt-auto flex items-center justify-between pt-4 border-t border-zinc-100">
-                      <p className={`text-xl text-zinc-900 font-semibold ${cormorant.className}`}>
+                    <div className="mt-auto flex items-center justify-between pt-5 border-t border-zinc-200/50">
+                      <p className={`text-2xl text-zinc-900 ${cormorant.className}`}>
                         {formatPrice(product.price)}
                       </p>
-                      <button onClick={(e) => handleAddToCart(product, e)} disabled={product.stock === 0} className="relative flex items-center justify-center w-12 h-12 rounded-full border border-zinc-200 bg-white hover:bg-zinc-50 transition-all duration-300 active:scale-95 shadow-sm group/btn disabled:opacity-50">
-                        <PlusIcon className="w-5 h-5 text-zinc-500 group-hover/btn:text-zinc-900 transition-colors" />
+                      <button 
+                        onClick={(e) => handleAddToCart(product, e)} 
+                        disabled={product.stock === 0} 
+                        className="relative flex items-center justify-center w-12 h-12 rounded-full bg-zinc-900 text-white hover:bg-zinc-700 transition-all duration-300 hover:scale-110 active:scale-95 shadow-md disabled:opacity-50 disabled:hover:scale-100 z-30"
+                        title="Añadir al compendio"
+                      >
+                        <PlusIcon className="w-5 h-5" />
                       </button>
                     </div>
                   </div>
@@ -265,14 +284,91 @@ export default function HomeClient({ products, categories, banners }: HomeClient
           </div>
         )}
       </main>
+
+      {/* --- LIGHTBOX (Vista Inmersiva del Producto) --- */}
+      {selectedProduct && (
+        <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 sm:p-8">
+          {/* Overlay oscuro con blur */}
+          <div 
+            className="absolute inset-0 bg-zinc-900/80 backdrop-blur-xl animate-[fadeIn_0.3s_ease-out]"
+            onClick={() => setSelectedProduct(null)}
+          />
+          
+          {/* Contenedor Modal */}
+          <div className="relative w-full max-w-6xl bg-[#FAFAFB] rounded-[2rem] sm:rounded-[3rem] shadow-2xl overflow-hidden flex flex-col md:flex-row max-h-[90vh] animate-[scaleUp_0.4s_cubic-bezier(0.16,1,0.3,1)]">
+            
+            {/* Botón Cerrar */}
+            <button 
+              onClick={() => setSelectedProduct(null)}
+              className="absolute top-6 right-6 z-50 p-3 bg-white/50 backdrop-blur-md rounded-full text-zinc-500 hover:text-black hover:bg-white transition-all"
+            >
+              <CloseIcon className="w-5 h-5" />
+            </button>
+
+            {/* Área de Imagen en Alta Calidad */}
+            <div className="w-full md:w-1/2 relative bg-zinc-100 min-h-[40vh] md:min-h-full">
+              {selectedProduct.imageUrl ? (
+                <Image src={selectedProduct.imageUrl} alt={selectedProduct.name} fill className="object-cover" priority />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center bg-zinc-100">
+                  <TetragrammatonIcon className="w-24 h-24 text-zinc-300" />
+                </div>
+              )}
+            </div>
+
+            {/* Área de Detalles */}
+            <div className="w-full md:w-1/2 p-8 sm:p-12 md:p-16 flex flex-col overflow-y-auto custom-scrollbar">
+              <span className="inline-block px-4 py-2 text-[10px] font-bold tracking-[0.3em] uppercase rounded-full bg-zinc-100 text-zinc-600 w-max mb-6">
+                {selectedProduct.type === 'SERVICE' ? 'Terapia' : selectedProduct.type === 'PHYSICAL' ? 'Materia' : 'Etéreo'}
+              </span>
+              
+              <h2 className={`text-4xl sm:text-5xl text-zinc-900 mb-6 leading-tight ${cormorant.className}`}>
+                {selectedProduct.name}
+              </h2>
+              
+              <div className="w-12 h-[1px] bg-zinc-300 mb-6" />
+              
+              <p className="text-zinc-600 leading-relaxed mb-8 text-sm sm:text-base whitespace-pre-line">
+                {selectedProduct.description}
+              </p>
+
+              {selectedProduct.duration && (
+                <p className="text-xs font-bold tracking-[0.2em] text-zinc-400 uppercase mb-8">
+                  Duración del servicio: {selectedProduct.duration} min
+                </p>
+              )}
+              
+              <div className="mt-auto pt-8 flex items-center justify-between border-t border-zinc-200">
+                <p className={`text-4xl text-zinc-900 ${cormorant.className}`}>
+                  {formatPrice(selectedProduct.price)}
+                </p>
+                <button 
+                  onClick={() => { handleAddToCart(selectedProduct); setSelectedProduct(null); }}
+                  disabled={selectedProduct.stock === 0}
+                  className="px-8 py-4 bg-zinc-900 text-white rounded-full text-xs font-bold tracking-[0.2em] uppercase hover:bg-zinc-800 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 disabled:opacity-50"
+                >
+                  {selectedProduct.stock === 0 ? 'Agotado' : 'Adquirir'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Estilos CSS Inline para las animaciones del Modal para no depender de Tailwind config global */}
+      <style dangerouslySetInnerHTML={{__html: `
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes scaleUp { from { opacity: 0; transform: scale(0.95) translateY(20px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+      `}} />
     </div>
   );
 }
 
-// Icons remain unchanged but organized
+// --- ICONOS ---
 function SearchIcon(props: React.SVGProps<SVGSVGElement>) { return <svg fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" {...props}><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" /></svg>; }
 function CartIcon(props: React.SVGProps<SVGSVGElement>) { return <svg fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" {...props}><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007z" /></svg>; }
 function PlusIcon(props: React.SVGProps<SVGSVGElement>) { return <svg fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" {...props}><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>; }
+function CloseIcon(props: React.SVGProps<SVGSVGElement>) { return <svg fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" {...props}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>; }
 
 function TetragrammatonIcon(props: React.SVGProps<SVGSVGElement>) {
   return (

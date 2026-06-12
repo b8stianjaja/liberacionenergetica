@@ -1,11 +1,11 @@
 @import "tailwindcss";
 
 :root {
-  /* Warmer, community-friendly base palette */
-  --background: #FCFBF9; /* Alabaster / Warm White */
-  --foreground: #2D2A26; /* Soft Charcoal instead of harsh black */
-  --accent-primary: #D4A373; /* Warm Sand/Gold */
-  --accent-secondary: #CCD5AE; /* Sage Green */
+  /* Paleta Específica "Liberación Energética": Pura, Etérea y Clara */
+  --background: #FAFAFB; /* Blanco cálido muy sutil */
+  --foreground: #18181B; /* Zinc-900 para contraste elegante */
+  --accent-primary: #A1A1AA; /* Plata/Zinc oscuro */
+  --accent-secondary: #E4E4E7; /* Plata clara */
 }
 
 @theme inline {
@@ -18,52 +18,49 @@ body {
   color: var(--foreground);
   overflow-x: hidden; 
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* Warm magical selection */
+/* Selección mágica y limpia */
 ::selection {
-  background-color: rgba(212, 163, 115, 0.3); /* Warm Sand */
-  color: #1A1A1A; 
+  background-color: rgba(161, 161, 170, 0.2); /* Plata sutil */
+  color: #000000; 
 }
 
-/* --- THE "WARM AURA" EFFECT (Replaces Silver Shimmer) --- */
-@keyframes auraShimmer {
+/* --- EFECTO SILVER SHIMMER (Plata Brillante) --- */
+@keyframes silverShimmer {
   0% { background-position: -200% center; }
   100% { background-position: 200% center; }
 }
 
-.text-aura-shimmer {
+.text-silver-shimmer {
   background: linear-gradient(
     110deg,
-    #D4A373 0%,
-    #E9C46A 20%,
-    #F4A261 40%,
-    #E9C46A 60%,
-    #D4A373 80%,
-    #E76F51 100%
+    #71717A 0%,     /* Zinc 500 */
+    #D4D4D8 20%,    /* Zinc 300 */
+    #FFFFFF 40%,    /* Blanco Puro (El destello) */
+    #D4D4D8 60%,    /* Zinc 300 */
+    #71717A 80%,    /* Zinc 500 */
+    #A1A1AA 100%    /* Zinc 400 */
   );
   background-size: 200% auto;
   color: transparent;
   -webkit-background-clip: text;
   background-clip: text;
-  animation: auraShimmer 8s linear infinite;
+  animation: silverShimmer 6s linear infinite;
 }
 
-.border-aura-real {
-  border: 1px solid transparent;
-  background: linear-gradient(var(--background), var(--background)) padding-box,
-              linear-gradient(135deg, #E9C46A, var(--background), #D4A373, var(--background)) border-box;
-  border-radius: 1rem; /* Softer, friendlier edges */
-}
-
-/* Elegant, warm custom scrollbar */
+/* Scrollbar elegante */
 .custom-scrollbar {
   scrollbar-width: thin;
   scrollbar-color: var(--accent-primary) transparent; 
 }
-.custom-scrollbar::-webkit-scrollbar { width: 8px; height: 8px; }
+.custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
 .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, #D4A373, #CCD5AE); 
-  border-radius: 99px; /* Pill shape for friendliness */
+  background: #D4D4D8; 
+  border-radius: 99px; 
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #A1A1AA;
 }
