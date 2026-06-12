@@ -256,8 +256,8 @@ export default function HomeClient({ products, categories, banners }: HomeClient
         {filteredProducts.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 sm:py-40 text-center relative z-20">
             <TetragrammatonIcon className="w-16 h-16 sm:w-20 sm:h-20 text-zinc-200 mb-6 sm:mb-8 animate-[spin_15s_linear_infinite]" />
-            <h3 className="text-3xl sm:text-4xl text-zinc-400 mb-4 tracking-widest uppercase font-cormorant">El Vacío</h3>
-            <p className="text-zinc-400 text-[10px] sm:text-xs font-bold tracking-[0.3em] uppercase">No hay manifestaciones para esta búsqueda.</p>
+            <h3 className="text-3xl sm:text-4xl text-zinc-400 mb-4 tracking-widest uppercase font-cormorant">Banners y Productos</h3>
+            <p className="text-zinc-400 text-[10px] sm:text-xs font-bold tracking-[0.3em] uppercase">Empiece por añadir productos desde su Panel.</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-6 gap-y-10 sm:gap-y-16 items-start relative z-20">

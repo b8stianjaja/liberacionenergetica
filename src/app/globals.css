@@ -1,5 +1,30 @@
 @import "tailwindcss";
 
+/* =========================================
+   EFECTO ZOOM GLOBAL NATIVO
+   ========================================= */
+/* Móviles (Por defecto): Mantenemos 16px para no desbordar las pantallas pequeñas */
+html {
+  font-size: 16px; 
+}
+
+/* Tablets / Laptops pequeñas (min-width: 1024px): Zoom ~112.5% */
+@media (min-width: 1024px) {
+  html {
+    font-size: 18px; /* Sube este número si lo quieres aún más "zoomeado" */
+  }
+}
+
+/* Pantallas 2K/4K (min-width: 1536px): Zoom 125% para llenar mejor monitores gigantes */
+@media (min-width: 1536px) {
+  html {
+    font-size: 20px; 
+  }
+}
+
+/* =========================================
+   VARIABLES Y TEMA
+   ========================================= */
 :root {
   --background: #FAFAFB;
   --foreground: #18181B; 
@@ -18,10 +43,11 @@ body {
   overflow-x: hidden; 
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  /* La fuente principal ahora se jala desde el layout.tsx */
   font-family: var(--font-montserrat), sans-serif;
 }
 
-/* Clase global para invocar Cormorant donde la necesitemos */
+/* Clase global para usar la tipografía serif donde se necesite */
 .font-cormorant {
   font-family: var(--font-cormorant), serif;
 }
@@ -30,6 +56,18 @@ body {
   background-color: rgba(161, 161, 170, 0.2); 
   color: #000000; 
 }
+
+/* =========================================
+   ESTILOS DE COMPONENTES (Scroll, Texto Místico)
+   ========================================= */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: var(--accent-primary) transparent; 
+}
+.custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+.custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+.custom-scrollbar::-webkit-scrollbar-thumb { background: #D4D4D8; border-radius: 99px; }
+.custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #A1A1AA; }
 
 @keyframes silverShimmer {
   0% { background-position: -200% center; }
@@ -47,17 +85,12 @@ body {
   animation: silverShimmer 6s linear infinite;
 }
 
-.custom-scrollbar {
-  scrollbar-width: thin;
-  scrollbar-color: var(--accent-primary) transparent; 
-}
-.custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
-.custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-.custom-scrollbar::-webkit-scrollbar-thumb { background: #D4D4D8; border-radius: 99px; }
-.custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #A1A1AA; }
-
-/* --- OPTIMIZED HARDWARE-ACCELERATED ANIMATIONS --- */
+/* =========================================
+   ANIMACIONES ACELERADAS POR HARDWARE (GPU)
+   (Las que extrajimos del EnergyScene.tsx)
+   ========================================= */
 @keyframes wave-shift-1 {
+  /* Usar translate3d fuerza al navegador a pasar el cálculo a la Tarjeta Gráfica */
   0% { transform: rotate(-15deg) translate3d(0, 0, 0) scale(1); }
   100% { transform: rotate(-5deg) translate3d(0, 10%, 0) scale(1.1); }
 }
@@ -79,6 +112,32 @@ body {
   100% { transform: translate3d(0, -110vh, 0) scale(1.2); opacity: 0; }
 }
 
+/* Utilidades para los divs de EnergyScene.tsx */
 .astral-wave-1 { animation: wave-shift-1 25s ease-in-out infinite alternate; }
 .astral-wave-2 { animation: wave-shift-2 30s ease-in-out infinite alternate; }
 .astral-pulse { animation: pulse-light 15s ease-in-out infinite alternate; }
+
+
+/* =========================================
+   ANIMACIONES DE INTERFAZ (Modales y Carrusel)
+   (Extraídas del home-client.tsx)
+   ========================================= */
+@keyframes fadeIn { 
+  from { opacity: 0; } 
+  to { opacity: 1; } 
+}
+
+@keyframes scaleUp { 
+  from { opacity: 0; transform: scale3d(0.95, 0.95, 1) translate3d(0, 20px, 0); } 
+  to { opacity: 1; transform: scale3d(1, 1, 1) translate3d(0, 0, 0); } 
+}
+
+@keyframes slideUpMobile { 
+  from { opacity: 0; transform: translate3d(0, 100%, 0); } 
+  to { opacity: 1; transform: translate3d(0, 0, 0); } 
+}
+
+@keyframes kenBurns {
+  0% { transform: scale3d(1.05, 1.05, 1) translate3d(0, 0, 0); }
+  100% { transform: scale3d(1.12, 1.12, 1) translate3d(-1%, -1%, 0); }
+}
