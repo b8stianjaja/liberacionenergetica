@@ -1,19 +1,21 @@
 'use client';
 
 import { useActionState, useState, useEffect } from 'react';
+import Image from 'next/image'; // Importamos el componente optimizado de Next.js
 import { authenticate } from './actions';
 import { Cormorant_Garamond, Montserrat } from "next/font/google";
 
 const cormorant = Cormorant_Garamond({ subsets: ["latin"], weight: ["300", "400", "500", "600", "700"], style: ["normal", "italic"], display: "swap" });
 const montserrat = Montserrat({ subsets: ["latin"], weight: ["300", "400", "500", "600"], display: "swap" });
 
+// 1. RUTAS LOCALES: Estas imágenes deben estar físicamente en public/images/login/
 const backgroundImages = [
-  "https://images.unsplash.com/photo-1608248593842-8021c6a1b184?auto=format&fit=crop&q=80", 
-  "https://images.unsplash.com/photo-1507676184212-d0c30a514b8a?auto=format&fit=crop&q=80", 
-  "https://images.unsplash.com/photo-1499209974431-9dddcece7f88?auto=format&fit=crop&q=80"  
+  "/images/login/studio-1.jpg", 
+  "/images/login/studio-2.jpg", 
+  "/images/login/studio-3.jpg"  
 ];
 
-// 1. ISOLATED COMPONENT: This prevents the form from re-rendering every 6 seconds
+// 2. COMPONENTE AISLADO: Evita que el formulario se vuelva a renderizar en cada transición de imagen
 function CinematicBackground() {
   const [currentImg, setCurrentImg] = useState(0);
 
@@ -36,10 +38,17 @@ function CinematicBackground() {
             transition: 'opacity 1.5s ease-in-out, transform 10s linear',
           }}
         >
-          <img 
+          {/* Uso de next/image para optimización automática (WebP, redimensionamiento).
+            'fill' hace que la imagen ocupe el contenedor absoluto.
+            'priority' en index 0 asegura que la primera imagen cargue de inmediato.
+          */}
+          <Image 
             src={src} 
-            alt="Background mood" 
-            className="object-cover w-full h-full"
+            alt={`Atmósfera administrativa ${index + 1}`}
+            fill
+            priority={index === 0} 
+            className="object-cover"
+            quality={90}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
           <div className="absolute inset-0 bg-[#D4A373]/10 mix-blend-overlay" />
@@ -61,17 +70,17 @@ function CinematicBackground() {
   );
 }
 
-// 2. MAIN PAGE: Now perfectly stable for form submissions
+// 3. PÁGINA PRINCIPAL: Estable para el envío de formularios de Next Auth
 export default function LoginPage() {
   const [errorMessage, formAction, isPending] = useActionState(authenticate, undefined);
 
   return (
     <div className={`min-h-screen flex w-full bg-[#FCFBF9] text-[#2D2A26] ${montserrat.className} selection:bg-[#D4A373]/30`}>
       
-      {/* LEFT SIDE */}
+      {/* LADO IZQUIERDO: Imágenes Cinematográficas */}
       <CinematicBackground />
 
-      {/* RIGHT SIDE */}
+      {/* LADO DERECHO: Formulario de Autenticación */}
       <div className="w-full lg:w-[480px] xl:w-[550px] flex flex-col justify-center px-8 sm:px-16 py-12 bg-[#FCFBF9] shadow-[-20px_0_40px_rgba(0,0,0,0.03)] z-10 relative">
         <div className="w-full max-w-sm mx-auto">
           
@@ -131,6 +140,7 @@ export default function LoginPage() {
   );
 }
 
+// Icono decorativo base
 function TetragrammatonIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
     <svg viewBox="0 0 200 200" fill="none" stroke="currentColor" strokeWidth="0.5" {...props}>
