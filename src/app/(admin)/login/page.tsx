@@ -61,8 +61,7 @@ export default function LoginPage() {
             <TetragrammatonIcon className="w-12 h-12 text-[#D4A373] animate-[spin_20s_linear_infinite]" />
           </div>
           <h2 className={`text-5xl md:text-6xl font-medium tracking-wide mb-4 ${cormorant.className}`}>
-            Liberación <br/>
-            <span className="italic text-[#D4A373]">Energética</span>
+            <span className="italic text-[#D4A373]">liberacionenergetica™</span>
           </h2>
           <p className="text-sm font-bold tracking-[0.3em] uppercase opacity-70">
             Portal Administrativo
