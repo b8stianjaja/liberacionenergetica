@@ -1,35 +1,27 @@
-  'use server';
+'use server';
 
-  import { signIn } from '@/auth';
-  import { AuthError } from 'next-auth';
+import { signIn } from '@/auth';
+import { AuthError } from 'next-auth';
 
-  export async function authenticate(
-    prevState: string | undefined,
-    formData: FormData,
-  ) {
-    try {
-      // CRITICAL FIX: Convert FormData to a standard plain object.
-      // NextAuth v5 credentials provider handles plain objects much more predictably.
-      const credentials = Object.fromEntries(formData.entries());
-
-      // Call NextAuth signIn, passing the credentials object and redirection path
-      await signIn('credentials', {
-        ...credentials,
-        redirectTo: '/dashboard',
-      });
-    } catch (error) {
-      if (error instanceof AuthError) {
-        // Map Auth.js specific errors to UI-friendly messages
-        switch (error.type) {
-          case 'CredentialsSignin':
-            return 'Credenciales inválidas. Verifica tu correo y contraseña.';
-          default:
-            return 'Error en el servidor. Intenta de nuevo más tarde.';
-        }
+export async function authenticate(
+  prevState: string | undefined,
+  formData: FormData,
+) {
+  try {
+    // NextAuth handles the redirection internally if successful
+    await signIn('credentials', formData);
+  } catch (error) {
+    if (error instanceof AuthError) {
+      switch (error.type) {
+        case 'CredentialsSignin':
+          return 'Credenciales inválidas. Verifica tu usuario y contraseña.';
+        default:
+          return 'Algo salió mal al intentar iniciar sesión.';
       }
-      
-      // CRITICAL: Next.js 'redirect()' internally throws an error to halt execution.
-      // We MUST rethrow the error if it is not an AuthError, otherwise the redirect fails.
-      throw error;
     }
+    
+    // IMPORTANT: You must re-throw the error if it is NOT an AuthError.
+    // Next.js uses errors under the hood to trigger the redirect upon successful login.
+    throw error;
   }
+}
