@@ -178,7 +178,7 @@ export default function HomeClient({ products, categories, banners }: HomeClient
               <TetragrammatonIcon className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-zinc-600" />
             </div>
             <span className={`text-[12px] sm:text-xl lg:text-3xl font-medium tracking-[0.05em] sm:tracking-widest text-silver-shimmer truncate ${cormorant.className}`}>
-              liberacionenergetica
+              liberacionenergetica™ Boutique
             </span>
           </div>
 

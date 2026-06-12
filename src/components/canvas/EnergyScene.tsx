@@ -32,7 +32,7 @@ function SparkleField({ isMobile }: { isMobile: boolean }) {
         scale={25} 
         size={isMobile ? 2.5 : 1.5} 
         speed={0.2} 
-        color="#a1a1aa" 
+        color="#ffeb32" 
         opacity={0.4} 
         noise={1}
       />
@@ -42,7 +42,7 @@ function SparkleField({ isMobile }: { isMobile: boolean }) {
         scale={20} 
         size={isMobile ? 4 : 3} 
         speed={0.4} 
-        color="#71717a" 
+        color="#94ffdb" 
         opacity={0.3} 
         noise={2}
       />
