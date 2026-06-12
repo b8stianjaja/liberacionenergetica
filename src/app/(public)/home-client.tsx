@@ -214,30 +214,37 @@ export default function HomeClient({ products, categories, banners }: HomeClient
             <div className="absolute inset-0 border border-white/40 rounded-[1.5rem] sm:rounded-[2.5rem] pointer-events-none z-30" />
             
             <div className="carousel-track flex h-full will-change-transform w-max">
-              {infiniteBanners.map((banner, i) => (
-                <article key={`${banner.id}-${i}`} className="w-[100vw] max-w-[90rem] h-full relative shrink-0 px-0 overflow-hidden bg-zinc-900">
-                  <Image 
-                    src={banner.imageUrl} 
-                    alt={banner.title} 
-                    fill 
-                    priority={i === 0} 
-                    sizes="100vw"
-                    className="object-cover animate-[kenBurns_25s_ease-in-out_infinite_alternate] transform-gpu" 
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-zinc-900/90 via-zinc-900/30 to-transparent mix-blend-multiply pointer-events-none" />
-                  
-                  <div className="absolute bottom-10 sm:bottom-24 left-6 sm:left-20 max-w-3xl text-white z-10 drop-shadow-[0_4px_10px_rgba(0,0,0,0.5)] pointer-events-none">
-                    <h3 className={`text-4xl sm:text-6xl md:text-8xl font-light tracking-wide mb-2 sm:mb-4 text-silver-shimmer ${cormorant.className}`}>
-                      {banner.title}
-                    </h3>
-                    {banner.subtitle && (
-                      <p className="text-zinc-200 text-[10px] sm:text-[13px] font-bold tracking-[0.4em] uppercase opacity-90">
-                        {banner.subtitle}
-                      </p>
-                    )}
-                  </div>
-                </article>
-              ))}
+              {infiniteBanners.map((banner, i) => {
+                // Comprobamos si es un GIF o WebP animado
+                const isAnimated = banner.imageUrl.toLowerCase().includes('.gif') || banner.imageUrl.toLowerCase().includes('.webp');
+
+                return (
+                  <article key={`${banner.id}-${i}`} className="w-[100vw] max-w-[90rem] h-full relative shrink-0 px-0 overflow-hidden bg-zinc-900">
+                    <Image 
+                      src={banner.imageUrl} 
+                      alt={banner.title} 
+                      fill 
+                      priority={i === 0} 
+                      sizes="100vw"
+                      unoptimized={isAnimated}
+                      // Desactivamos el kenBurns si es una imagen animada para proteger la GPU
+                      className={`object-cover transform-gpu ${isAnimated ? '' : 'animate-[kenBurns_25s_ease-in-out_infinite_alternate]'}`} 
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-zinc-900/90 via-zinc-900/30 to-transparent mix-blend-multiply pointer-events-none" />
+                    
+                    <div className="absolute bottom-10 sm:bottom-24 left-6 sm:left-20 max-w-3xl text-white z-10 drop-shadow-[0_4px_10px_rgba(0,0,0,0.5)] pointer-events-none">
+                      <h3 className={`text-4xl sm:text-6xl md:text-8xl font-light tracking-wide mb-2 sm:mb-4 text-silver-shimmer ${cormorant.className}`}>
+                        {banner.title}
+                      </h3>
+                      {banner.subtitle && (
+                        <p className="text-zinc-200 text-[10px] sm:text-[13px] font-bold tracking-[0.4em] uppercase opacity-90">
+                          {banner.subtitle}
+                        </p>
+                      )}
+                    </div>
+                  </article>
+                );
+              })}
             </div>
             
             <div className="absolute bottom-6 sm:bottom-10 right-6 sm:right-12 flex gap-2 sm:gap-3 z-20 pointer-events-none">
