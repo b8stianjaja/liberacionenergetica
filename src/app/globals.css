@@ -44,7 +44,6 @@ body {
   color: transparent;
   -webkit-background-clip: text;
   background-clip: text;
-  /* Utilizar transform3d aquí es innecesario, pero backface-visibility ayuda en Safari */
   -webkit-backface-visibility: hidden;
   backface-visibility: hidden;
   animation: silverShimmer 6s linear infinite;
@@ -62,4 +61,58 @@ body {
 }
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: #A1A1AA;
+}
+
+/* --- OPTIMIZED HARDWARE-ACCELERATED ANIMATIONS --- */
+@keyframes wave-shift-1 {
+  0% { transform: rotate(-15deg) translate3d(0, 0, 0) scale(1); }
+  100% { transform: rotate(-5deg) translate3d(0, 10%, 0) scale(1.1); }
+}
+
+@keyframes wave-shift-2 {
+  0% { transform: rotate(10deg) translate3d(0, 0, 0) scale(1); }
+  100% { transform: rotate(20deg) translate3d(-10%, 0, 0) scale(1.15); }
+}
+
+@keyframes pulse-light {
+  0% { transform: scale(1) translateZ(0); opacity: 0.15; }
+  100% { transform: scale(1.2) translateZ(0); opacity: 0.25; }
+}
+
+@keyframes float-up {
+  0% { transform: translate3d(0, 10vh, 0) scale(0.8); opacity: 0; }
+  10% { opacity: 0.8; }
+  90% { opacity: 0.8; }
+  100% { transform: translate3d(0, -110vh, 0) scale(1.2); opacity: 0; }
+}
+
+@keyframes fadeIn { 
+  from { opacity: 0; } 
+  to { opacity: 1; } 
+}
+
+@keyframes scaleUp { 
+  from { opacity: 0; transform: scale3d(0.95, 0.95, 1) translate3d(0, 20px, 0); } 
+  to { opacity: 1; transform: scale3d(1, 1, 1) translate3d(0, 0, 0); } 
+}
+
+@keyframes slideUpMobile { 
+  from { opacity: 0; transform: translate3d(0, 100%, 0); } 
+  to { opacity: 1; transform: translate3d(0, 0, 0); } 
+}
+
+@keyframes kenBurns {
+  0% { transform: scale3d(1.05, 1.05, 1) translate3d(0, 0, 0); }
+  100% { transform: scale3d(1.12, 1.12, 1) translate3d(-1%, -1%, 0); }
+}
+
+/* Helper Classes for Canvas */
+.astral-wave-1 {
+  animation: wave-shift-1 25s ease-in-out infinite alternate;
+}
+.astral-wave-2 {
+  animation: wave-shift-2 30s ease-in-out infinite alternate;
+}
+.astral-pulse {
+  animation: pulse-light 15s ease-in-out infinite alternate;
 }

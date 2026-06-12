@@ -61,7 +61,6 @@ export default function HomeClient({ products, categories, banners }: HomeClient
 
   const infiniteBanners = useMemo(() => [...banners, ...banners], [banners]);
 
-  // ANIMACIÓN DE CARGA INDEPENDIENTE
   useGSAP(() => {
     const tl = gsap.timeline();
     tl.to(".loader-content", { opacity: 1, y: 0, duration: 1, ease: "power3.out" })
@@ -69,7 +68,6 @@ export default function HomeClient({ products, categories, banners }: HomeClient
       .fromTo(".top-navbar", { y: -30, opacity: 0 }, { y: 0, opacity: 1, duration: 1.5, ease: "expo.out" }, "-=0.5");
   }, { scope: container }); 
 
-  // LÓGICA DE CURSOR EXCLUSIVA PARA PC (Evita el lag masivo en móviles)
   useGSAP(() => {
     const isTouchDevice = window.matchMedia('(hover: none), (pointer: coarse)').matches;
     
@@ -138,7 +136,11 @@ export default function HomeClient({ products, categories, banners }: HomeClient
   const handleAddToCart = (product: Product, e?: ReactMouseEvent<HTMLButtonElement>) => {
     if (e) e.stopPropagation();
     addItem({ id: product.id, name: product.name, price: product.price, imageUrl: product.imageUrl || null });
-    gsap.fromTo(".cart-badge", { scale: 1.5, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.8, ease: "elastic.out(1, 0.5)" });
+    
+    // Timeout para asegurar que el badge esté en el DOM antes de animarlo (React batching fix)
+    setTimeout(() => {
+      gsap.fromTo(".cart-badge", { scale: 1.5, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.8, ease: "elastic.out(1, 0.5)" });
+    }, 50);
   };
 
   const designPattern = ["col-span-1", "col-span-2", "col-span-1", "col-span-1", "col-span-2", "col-span-1"];
@@ -148,7 +150,6 @@ export default function HomeClient({ products, categories, banners }: HomeClient
       
       <EnergyScene />
 
-      {/* Uso de transform-gpu y will-change para evitar cuellos de botella de renderizado en iOS/Android */}
       <div 
         className="fixed top-[-10%] left-[-10%] w-[60vw] h-[60vw] rounded-full pointer-events-none z-0 opacity-80 transform-gpu will-change-transform" 
         style={{ background: 'radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(255,255,255,0) 70%)' }}
@@ -160,7 +161,8 @@ export default function HomeClient({ products, categories, banners }: HomeClient
 
       <div className="hidden md:block pointer-events-none z-[9999]">
         <div ref={cursorRef} className="fixed top-0 left-0 w-2 h-2 bg-zinc-600 rounded-full shadow-[0_0_10px_rgba(161,161,170,0.5)] will-change-transform" />
-        <div ref={cursorAuraRef} className="fixed top-0 left-0 w-12 h-12 border-[0.5px] border-zinc-400/40 bg-white/10 backdrop-blur-[1px] rounded-full will-change-transform" />
+        {/* Eliminado backdrop-blur-[1px] aquí */}
+        <div ref={cursorAuraRef} className="fixed top-0 left-0 w-12 h-12 border-[0.5px] border-zinc-400/40 bg-zinc-400/20 rounded-full will-change-transform" />
       </div>
 
       <div className="loader-screen fixed inset-0 z-[100] bg-[#FAFAFB] flex items-center justify-center pointer-events-none">
@@ -215,7 +217,6 @@ export default function HomeClient({ products, categories, banners }: HomeClient
             
             <div className="carousel-track flex h-full will-change-transform w-max">
               {infiniteBanners.map((banner, i) => {
-                // Comprobamos si es un GIF o WebP animado
                 const isAnimated = banner.imageUrl.toLowerCase().includes('.gif') || banner.imageUrl.toLowerCase().includes('.webp');
 
                 return (
@@ -227,7 +228,6 @@ export default function HomeClient({ products, categories, banners }: HomeClient
                       priority={i === 0} 
                       sizes="100vw"
                       unoptimized={isAnimated}
-                      // Desactivamos el kenBurns si es una imagen animada para proteger la GPU
                       className={`object-cover transform-gpu ${isAnimated ? '' : 'animate-[kenBurns_25s_ease-in-out_infinite_alternate]'}`} 
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-zinc-900/90 via-zinc-900/30 to-transparent mix-blend-multiply pointer-events-none" />
@@ -403,16 +403,6 @@ export default function HomeClient({ products, categories, banners }: HomeClient
           </div>
         </div>
       )}
-
-      <style dangerouslySetInnerHTML={{__html: `
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes scaleUp { from { opacity: 0; transform: scale3d(0.95, 0.95, 1) translate3d(0, 20px, 0); } to { opacity: 1; transform: scale3d(1, 1, 1) translate3d(0, 0, 0); } }
-        @keyframes slideUpMobile { from { opacity: 0; transform: translate3d(0, 100%, 0); } to { opacity: 1; transform: translate3d(0, 0, 0); } }
-        @keyframes kenBurns {
-          0% { transform: scale3d(1.05, 1.05, 1) translate3d(0, 0, 0); }
-          100% { transform: scale3d(1.12, 1.12, 1) translate3d(-1%, -1%, 0); }
-        }
-      `}} />
     </div>
   );
 }
