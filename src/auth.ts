@@ -8,41 +8,29 @@ import bcrypt from 'bcryptjs';
 export const { auth, signIn, signOut, handlers } = NextAuth({
   ...authConfig,
   session: { strategy: 'jwt' },
-  callbacks: {
-    // Inject the role and user ID into the token
-    async jwt({ token, user }) {
-      if (user) {
-        token.id = user.id;
-        token.role = (user as any).role; // From our DB
-      }
-      return token;
-    },
-    // Expose the token data to the client session
-    async session({ session, token }) {
-      if (token && session.user) {
-        session.user.id = token.id as string;
-        (session.user as any).role = token.role as string;
-      }
-      return session;
-    }
-  },
   providers: [
     Credentials({
+      // CRITICAL FIX: NextAuth needs to know exactly what fields to extract from the FormData
+      credentials: {
+        username: { label: 'Username', type: 'text' },
+        password: { label: 'Password', type: 'password' }
+      },
       async authorize(credentials) {
+        // Now 'credentials' will properly contain { username: '...', password: '...' }
         const parsedCredentials = UserRegistrationSchema.safeParse(credentials);
 
         if (parsedCredentials.success) {
           const { username, password } = parsedCredentials.data;
           
-          // Buscamos por username en lugar de email
           const user = await prisma.user.findUnique({ where: { username } });
-          if (!user) return null;
+          if (!user) return null; // User not found
 
           const passwordsMatch = await bcrypt.compare(password, user.password);
-          if (passwordsMatch) return user;
+          if (passwordsMatch) return user; // Success
         }
 
-        return null; 
+        console.log("Validation failed or wrong password");
+        return null; // Fallback failure
       },
     }),
   ],

@@ -5,22 +5,25 @@ export const authConfig = {
     signIn: '/login',
   },
   callbacks: {
+    // Inject the role and user ID into the token
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
-        token.role = user.role; 
-        token.username = user.username; // <-- Pasamos el username al token
+        token.role = (user as any).role; 
+        token.username = (user as any).username;
       }
       return token;
     },
+    // Expose the token data to the client session
     async session({ session, token }) {
-      if (token?.id) {
-        session.user.id = token.id;
-        session.user.role = token.role;
-        session.user.username = token.username; // <-- Pasamos el username a la sesión final
+      if (token?.id && session.user) {
+        session.user.id = token.id as string;
+        (session.user as any).role = token.role as string;
+        (session.user as any).username = token.username as string;
       }
       return session;
     },
+    // Middleware protection logic
     authorized({ auth, request: { nextUrl } }) {
       const isLoggedIn = !!auth?.user;
       const path = nextUrl.pathname;
@@ -29,7 +32,7 @@ export const authConfig = {
 
       if (isOnDashboard) {
         if (isLoggedIn) return true;
-        return false; 
+        return false; // Redirect unauthenticated users to login page
       } 
       
       if (isLoggedIn && isOnLogin) {
