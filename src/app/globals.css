@@ -1,9 +1,9 @@
 @import "tailwindcss";
 
 :root {
-  --background: #fbf9ff; /* Lavanda ultra claro */
-  --foreground: #4a2e6b; /* Púrpura profundo */
-  --gold: #cfaa66;       /* Dorado místico */
+  --background: #fbf9ff; 
+  --foreground: #4a2e6b; 
+  --gold: #cfaa66;       
   --lavender: #eaddff;
 }
 
@@ -26,10 +26,32 @@ body {
   font-family: var(--font-playfair), serif;
 }
 
-.transition-mystic {
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+/* Efectos de Magia */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
 }
 
+.text-gradient-gold {
+  background: linear-gradient(135deg, #cfaa66 0%, #e8d099 50%, #cfaa66 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+@keyframes floatY {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+  100% { transform: translateY(0px); }
+}
+
+.animate-float {
+  animation: floatY 6s ease-in-out infinite;
+}
+
+/* Scrollbar */
 .custom-scrollbar {
   scrollbar-width: thin;
   scrollbar-color: var(--gold) transparent; 
