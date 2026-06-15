@@ -1,143 +1,39 @@
 @import "tailwindcss";
 
-/* =========================================
-   EFECTO ZOOM GLOBAL NATIVO
-   ========================================= */
-/* Móviles (Por defecto): Mantenemos 16px para no desbordar las pantallas pequeñas */
-html {
-  font-size: 16px; 
-}
-
-/* Tablets / Laptops pequeñas (min-width: 1024px): Zoom ~112.5% */
-@media (min-width: 1024px) {
-  html {
-    font-size: 18px; /* Sube este número si lo quieres aún más "zoomeado" */
-  }
-}
-
-/* Pantallas 2K/4K (min-width: 1536px): Zoom 125% para llenar mejor monitores gigantes */
-@media (min-width: 1536px) {
-  html {
-    font-size: 20px; 
-  }
-}
-
-/* =========================================
-   VARIABLES Y TEMA
-   ========================================= */
 :root {
-  --background: #FAFAFB;
-  --foreground: #18181B; 
-  --accent-primary: #A1A1AA;
-  --accent-secondary: #E4E4E7;
+  --background: #fbf9ff; /* Lavanda ultra claro */
+  --foreground: #4a2e6b; /* Púrpura profundo */
+  --gold: #cfaa66;       /* Dorado místico */
+  --lavender: #eaddff;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-gold: var(--gold);
+  --color-lavender: var(--lavender);
 }
 
 body {
-  background: var(--background);
+  background-color: var(--background);
   color: var(--foreground);
-  overflow-x: hidden; 
+  font-family: var(--font-lato), sans-serif;
+  overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  /* La fuente principal ahora se jala desde el layout.tsx */
-  font-family: var(--font-montserrat), sans-serif;
 }
 
-/* Clase global para usar la tipografía serif donde se necesite */
-.font-cormorant {
-  font-family: var(--font-cormorant), serif;
+.font-playfair {
+  font-family: var(--font-playfair), serif;
 }
 
-::selection {
-  background-color: rgba(161, 161, 170, 0.2); 
-  color: #000000; 
+.transition-mystic {
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* =========================================
-   ESTILOS DE COMPONENTES (Scroll, Texto Místico)
-   ========================================= */
 .custom-scrollbar {
   scrollbar-width: thin;
-  scrollbar-color: var(--accent-primary) transparent; 
+  scrollbar-color: var(--gold) transparent; 
 }
-.custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+.custom-scrollbar::-webkit-scrollbar { width: 6px; }
 .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-.custom-scrollbar::-webkit-scrollbar-thumb { background: #D4D4D8; border-radius: 99px; }
-.custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #A1A1AA; }
-
-@keyframes silverShimmer {
-  0% { background-position: -200% center; }
-  100% { background-position: 200% center; }
-}
-
-.text-silver-shimmer {
-  background: linear-gradient(110deg, #71717A 0%, #D4D4D8 20%, #FFFFFF 40%, #D4D4D8 60%, #71717A 80%, #A1A1AA 100%);
-  background-size: 200% auto;
-  color: transparent;
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-backface-visibility: hidden;
-  backface-visibility: hidden;
-  animation: silverShimmer 6s linear infinite;
-}
-
-/* =========================================
-   ANIMACIONES ACELERADAS POR HARDWARE (GPU)
-   (Las que extrajimos del EnergyScene.tsx)
-   ========================================= */
-@keyframes wave-shift-1 {
-  /* Usar translate3d fuerza al navegador a pasar el cálculo a la Tarjeta Gráfica */
-  0% { transform: rotate(-15deg) translate3d(0, 0, 0) scale(1); }
-  100% { transform: rotate(-5deg) translate3d(0, 10%, 0) scale(1.1); }
-}
-
-@keyframes wave-shift-2 {
-  0% { transform: rotate(10deg) translate3d(0, 0, 0) scale(1); }
-  100% { transform: rotate(20deg) translate3d(-10%, 0, 0) scale(1.15); }
-}
-
-@keyframes pulse-light {
-  0% { transform: scale(1) translateZ(0); opacity: 0.15; }
-  100% { transform: scale(1.2) translateZ(0); opacity: 0.25; }
-}
-
-@keyframes float-up {
-  0% { transform: translate3d(0, 10vh, 0) scale(0.8); opacity: 0; }
-  10% { opacity: 0.8; }
-  90% { opacity: 0.8; }
-  100% { transform: translate3d(0, -110vh, 0) scale(1.2); opacity: 0; }
-}
-
-/* Utilidades para los divs de EnergyScene.tsx */
-.astral-wave-1 { animation: wave-shift-1 25s ease-in-out infinite alternate; }
-.astral-wave-2 { animation: wave-shift-2 30s ease-in-out infinite alternate; }
-.astral-pulse { animation: pulse-light 15s ease-in-out infinite alternate; }
-
-
-/* =========================================
-   ANIMACIONES DE INTERFAZ (Modales y Carrusel)
-   (Extraídas del home-client.tsx)
-   ========================================= */
-@keyframes fadeIn { 
-  from { opacity: 0; } 
-  to { opacity: 1; } 
-}
-
-@keyframes scaleUp { 
-  from { opacity: 0; transform: scale3d(0.95, 0.95, 1) translate3d(0, 20px, 0); } 
-  to { opacity: 1; transform: scale3d(1, 1, 1) translate3d(0, 0, 0); } 
-}
-
-@keyframes slideUpMobile { 
-  from { opacity: 0; transform: translate3d(0, 100%, 0); } 
-  to { opacity: 1; transform: translate3d(0, 0, 0); } 
-}
-
-@keyframes kenBurns {
-  0% { transform: scale3d(1.05, 1.05, 1) translate3d(0, 0, 0); }
-  100% { transform: scale3d(1.12, 1.12, 1) translate3d(-1%, -1%, 0); }
-}
+.custom-scrollbar::-webkit-scrollbar-thumb { background: var(--gold); border-radius: 99px; }

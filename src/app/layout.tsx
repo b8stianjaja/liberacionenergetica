@@ -1,25 +1,22 @@
 import type { Metadata } from "next";
-import { Cormorant_Garamond, Montserrat } from "next/font/google";
+import { Playfair_Display, Lato } from "next/font/google";
 import "./globals.css";
 
-const cormorant = Cormorant_Garamond({ 
+const playfair = Playfair_Display({ 
   subsets: ["latin"], 
-  weight: ["300", "400", "500", "600", "700"], 
-  style: ["normal", "italic"], 
-  display: "swap",
-  variable: "--font-cormorant", 
+  variable: "--font-playfair",
+  weight: ["400", "500", "600", "700"]
 });
 
-const montserrat = Montserrat({ 
+const lato = Lato({ 
   subsets: ["latin"], 
-  weight: ["300", "400", "500", "600"], 
-  display: "swap",
-  variable: "--font-montserrat", 
+  variable: "--font-lato",
+  weight: ["300", "400", "700"]
 });
 
 export const metadata: Metadata = {
-  title: "Liberación Energética | Catálogo",
-  description: "Terapias y herramientas para restaurar tu armonía interior.",
+  title: "Johanna Grandón | Liberación Energética",
+  description: "Terapias Holísticas, Radiestesia y Biodecodificación Emocional",
 };
 
 export default function RootLayout({
@@ -28,9 +25,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es" className={`${cormorant.variable} ${montserrat.variable}`}>
-      {/* Aplicamos la fuente base (Montserrat) directamente al body */}
-      <body className="antialiased bg-[#FAFAFB] text-zinc-900 font-sans">
+    <html lang="es" className={`${playfair.variable} ${lato.variable}`}>
+      <body className="antialiased bg-background text-foreground font-sans">
         {children}
       </body>
     </html>
