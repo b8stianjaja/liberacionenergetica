@@ -1,17 +1,17 @@
 @import "tailwindcss";
 
 :root {
-  --bg-pure: #FCFAFF;        /* Blanco nieve con 1% de lavanda */
-  --text-void: #221533;      /* Amatista profundo (máxima legibilidad) */
-  --gold-essence: #D4B872;   /* Dorado etéreo */
-  --lavender-mist: #E8E0F5;  /* Lavanda suave */
+  --bg-cream: #FDFCF8;      /* Fondo principal crema/marfil */
+  --purple-main: #5B3A80;   /* Morado profundo de tus textos */
+  --purple-light: #F1E8FA;  /* Lavanda de fondo */
+  --gold-accent: #D4A373;   /* Acentos dorados/naranjas */
 }
 
 @theme inline {
-  --color-background: var(--bg-pure);
-  --color-foreground: var(--text-void);
-  --color-gold: var(--gold-essence);
-  --color-lavender: var(--lavender-mist);
+  --color-background: var(--bg-cream);
+  --color-foreground: var(--purple-main);
+  --color-gold: var(--gold-accent);
+  --color-lavender: var(--purple-light);
 }
 
 body {
@@ -24,57 +24,24 @@ body {
 
 .font-playfair { font-family: var(--font-playfair), serif; }
 
-/* 1. El Aura Viva (Background Orgánico) */
-.energy-blob {
-  position: absolute;
-  filter: blur(80px);
-  z-index: 0;
-  opacity: 0.6;
-  animation: morph 15s ease-in-out infinite both alternate;
+/* Utilidad para la línea con el corazón en el centro */
+.heart-divider {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  color: var(--gold-accent);
 }
-@keyframes morph {
-  0% { border-radius: 40% 60% 70% 30% / 40% 50% 60% 50%; transform: rotate(0deg) scale(1); }
-  50% { border-radius: 70% 30% 50% 50% / 30% 30% 70% 70%; transform: rotate(180deg) scale(1.1); }
-  100% { border-radius: 40% 60% 70% 30% / 40% 50% 60% 50%; transform: rotate(360deg) scale(1); }
+.heart-divider::before, .heart-divider::after {
+  content: '';
+  flex: 1;
+  border-bottom: 1px solid var(--gold-accent);
+  opacity: 0.4;
 }
+.heart-divider::before { margin-right: .5em; }
+.heart-divider::after { margin-left: .5em; }
 
-/* 2. El Efecto Golden Rainbow (Iridiscencia) */
-.iridescent-border {
-  position: relative;
-  background: var(--color-background);
-  border-radius: 2.5rem;
-  z-index: 1;
-}
-.iridescent-border::before {
-  content: "";
-  position: absolute;
-  inset: -2px;
-  border-radius: 2.6rem;
-  background: linear-gradient(120deg, #E8E0F5, #D4B872, #FFFFFF, #D4B872, #E8E0F5);
-  background-size: 300% 300%;
-  z-index: -1;
-  opacity: 0;
-  transition: opacity 0.7s ease;
-  animation: shimmer 4s linear infinite;
-}
-.iridescent-border:hover::before { opacity: 1; }
-
-.iridescent-text {
-  background: linear-gradient(to right, #D4B872, #A88B4E, #D4B872);
-  background-size: 200% auto;
-  color: transparent;
-  -webkit-background-clip: text;
-  background-clip: text;
-  animation: shimmer 5s linear infinite;
-}
-
-@keyframes shimmer {
-  0% { background-position: 0% 50%; }
-  100% { background-position: 200% 50%; }
-}
-
-/* 3. Textura de lujo (Noise) imperceptible pero efectiva */
-.luxury-noise {
-  position: fixed; inset: 0; z-index: 9999; opacity: 0.03; pointer-events: none;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
-}
+/* Scrollbar sutil */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg-cream); }
+::-webkit-scrollbar-thumb { background: var(--purple-light); border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover { background: var(--purple-main); }
