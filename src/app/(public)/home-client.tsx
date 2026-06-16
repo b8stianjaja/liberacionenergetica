@@ -2,12 +2,14 @@
 
 import { useRef, useState, useMemo, useEffect } from "react";
 import Image from "next/image";
-import Link from "next/link"; 
+import Link from "next/link";
 import { useCart } from "@/context/CartContext";
 import { Plus, Sparkles, MoveRight, Quote, Leaf, CircleDot } from "lucide-react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
+// @ts-ignore
+import Lenis from 'lenis';
 
 if (typeof window !== "undefined") {
   gsap.registerPlugin(ScrollTrigger, useGSAP);
@@ -35,34 +37,77 @@ export default function HomeClient({ products, categories, banners }: HomeClient
   
   const formatPrice = (price: number) => new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 }).format(price);
 
-  // Failsafe para asegurar que el scroll nunca se quede bloqueado
-  useEffect(() => {
-    return () => { document.body.style.overflow = ""; };
-  }, []);
-
   useGSAP(() => {
-    // 1. PRELOADER INMERSIVO
+    // 0. SCROLL PREMIUM CON LENIS
+    const lenis = new Lenis({
+      lerp: 0.05, // Suavidad extrema. Menor = más manteca.
+      wheelMultiplier: 0.6, // Frena la velocidad agresiva del ratón en PC
+      smoothWheel: true,
+    });
+
+    lenis.on('scroll', ScrollTrigger.update);
+    gsap.ticker.add((time) => { lenis.raf(time * 1000); });
+    gsap.ticker.lagSmoothing(0, 0);
+
+    // Bloquear scroll al inicio
+    lenis.stop();
     document.body.style.overflow = "hidden";
+
+    // Interceptar anclas para usar scroll suave de Lenis
+    document.querySelectorAll('a[href*="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function (e) {
+        const href = this.getAttribute('href') || '';
+        if (href.includes('#')) {
+          const id = href.split('#')[1];
+          const target = document.getElementById(id);
+          if (target) {
+            e.preventDefault();
+            lenis.scrollTo(target, { offset: -50, duration: 1.5, easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)) });
+          }
+        }
+      });
+    });
+
+    // 1. PRELOADER INMERSIVO (EYE CANDY)
     const tl = gsap.timeline({ 
       onComplete: () => { 
         document.body.style.overflow = ""; 
+        lenis.start(); // Libera la bestia
       } 
     });
 
     tl.to(".loader-logo", { opacity: 1, y: 0, duration: 1, ease: "power3.out" })
       .to(".loader-logo", { scale: 1.05, duration: 1.2, ease: "sine.inOut" })
-      .to(".loader-bg", { yPercent: -100, duration: 1.2, ease: "power4.inOut" })
-      .fromTo(".hero-text-mask span", { y: "100%" }, { y: "0%", stagger: 0.1, duration: 1, ease: "power3.out" }, "-=0.6")
-      .fromTo(".hero-image-wrapper", { scale: 1.2, filter: "blur(20px)" }, { scale: 1, filter: "blur(0px)", duration: 1.8, ease: "power3.out" }, "-=1");
+      .to(".loader-bg", { yPercent: -100, duration: 1.4, ease: "expo.inOut" })
+      .fromTo(".hero-text-mask span", { y: "100%" }, { y: "0%", stagger: 0.15, duration: 1.2, ease: "expo.out" }, "-=0.8")
+      .fromTo(".hero-image-wrapper", { scale: 1.2, filter: "blur(20px)" }, { scale: 1, filter: "blur(0px)", duration: 2, ease: "power3.out" }, "-=1.2");
 
-    // 2. PARALLAX SUAVE DEL HERO
-    gsap.to(".hero-image", {
-      yPercent: 20,
-      ease: "none",
-      scrollTrigger: { trigger: ".hero-section", start: "top top", end: "bottom top", scrub: true }
+    // 2. ANIMACIÓN FLOTANTE INFINITA (EYE CANDY)
+    gsap.to(".floating-element", {
+      y: -15,
+      rotation: 5,
+      duration: 3.5,
+      yoyo: true,
+      repeat: -1,
+      ease: "sine.inOut",
+      stagger: 0.2
     });
 
-    // 3. ANIMACIONES DE TEXTO ORGÁNICAS
+    // 3. REVEAL CINEMATOGRÁFICO DE IMÁGENES (CLIP-PATH)
+    gsap.utils.toArray('.reveal-image').forEach((img: any) => {
+      gsap.fromTo(img,
+        { clipPath: "polygon(0 100%, 100% 100%, 100% 100%, 0% 100%)", scale: 1.1 },
+        { 
+          clipPath: "polygon(0 0, 100% 0, 100% 100%, 0 100%)", 
+          scale: 1, 
+          duration: 1.5, 
+          ease: "expo.out",
+          scrollTrigger: { trigger: img, start: "top 80%" }
+        }
+      );
+    });
+
+    // 4. ANIMACIONES DE TEXTO ORGÁNICAS
     gsap.utils.toArray('.fade-up').forEach((elem: any) => {
       gsap.fromTo(elem, 
         { opacity: 0, y: 40 },
@@ -70,13 +115,31 @@ export default function HomeClient({ products, categories, banners }: HomeClient
       );
     });
 
-    // 4. FADE IN DE LA BOUTIQUE
+    // 5. PARALLAX INTERNO DEL TAROT (Profundidad 3D)
+    gsap.utils.toArray('.tarot-number').forEach((num: any) => {
+      gsap.to(num, {
+        y: 120,
+        opacity: 0,
+        scrollTrigger: {
+          trigger: num.parentElement.parentElement, // La carta contenedora
+          start: "top center",
+          end: "bottom top",
+          scrub: 1.5 // Parallax ultra suave gracias a Lenis
+        }
+      });
+    });
+
+    // 6. FADE IN DE LA BOUTIQUE (EFECTO RESORTE)
     gsap.fromTo(".boutique-item", 
-      { y: 50, opacity: 0 }, 
-      { scrollTrigger: { trigger: ".boutique-grid", start: "top 80%" }, y: 0, opacity: 1, duration: 0.8, stagger: 0.1, ease: "power2.out" }
+      { y: 80, opacity: 0, scale: 0.95 }, 
+      { scrollTrigger: { trigger: ".boutique-grid", start: "top 80%" }, y: 0, opacity: 1, scale: 1, duration: 1, stagger: 0.15, ease: "back.out(1.5)" }
     );
 
-    return () => { document.body.style.overflow = ""; };
+    return () => { 
+      lenis.destroy(); 
+      gsap.ticker.remove((time) => { lenis.raf(time * 1000); });
+      document.body.style.overflow = ""; 
+    };
   }, { scope: container });
 
   return (
@@ -118,7 +181,7 @@ export default function HomeClient({ products, categories, banners }: HomeClient
           </div>
 
           <Link href="/#terapias" className="group relative inline-flex items-center gap-4 text-[var(--purple-deep)] font-bold uppercase tracking-[0.2em] text-xs hover:text-[var(--gold-magic)] transition-colors">
-            <div className="w-12 h-12 rounded-full border border-[var(--purple-deep)] flex items-center justify-center group-hover:scale-110 group-hover:border-[var(--gold-magic)] transition-all duration-500">
+            <div className="w-12 h-12 rounded-full border border-[var(--purple-deep)] flex items-center justify-center group-hover:scale-110 group-hover:border-[var(--gold-magic)] transition-all duration-500 shadow-lg shadow-[var(--purple-deep)]/5">
               <MoveRight strokeWidth={1} className="group-hover:translate-x-1 transition-transform" />
             </div>
             Explorar Terapias
@@ -129,19 +192,20 @@ export default function HomeClient({ products, categories, banners }: HomeClient
       {/* --- SOBRE MÍ --- */}
       <section id="sobre-mi" className="relative w-full py-32 bg-white px-6 lg:px-16 overflow-hidden">
         <div className="max-w-[80rem] mx-auto flex flex-col lg:flex-row items-center gap-16 lg:gap-24 relative z-10">
-          <div className="w-full lg:w-1/2 relative fade-up">
-            <div className="aspect-[3/4] w-full max-w-md mx-auto bg-[var(--purple-light)] rounded-[2rem] overflow-hidden relative shadow-2xl">
+          <div className="w-full lg:w-1/2 relative">
+            <div className="reveal-image aspect-[3/4] w-full max-w-md mx-auto bg-[var(--purple-light)] rounded-[2rem] overflow-hidden relative shadow-2xl">
               <div className="absolute inset-0 bg-gradient-to-t from-[var(--purple-deep)]/40 to-transparent z-10" />
-              {/* Aquí idealmente va la foto de Johanna. Usaremos un placeholder elegante mientras tanto */}
               <div className="absolute inset-0 flex items-center justify-center text-[var(--purple-deep)]/20">
-                <Leaf size={100} strokeWidth={0.5} />
+                <Leaf size={100} strokeWidth={0.5} className="floating-element" />
               </div>
             </div>
-            <div className="absolute -bottom-8 -right-8 w-48 h-48 bg-[var(--gold-magic)] rounded-full blur-[80px] opacity-20 -z-10" />
+            <div className="absolute -bottom-8 -right-8 w-48 h-48 bg-[var(--gold-magic)] rounded-full blur-[80px] opacity-20 -z-10 floating-element" />
           </div>
 
           <div className="w-full lg:w-1/2 flex flex-col justify-center fade-up">
-            <h2 className="text-[10px] uppercase tracking-[0.3em] font-bold text-[var(--gold-magic)] mb-4">La Canalizadora</h2>
+            <h2 className="text-[10px] uppercase tracking-[0.3em] font-bold text-[var(--gold-magic)] mb-4 flex items-center gap-3">
+               <Sparkles size={12} className="floating-element" /> La Canalizadora
+            </h2>
             <h3 className="font-playfair text-4xl lg:text-5xl text-[var(--purple-deep)] mb-8 leading-tight">
               Acompañándote a <br/><span className="italic font-light">recordar tu origen.</span>
             </h3>
@@ -153,33 +217,25 @@ export default function HomeClient({ products, categories, banners }: HomeClient
                 A través de herramientas sagradas como el Péndulo Hebreo y la Biodecodificación, te guío a un espacio de liberación donde tu propia energía vital recupera su curso natural, permitiéndote sanar desde la raíz.
               </p>
             </div>
-            
-            <div className="mt-12 flex items-center gap-4">
-              <Image src="/file.svg" alt="Firma" width={120} height={40} className="opacity-50" />
-            </div>
           </div>
         </div>
       </section>
 
-      {/* --- TERAPIAS: NATIVE CSS STACKING PERFECCIONADO --- */}
+      {/* --- TERAPIAS: THE TAROT STACKING --- */}
       <section id="terapias" className="relative w-full bg-[var(--bg-canvas)] pt-32 px-6 lg:px-16">
         <div className="max-w-xl mx-auto text-center mb-24 fade-up">
           <h2 className="font-playfair text-4xl lg:text-5xl text-[var(--purple-deep)] mb-4">El Oráculo de Sanación</h2>
           <p className="text-[var(--purple-deep)]/50 uppercase tracking-[0.2em] text-[10px] font-bold flex items-center justify-center gap-3">
-            <CircleDot size={8} /> Un viaje en tres fases <CircleDot size={8} />
+            <CircleDot size={8} className="floating-element" /> Un viaje en tres fases <CircleDot size={8} className="floating-element" />
           </p>
         </div>
 
-        {/* Contenedor Flex: El padding inferior masivo asegura que haya espacio 
-            suficiente para hacer scroll y que las cartas se apilen antes de que
-            llegue la siguiente sección.
-        */}
         <div className="max-w-[1000px] mx-auto flex flex-col gap-[20vh] pb-[30vh]">
           
           {/* Card 1 */}
           <div className="tarot-card sticky top-[10vh] w-full min-h-[500px] lg:h-[65vh] bg-white rounded-[2.5rem] shadow-[0_20px_60px_rgba(91,58,128,0.06)] border border-[var(--purple-deep)]/5 overflow-hidden flex flex-col lg:flex-row z-10 transition-transform duration-500 ease-out">
-             <div className="w-full h-64 lg:h-full lg:w-1/2 bg-[var(--purple-light)]/40 relative flex items-center justify-center">
-                <span className="text-8xl lg:text-[10rem] font-playfair text-[var(--purple-deep)] opacity-5">I</span>
+             <div className="w-full h-64 lg:h-full lg:w-1/2 bg-[var(--purple-light)]/40 relative flex items-center justify-center overflow-hidden">
+                <span className="tarot-number text-8xl lg:text-[10rem] font-playfair text-[var(--purple-deep)] opacity-5">I</span>
              </div>
              <div className="w-full lg:w-1/2 p-10 lg:p-20 flex flex-col justify-center bg-white">
                <h3 className="font-playfair text-3xl lg:text-4xl text-[var(--purple-deep)] mb-6">Radiestesia</h3>
@@ -189,8 +245,8 @@ export default function HomeClient({ products, categories, banners }: HomeClient
 
           {/* Card 2 */}
           <div className="tarot-card sticky top-[13vh] w-full min-h-[500px] lg:h-[65vh] bg-[#FDFCF8] rounded-[2.5rem] shadow-[0_30px_60px_rgba(91,58,128,0.1)] border border-[var(--gold-magic)]/20 overflow-hidden flex flex-col lg:flex-row z-20 transition-transform duration-500 ease-out">
-             <div className="w-full h-64 lg:h-full lg:w-1/2 bg-[var(--gold-magic)]/10 relative flex items-center justify-center">
-                <span className="text-8xl lg:text-[10rem] font-playfair text-[var(--gold-magic)] opacity-10">II</span>
+             <div className="w-full h-64 lg:h-full lg:w-1/2 bg-[var(--gold-magic)]/10 relative flex items-center justify-center overflow-hidden">
+                <span className="tarot-number text-8xl lg:text-[10rem] font-playfair text-[var(--gold-magic)] opacity-10">II</span>
              </div>
              <div className="w-full lg:w-1/2 p-10 lg:p-20 flex flex-col justify-center bg-[#FDFCF8]">
                <h3 className="font-playfair text-3xl lg:text-4xl text-[var(--purple-deep)] mb-6">Biodecodificación</h3>
@@ -200,8 +256,8 @@ export default function HomeClient({ products, categories, banners }: HomeClient
 
           {/* Card 3 */}
           <div className="tarot-card sticky top-[16vh] w-full min-h-[500px] lg:h-[65vh] bg-[var(--purple-deep)] rounded-[2.5rem] shadow-[0_40px_80px_rgba(0,0,0,0.3)] border border-white/10 overflow-hidden flex flex-col lg:flex-row text-white z-30 transition-transform duration-500 ease-out">
-             <div className="w-full h-64 lg:h-full lg:w-1/2 bg-black/20 relative flex items-center justify-center">
-                <span className="text-8xl lg:text-[10rem] font-playfair text-white opacity-5">III</span>
+             <div className="w-full h-64 lg:h-full lg:w-1/2 bg-black/20 relative flex items-center justify-center overflow-hidden">
+                <span className="tarot-number text-8xl lg:text-[10rem] font-playfair text-white opacity-5">III</span>
              </div>
              <div className="w-full lg:w-1/2 p-10 lg:p-20 flex flex-col justify-center">
                <h3 className="font-playfair text-3xl lg:text-4xl mb-6">Péndulo Hebreo</h3>
@@ -215,7 +271,7 @@ export default function HomeClient({ products, categories, banners }: HomeClient
       {/* --- TESTIMONIOS --- */}
       <section id="testimonios" className="relative w-full py-32 bg-[var(--purple-light)]/30 px-6 lg:px-16 overflow-hidden">
         <div className="max-w-[80rem] mx-auto text-center fade-up">
-          <Quote size={48} className="mx-auto text-[var(--gold-magic)] opacity-50 mb-8" />
+          <Quote size={48} className="mx-auto text-[var(--gold-magic)] opacity-50 mb-8 floating-element" />
           <h2 className="font-playfair text-4xl lg:text-5xl text-[var(--purple-deep)] mb-16">Ecos de Sanación</h2>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -224,7 +280,7 @@ export default function HomeClient({ products, categories, banners }: HomeClient
               { text: "Entender de dónde venía mi síntoma a través de la biodecodificación cambió mi vida por completo.", name: "Carolina S." },
               { text: "Una experiencia de luz pura. El uso del péndulo hebreo me hizo sentir protegida y renovada.", name: "Andrea V." }
             ].map((testimonio, i) => (
-              <div key={i} className="bg-white p-10 rounded-[2rem] shadow-sm border border-[var(--purple-deep)]/5 flex flex-col justify-between items-start text-left hover:-translate-y-2 transition-transform duration-500">
+              <div key={i} className="bg-white p-10 rounded-[2rem] shadow-sm border border-[var(--purple-deep)]/5 flex flex-col justify-between items-start text-left hover:-translate-y-3 hover:shadow-xl transition-all duration-500">
                 <p className="text-zinc-600 font-light leading-relaxed mb-8">"{testimonio.text}"</p>
                 <span className="font-playfair text-[var(--purple-deep)] font-bold">{testimonio.name}</span>
               </div>
@@ -259,7 +315,7 @@ export default function HomeClient({ products, categories, banners }: HomeClient
 
           {filteredProducts.length === 0 ? (
             <div className="w-full py-32 flex flex-col items-center justify-center opacity-50 fade-up">
-               <Sparkles className="text-[var(--purple-deep)] mb-6" size={40}/>
+               <Sparkles className="text-[var(--purple-deep)] mb-6 floating-element" size={40}/>
                <p className="font-playfair text-2xl text-[var(--purple-deep)]">Aún no hay reliquias en esta categoría.</p>
             </div>
           ) : (
@@ -271,7 +327,7 @@ export default function HomeClient({ products, categories, banners }: HomeClient
                       <Image src={product.imageUrl} alt={product.name} fill sizes="(max-width: 768px) 100vw, 25vw" className="object-cover group-hover:scale-110 transition-transform duration-[1.5s] ease-out" />
                     ) : (
                       <div className="absolute inset-0 flex items-center justify-center">
-                         <Sparkles className="text-[var(--purple-deep)]/20" size={40}/>
+                         <Sparkles className="text-[var(--purple-deep)]/20 floating-element" size={40}/>
                       </div>
                     )}
                     
