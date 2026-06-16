@@ -47,9 +47,10 @@
 
 @layer utilities {
   /* El efecto iridiscente para el hero */
-  .golden-rainbow-text {
+    .golden-rainbow-text {
     background: linear-gradient(to right, var(--gold-magic), #E2C792, var(--gold-magic));
     -webkit-background-clip: text;
+    background-clip: text; /* NUEVO: Propiedad estándar añadida aquí */
     -webkit-text-fill-color: transparent;
     background-size: 200% auto;
     animation: gold-shine 4s linear infinite;

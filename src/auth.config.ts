@@ -1,3 +1,4 @@
+// src/auth.config.ts
 import type { NextAuthConfig } from 'next-auth';
 
 export const authConfig = {
@@ -5,7 +6,6 @@ export const authConfig = {
     signIn: '/login',
   },
   callbacks: {
-    // Inject the role and user ID into the token
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
@@ -14,7 +14,6 @@ export const authConfig = {
       }
       return token;
     },
-    // Expose the token data to the client session
     async session({ session, token }) {
       if (token?.id && session.user) {
         session.user.id = token.id as string;
@@ -23,22 +22,22 @@ export const authConfig = {
       }
       return session;
     },
-    // Middleware protection logic
     authorized({ auth, request: { nextUrl } }) {
       const isLoggedIn = !!auth?.user;
-      const path = nextUrl.pathname;
-      const isOnDashboard = path.startsWith('/dashboard');
-      const isOnLogin = path === '/login';
+      const isOnDashboard = nextUrl.pathname.startsWith('/dashboard');
+      const isOnLogin = nextUrl.pathname === '/login';
 
+      // 1. Proteger el Dashboard
       if (isOnDashboard) {
-        if (isLoggedIn) return true;
-        return false; // Redirect unauthenticated users to login page
+        return isLoggedIn; // Si está logueado, pasa. Si no, redirige a /login
       } 
       
+      // 2. Si ya está logueado y intenta ir a /login, mandarlo al dashboard
       if (isLoggedIn && isOnLogin) {
         return Response.redirect(new URL('/dashboard', nextUrl));
       }
 
+      // 3. Permitir el paso para cualquier otra cosa
       return true;
     },
   },

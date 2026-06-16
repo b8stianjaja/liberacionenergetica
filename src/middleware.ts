@@ -5,5 +5,7 @@ import { authConfig } from './auth.config';
 export default NextAuth(authConfig).auth;
 
 export const config = {
-  matcher: ['/((?!api|_next/static|_next/image|uploads|favicon.ico|.*\\.svg$|.*\\.png$|.*\\.jpeg$).*)'],
+  // SOLO interceptar el dashboard y el login. 
+  // Todas las demás rutas (públicas) son ignoradas por el middleware.
+  matcher: ['/dashboard/:path*', '/login'],
 };
