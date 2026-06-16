@@ -19,23 +19,23 @@ function Header() {
   }, []);
 
   return (
-    <header className={`fixed w-full top-0 z-50 transition-all duration-500 ${scrolled ? 'py-4 bg-white/95 backdrop-blur-md shadow-sm' : 'py-6 bg-white/80 backdrop-blur-sm'}`}>
+    <header className={`fixed w-full top-0 z-50 transition-all duration-500 ${scrolled ? 'py-4 bg-white/80 backdrop-blur-xl shadow-[0_4px_30px_rgba(56,42,79,0.03)]' : 'py-6 bg-white/50 backdrop-blur-sm'}`}>
       <div className="max-w-[85rem] mx-auto px-6 flex justify-between items-center">
         
         <Link href="/" className="flex flex-col items-start group">
-          <span className="font-playfair text-2xl text-foreground font-semibold">Johanna Grandón</span>
-          <span className="text-[10px] text-gold tracking-widest uppercase font-bold mt-1">Liberación Energética</span>
+          <span className="font-playfair text-2xl text-foreground font-semibold group-hover:text-gold transition-colors">Johanna Grandón</span>
+          <span className="text-[10px] text-foreground/50 tracking-widest uppercase font-bold mt-1 group-hover:text-gold transition-colors">Liberación Energética</span>
         </Link>
         
-        {/* Navegación Clara y Legible */}
-        <nav className="hidden md:flex space-x-10 text-[13px] font-bold tracking-wider uppercase text-foreground/80">
+        {/* Navegación Clara */}
+        <nav className="hidden md:flex space-x-10 text-[12px] font-bold tracking-widest uppercase text-foreground/70">
           <button onClick={() => document.getElementById('terapias')?.scrollIntoView({behavior: 'smooth'})} className="hover:text-gold btn-transition">Terapias</button>
           <button onClick={() => document.getElementById('testimonios')?.scrollIntoView({behavior: 'smooth'})} className="hover:text-gold btn-transition">Testimonios</button>
           <button onClick={() => document.getElementById('boutique')?.scrollIntoView({behavior: 'smooth'})} className="hover:text-gold btn-transition">Boutique</button>
         </nav>
 
         <div className="flex items-center space-x-6">
-          <a href="https://wa.me/569XXXXXXXX" target="_blank" rel="noopener noreferrer" className="hidden lg:inline-flex bg-foreground text-white px-6 py-2.5 rounded-full text-sm hover:bg-gold btn-transition shadow-md">
+          <a href="https://wa.me/569XXXXXXXX" target="_blank" rel="noopener noreferrer" className="hidden lg:inline-flex bg-foreground text-white px-7 py-3 rounded-full text-[11px] uppercase tracking-widest font-bold hover:bg-gold hover:shadow-lg hover:-translate-y-0.5 btn-transition">
             Agendar Sesión
           </a>
           <button onClick={openCart} className="text-foreground hover:text-gold btn-transition relative flex items-center gap-2">
@@ -55,20 +55,20 @@ function Header() {
 
 function Footer() {
   return (
-    <footer className="bg-foreground text-background pt-24 pb-12 px-6 mt-20 rounded-t-[3rem] text-center">
+    <footer className="bg-lavender text-foreground pt-24 pb-12 px-6 mt-20 rounded-t-[3rem] text-center border-t border-white shadow-[0_-10px_40px_rgba(56,42,79,0.02)]">
       <div className="max-w-[85rem] mx-auto flex flex-col items-center">
-        <Heart className="text-gold mb-6" size={32} strokeWidth={1.5} />
-        <h3 className="font-playfair text-3xl md:text-5xl mb-8 text-white">
+        <Heart className="text-gold mb-6 fill-gold/20" size={36} strokeWidth={1} />
+        <h3 className="font-playfair text-3xl md:text-5xl mb-8">
           Acompañando tu proceso <br />
-          <span className="text-gold italic font-light">con amor y respeto.</span>
+          <span className="golden-rainbow-text italic font-light">con amor y respeto.</span>
         </h3>
-        <p className="text-white/70 max-w-lg mx-auto text-sm md:text-base mb-12 leading-relaxed">
+        <p className="text-foreground/70 max-w-lg mx-auto text-sm md:text-base mb-12 leading-relaxed">
           Un espacio de sanación diseñado para brindarte paz, desde los más pequeños de la familia hasta los más grandes.
         </p>
         
-        <div className="w-full h-[1px] bg-white/10 mb-8"></div>
-        <div className="flex flex-col md:flex-row justify-between items-center w-full text-xs text-white/50 gap-4">
-          <p>&copy; {new Date().getFullYear()} Johanna Grandón. Todos los derechos reservados.</p>
+        <div className="w-full h-[1px] bg-foreground/10 mb-8"></div>
+        <div className="flex flex-col md:flex-row justify-between items-center w-full text-[11px] uppercase tracking-widest text-foreground/50 font-bold gap-4">
+          <p>&copy; {new Date().getFullYear()} Johanna Grandón. Creado con Luz.</p>
           <Link href="/login" className="hover:text-gold transition-colors">Acceso Profesional</Link>
         </div>
       </div>

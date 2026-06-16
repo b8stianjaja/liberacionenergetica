@@ -1,22 +1,22 @@
 @import "tailwindcss";
 
 :root {
-  --bg-warm: #FCFBF9;       /* Crema muy suave, relaja la vista */
-  --text-deep: #2A1B38;     /* Púrpura casi negro (Alto contraste) */
-  --gold-soft: #B89047;     /* Dorado elegante, no estridente */
-  --lavender-light: #F0EBF5;/* Lavanda para fondos secundarios */
+  --bg-pure: #FEFCFF;        /* Blanco con un micro-toque lila */
+  --text-amethyst: #382A4F;  /* Lila oscurecido profundo (Contraste alto y maduro) */
+  --gold-light: #D1B370;     /* Dorado etéreo y suave */
+  --lavender-lila: #EBE4F5;  /* Lila lavender pastel */
 }
 
 @theme inline {
-  --color-background: var(--bg-warm);
-  --color-foreground: var(--text-deep);
-  --color-gold: var(--gold-soft);
-  --color-lavender: var(--lavender-light);
+  --color-background: var(--bg-pure);
+  --color-foreground: var(--text-amethyst);
+  --color-gold: var(--gold-light);
+  --color-lavender: var(--lavender-lila);
 }
 
 body {
-  background-color: var(--bg-warm);
-  color: var(--text-deep);
+  background-color: var(--color-background);
+  color: var(--color-foreground);
   font-family: var(--font-lato), sans-serif;
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
@@ -25,7 +25,26 @@ body {
 
 .font-playfair { font-family: var(--font-playfair), serif; }
 
-/* Transiciones suaves para botones */
+/* El efecto "Golden Rainbow" (Iridiscencia Mágica) */
+.golden-rainbow-text {
+  background: linear-gradient(90deg, #D1B370, #FDF4D4, #D5C2ED, #CDE9F2, #FDF4D4, #D1B370);
+  background-size: 200% auto;
+  color: transparent;
+  -webkit-background-clip: text;
+  background-clip: text;
+  animation: shine 8s linear infinite;
+}
+
+.golden-rainbow-bg {
+  background: linear-gradient(135deg, rgba(235, 228, 245, 0.6) 0%, rgba(253, 244, 212, 0.6) 50%, rgba(205, 233, 242, 0.4) 100%);
+  backdrop-filter: blur(20px);
+}
+
+@keyframes shine {
+  to { background-position: 200% center; }
+}
+
+/* Transiciones suaves para interacciones */
 .btn-transition {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
