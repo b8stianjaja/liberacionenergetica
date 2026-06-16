@@ -3,7 +3,7 @@
 import { useRef, useState, useMemo } from "react";
 import Image from "next/image";
 import { useCart } from "@/context/CartContext";
-import { Star, ArrowRight, Quote, Plus, Sparkles } from "lucide-react";
+import { Plus, Sparkles, MoveRight } from "lucide-react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
@@ -20,304 +20,224 @@ interface HomeClientProps { products: Product[]; categories: Category[]; banners
 
 export default function HomeClient({ products, categories, banners }: HomeClientProps) {
   const container = useRef<HTMLDivElement>(null);
-  const sliderRef = useRef<HTMLDivElement>(null);
-  
   const { addItem } = useCart();
   const [activeFilter, setActiveFilter] = useState<string>('ALL');
 
-  // PURGA DE BOUTIQUE: Eliminamos estrictamente todo lo que sea "SERVICE" (Agenda)
   const boutiqueProducts = useMemo(() => products.filter(p => p.type !== 'SERVICE'), [products]);
-  
-  // Filtros dinámicos basados SOLO en los productos de la boutique
   const activeCategories = useMemo(() => {
-    const usedCategoryIds = new Set(boutiqueProducts.map(p => p.categoryId));
-    return categories.filter(cat => usedCategoryIds.has(cat.id));
+    const usedIds = new Set(boutiqueProducts.map(p => p.categoryId));
+    return categories.filter(cat => usedIds.has(cat.id));
   }, [categories, boutiqueProducts]);
 
-  const dynamicFilters = useMemo(() => [{ id: 'ALL', label: 'Compendio' }, ...activeCategories.map(cat => ({ id: cat.id, label: cat.name }))], [activeCategories]);
-  const filteredProducts = useMemo(() => boutiqueProducts.filter(product => activeFilter === 'ALL' || product.categoryId === activeFilter), [boutiqueProducts, activeFilter]);
+  const dynamicFilters = useMemo(() => [{ id: 'ALL', label: 'Todo el Compendio' }, ...activeCategories.map(cat => ({ id: cat.id, label: cat.name }))], [activeCategories]);
+  const filteredProducts = useMemo(() => boutiqueProducts.filter(p => activeFilter === 'ALL' || p.categoryId === activeFilter), [boutiqueProducts, activeFilter]);
   
   const formatPrice = (price: number) => new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 }).format(price);
 
   useGSAP(() => {
-    // 1. CONTROL TOTAL DE LA PANTALLA DE CARGA Y EL HEADER
-    // Bloqueamos el scroll del usuario para que no rompa la experiencia inicial
+    // 1. PRELOADER INMERSIVO
     document.body.style.overflow = "hidden";
-    
-    // Escondemos el header para que no se superponga o se vea antes de tiempo
-    gsap.set("#app-header", { yPercent: -100, opacity: 0 });
+    const tl = gsap.timeline({ onComplete: () => { document.body.style.overflow = ""; } });
 
-    const tl = gsap.timeline({
-      onComplete: () => {
-        document.body.style.overflow = ""; // Liberamos el scroll al terminar
-      }
+    tl.to(".loader-logo", { opacity: 1, y: 0, duration: 1, ease: "power3.out" })
+      .to(".loader-logo", { scale: 1.05, duration: 1.2, ease: "sine.inOut" })
+      .to(".loader-bg", { clipPath: "inset(0 0 100% 0)", duration: 1.2, ease: "power4.inOut" })
+      .fromTo(".hero-text-mask span", { y: "100%" }, { y: "0%", stagger: 0.1, duration: 1, ease: "power3.out" }, "-=0.6")
+      .fromTo(".hero-image-wrapper", { scale: 1.2, filter: "blur(20px)" }, { scale: 1, filter: "blur(0px)", duration: 1.8, ease: "power3.out" }, "-=1");
+
+    // 2. PARALLAX SUAVE EN EL HERO
+    gsap.to(".hero-image", {
+      yPercent: 30,
+      ease: "none",
+      scrollTrigger: { trigger: ".hero-section", start: "top top", end: "bottom top", scrub: true }
     });
 
-    // Secuencia de carga Awwwards (Duración: ~3.2 segundos)
-    tl.fromTo(".loader-logo", 
-      { opacity: 0, scale: 0.9 }, 
-      { opacity: 1, scale: 1, duration: 1.2, ease: "power3.out" }
-    )
-    .to(".loader-logo", { scale: 1.05, duration: 1.5, ease: "sine.inOut" })
-    .to(".loader-bg", { yPercent: -100, duration: 1.2, ease: "expo.inOut" }, "+=0.2")
-    
-    // El Header y el Hero entran maravillosamente mientras el loader sube
-    .to("#app-header", { yPercent: 0, opacity: 1, duration: 1.2, ease: "expo.out" }, "-=0.8")
-    .fromTo(".breathe-reveal", 
-      { y: 50, opacity: 0, filter: "blur(8px)" }, 
-      { y: 0, opacity: 1, filter: "blur(0px)", duration: 1.5, stagger: 0.15, ease: "power3.out" }, 
-      "-=1"
-    )
-    .fromTo(".hero-image", 
-      { scale: 1.1, opacity: 0 }, 
-      { scale: 1, opacity: 1, duration: 2, ease: "power2.out" }, 
-      "-=1.5"
-    );
+    // 3. EFECTO "TAROT STACKING" PARA TERAPIAS (Radical UI)
+    const cards = gsap.utils.toArray('.tarot-card') as HTMLElement[];
+    cards.forEach((card, i) => {
+      ScrollTrigger.create({
+        trigger: card,
+        start: "top top+=120", // Espacio para el header
+        endTrigger: ".tarot-container",
+        end: "bottom bottom",
+        pin: true,
+        pinSpacing: false,
+        id: `card-${i}`
+      });
 
-    // 2. REVELADO SUAVE EN SCROLL PARA EL RESTO DE SECCIONES
-    gsap.utils.toArray('.scroll-reveal').forEach((section: any) => {
-      gsap.fromTo(section.children, 
-        { y: 40, opacity: 0 }, 
-        { scrollTrigger: { trigger: section, start: "top 85%" }, y: 0, opacity: 1, duration: 1.2, stagger: 0.15, ease: "power2.out" }
-      );
-    });
-
-    // 3. DIAPOSITIVAS INTERACTIVAS (Slide Horizontal Desktop)
-    let mm = gsap.matchMedia();
-    mm.add("(min-width: 1024px)", () => {
-      if (sliderRef.current) {
-        const slides = gsap.utils.toArray('.slide-panel');
-        gsap.to(slides, {
-          xPercent: -100 * (slides.length - 1),
+      // Oscurecer y escalar hacia atrás la carta anterior cuando llega una nueva
+      if (i > 0) {
+        gsap.to(cards[i - 1], {
+          scale: 0.95 - (0.02 * i),
+          opacity: 0.4,
+          filter: "blur(4px)",
           ease: "none",
           scrollTrigger: {
-            trigger: ".slider-container",
-            pin: true,
-            scrub: 1,
-            snap: 1 / (slides.length - 1),
-            end: () => "+=" + sliderRef.current?.offsetWidth
+            trigger: card,
+            start: "top bottom-=100",
+            end: "top top+=120",
+            scrub: true,
           }
         });
       }
     });
+
+    // 4. FADE IN ORGÁNICO PARA LA BOUTIQUE
+    gsap.fromTo(".boutique-item", 
+      { y: 50, opacity: 0 }, 
+      { scrollTrigger: { trigger: ".boutique-grid", start: "top 80%" }, y: 0, opacity: 1, duration: 0.8, stagger: 0.1, ease: "power2.out" }
+    );
+
   }, { scope: container });
 
   return (
-    <div ref={container} className="w-full relative overflow-hidden">
+    <div ref={container} className="w-full relative bg-[var(--bg-canvas)]">
       
-      {/* --- PANTALLA DE CARGA (PRELOADER ABSOLUTO) --- */}
-      <div className="loader-bg fixed inset-0 z-[999999] bg-background flex items-center justify-center">
-        <div className="loader-logo flex flex-col items-center text-center">
-          <Sparkles size={36} className="text-gold mb-6 animate-pulse" strokeWidth={1} />
-          <h1 className="font-playfair text-4xl md:text-5xl lg:text-6xl text-foreground tracking-tight mb-4">
-            Johanna Grandón
-          </h1>
-          <p className="golden-rainbow-text text-[9px] tracking-[0.4em] uppercase font-bold">
-            Armonizando tu espacio...
-          </p>
+      {/* --- PRELOADER --- */}
+      <div className="loader-bg fixed inset-0 z-[100] bg-[var(--purple-deep)] flex items-center justify-center pointer-events-none">
+        <div className="loader-logo opacity-0 translate-y-10 flex flex-col items-center">
+          <Sparkles size={40} className="text-[var(--gold-magic)] mb-4 animate-spin-slow" strokeWidth={1} />
+          <h1 className="font-playfair text-white text-5xl tracking-tight">Johanna Grandón</h1>
         </div>
-      </div>
-
-      {/* 🖼️ PLACEHOLDER FONDO: Reemplazar '/images/lavanda-bg.png' */}
-      <div className="absolute top-0 right-0 w-[80vw] md:w-[40vw] h-[80vw] md:h-[40vw] opacity-20 pointer-events-none -z-10 mix-blend-multiply">
-        {/* <Image src="/images/lavanda-bg.png" alt="Decoración Lavanda" fill className="object-contain object-right-top" /> */}
-        <div className="absolute inset-0 bg-lavender rounded-full blur-[80px]"></div>
       </div>
 
       {/* --- HERO SECTION --- */}
-      <section className="w-full min-h-[100svh] flex flex-col justify-center pt-24 pb-12 px-6 lg:px-12">
-        <div className="max-w-[85rem] mx-auto w-full flex flex-col lg:flex-row items-center gap-12 lg:gap-20">
-          
-          <div className="w-full lg:w-1/2 flex flex-col">
-            <span className="breathe-reveal text-gold font-bold tracking-[0.3em] uppercase text-[10px] mb-6 block">
-              Bienestar Emocional Integral
-            </span>
-            <h1 className="font-playfair text-5xl md:text-6xl lg:text-[5rem] text-foreground leading-[1.05] tracking-tight mb-8">
-              <div className="breathe-reveal">Libera tu energía.</div>
-              <div className="breathe-reveal golden-rainbow-text italic font-light pb-2">Sana tu origen.</div>
+      <section className="hero-section relative w-full h-[100svh] flex items-center overflow-hidden px-6 lg:px-16">
+        <div className="absolute inset-0 z-0 hero-image-wrapper overflow-hidden">
+          {banners.length > 0 ? (
+            <Image src={banners[0].imageUrl} alt="Bienestar" fill priority className="hero-image object-cover object-center" />
+          ) : (
+            <div className="w-full h-full bg-[var(--purple-light)]" />
+          )}
+          <div className="absolute inset-0 bg-gradient-to-r from-[var(--bg-canvas)] via-[var(--bg-canvas)]/80 to-transparent" />
+        </div>
+
+        <div className="relative z-10 max-w-4xl pt-20">
+          <div className="overflow-hidden mb-2">
+            <h1 className="hero-text-mask font-playfair text-6xl md:text-[5.5rem] lg:text-[7rem] text-[var(--purple-deep)] leading-[0.9] tracking-tight">
+              <span className="block">Despierta tu</span>
             </h1>
-            <p className="breathe-reveal text-foreground/70 text-lg leading-relaxed mb-10 max-w-md font-light">
-              Un espacio de respeto para ti y tu familia. A través de la radiestesia y la biodecodificación, desatamos los nudos emocionales para que vuelvas a florecer en paz.
+          </div>
+          <div className="overflow-hidden mb-8">
+            <h1 className="hero-text-mask font-playfair text-6xl md:text-[5.5rem] lg:text-[7rem] leading-[0.9] tracking-tight flex items-center gap-4">
+              <span className="block golden-rainbow-text italic font-light">energía vital.</span>
+            </h1>
+          </div>
+          
+          <div className="overflow-hidden mb-12">
+            <p className="hero-text-mask text-[var(--purple-deep)]/70 text-lg md:text-xl font-light max-w-lg leading-relaxed">
+              <span className="block">Sanación cuántica, radiestesia y biodecodificación para liberar las memorias que tu cuerpo ya no necesita cargar.</span>
             </p>
-            <div className="breathe-reveal flex gap-4">
-              <button onClick={() => document.getElementById('terapias-slide')?.scrollIntoView({behavior: 'smooth'})} className="bg-foreground text-white px-10 py-4 rounded-full text-[11px] font-bold tracking-[0.2em] uppercase hover:bg-gold hover:shadow-lg transition-all duration-500 shadow-sm">
-                Conocer Terapias
-              </button>
-            </div>
           </div>
 
-          <div className="w-full lg:w-1/2 relative h-[50vh] lg:h-[70vh]">
-            <div className="breathe-reveal absolute inset-0 w-full h-full rounded-[3rem] lg:rounded-t-[8rem] lg:rounded-b-[3rem] overflow-hidden shadow-2xl border-[8px] border-white bg-lavender/50 flex items-center justify-center">
-              {banners.length > 0 ? (
-                <Image src={banners[0].imageUrl} alt="Bienestar y Luz" fill priority className="hero-image object-cover" sizes="(max-width: 1024px) 100vw, 50vw" />
-              ) : (
-                <span className="hero-image text-foreground/40 text-xs font-bold uppercase tracking-widest text-center px-4">
-                  [Sube un Banner en Admin]
-                </span>
-              )}
+          <button onClick={() => document.getElementById('terapias')?.scrollIntoView({behavior: 'smooth'})} className="group relative flex items-center gap-4 text-[var(--purple-deep)] font-bold uppercase tracking-[0.2em] text-xs hover:text-[var(--gold-magic)] transition-colors">
+            <div className="w-12 h-12 rounded-full border border-[var(--purple-deep)] flex items-center justify-center group-hover:scale-110 group-hover:border-[var(--gold-magic)] transition-all duration-500">
+              <MoveRight strokeWidth={1} className="group-hover:translate-x-1 transition-transform" />
             </div>
+            Explorar Terapias
+          </button>
+        </div>
+      </section>
+
+      {/* --- TERAPIAS: THE TAROT STACKING --- */}
+      <section id="terapias" className="tarot-container relative w-full pb-[20vh] bg-[var(--bg-canvas)] pt-20">
+        <div className="max-w-xl mx-auto text-center px-6 mb-20">
+          <h2 className="font-playfair text-4xl lg:text-5xl text-[var(--purple-deep)] mb-4">El Oráculo de Sanación</h2>
+          <p className="text-[var(--purple-deep)]/50 uppercase tracking-[0.2em] text-[10px] font-bold">Un viaje en tres fases</p>
+        </div>
+
+        <div className="max-w-[1000px] mx-auto px-4 lg:px-0 relative h-[150vh]">
+          {/* Card 1 */}
+          <div className="tarot-card w-full h-[65vh] absolute top-0 left-0 bg-white rounded-[2rem] shadow-[0_20px_50px_rgba(91,58,128,0.05)] border border-[var(--purple-deep)]/10 overflow-hidden flex flex-col md:flex-row will-change-transform">
+             <div className="w-full md:w-1/2 bg-[var(--purple-light)]/30 relative flex items-center justify-center">
+                <span className="text-6xl font-playfair text-[var(--purple-deep)] opacity-20">I</span>
+             </div>
+             <div className="w-full md:w-1/2 p-10 lg:p-16 flex flex-col justify-center bg-white">
+               <h3 className="font-playfair text-4xl text-[var(--purple-deep)] mb-6">Radiestesia</h3>
+               <p className="text-zinc-600 font-light leading-relaxed">Limpieza profunda del campo electromagnético. Detectamos parásitos energéticos y bloqueos mediante el uso del péndulo, transmutando la densidad en luz pura.</p>
+             </div>
+          </div>
+
+          {/* Card 2 */}
+          <div className="tarot-card w-full h-[65vh] absolute top-[5vh] left-0 bg-[#FDFCF8] rounded-[2rem] shadow-[0_20px_50px_rgba(91,58,128,0.08)] border border-[var(--gold-magic)]/20 overflow-hidden flex flex-col md:flex-row will-change-transform">
+             <div className="w-full md:w-1/2 bg-[var(--gold-magic)]/10 relative flex items-center justify-center">
+                <span className="text-6xl font-playfair text-[var(--gold-magic)] opacity-40">II</span>
+             </div>
+             <div className="w-full md:w-1/2 p-10 lg:p-16 flex flex-col justify-center bg-[#FDFCF8]">
+               <h3 className="font-playfair text-4xl text-[var(--purple-deep)] mb-6">Biodecodificación</h3>
+               <p className="text-zinc-600 font-light leading-relaxed">El síntoma físico es la voz del alma no escuchada. Rastreamos tu árbol genealógico y tus conflictos silenciados para desactivar la enfermedad desde su raíz biológica.</p>
+             </div>
+          </div>
+
+          {/* Card 3 */}
+          <div className="tarot-card w-full h-[65vh] absolute top-[10vh] left-0 bg-[var(--purple-deep)] rounded-[2rem] shadow-[0_30px_60px_rgba(0,0,0,0.2)] border border-white/10 overflow-hidden flex flex-col md:flex-row text-white will-change-transform">
+             <div className="w-full md:w-1/2 bg-black/20 relative flex items-center justify-center">
+                <span className="text-6xl font-playfair text-white opacity-20">III</span>
+             </div>
+             <div className="w-full md:w-1/2 p-10 lg:p-16 flex flex-col justify-center">
+               <h3 className="font-playfair text-4xl mb-6">Péndulo Hebreo & Ankh</h3>
+               <p className="text-white/70 font-light leading-relaxed">Sellado del aura. Utilizamos símbolos radiónicos milenarios y la Cruz de la Vida egipcia (Ankh) para anclar tu nueva frecuencia y proteger tu campo áurico de reincidencias.</p>
+             </div>
           </div>
         </div>
       </section>
 
-      {/* --- EL ENFOQUE & TESTIMONIOS --- */}
-      <section id="enfoque" className="w-full py-32 px-6 bg-white border-y border-foreground/5 relative z-10">
-        <div className="scroll-reveal max-w-[85rem] mx-auto text-center">
-          <Sparkles className="text-gold mx-auto mb-8 opacity-50" size={24} />
-          <h2 className="font-playfair text-3xl md:text-4xl lg:text-5xl text-foreground mb-24 max-w-4xl mx-auto leading-relaxed">
-            "No atraes lo que quieres, atraes la vibración en la que estás. <br className="hidden md:block"/><span className="golden-rainbow-text italic font-light">Cambiemos tu frecuencia.</span>"
-          </h2>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-left">
-            {[
-              "Gracias a la sesión de péndulo, mi hijo ha vuelto a dormir tranquilo. Johanna transmite una paz increíble y nos dio confianza desde el primer minuto.",
-              "Llevaba meses sintiendo un peso en el pecho. La biodecodificación me ayudó a entender el origen. Hoy me siento libre, en paz y profundamente feliz.",
-              "Una experiencia maravillosa. Su consulta es un bálsamo de tranquilidad. Me explicó cada paso con mucha paciencia. Un antes y un después en mi bienestar."
-            ].map((text, i) => (
-              <div key={i} className="bg-background p-10 rounded-[2.5rem] border border-black/5 flex flex-col relative hover:-translate-y-2 hover:shadow-xl transition-all duration-500">
-                <div className="absolute -top-6 left-8 bg-lavender w-14 h-14 rounded-full flex items-center justify-center text-foreground shadow-sm">
-                  <Quote size={20} fill="currentColor" />
-                </div>
-                <div className="flex text-gold mt-2 mb-6">
-                  {[...Array(5)].map((_, index) => <Star key={index} size={16} fill="currentColor" className="mr-1" />)}
-                </div>
-                <p className="text-foreground/80 leading-relaxed text-sm flex-grow">"{text}"</p>
-                <span className="block mt-8 text-[10px] uppercase tracking-[0.2em] font-bold text-foreground/40 border-t border-black/5 pt-4">Consultante</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* --- TERAPIAS (Diapositiva Interactiva GSAP) --- */}
-      <section id="terapias-slide" className="slider-container w-full h-auto lg:h-[100vh] bg-background flex flex-col lg:flex-row items-center overflow-hidden relative z-20 pb-20 lg:pb-0">
-        
-        <div className="w-full px-6 lg:px-12 lg:absolute top-16 left-0 z-20 text-center lg:text-left pt-16 lg:pt-0 mb-8 lg:mb-0">
-          <h2 className="font-playfair text-4xl md:text-5xl text-foreground">El Proceso</h2>
-          <p className="text-foreground/50 text-[10px] mt-2 uppercase tracking-[0.2em] font-bold hidden lg:block">Desliza para explorar</p>
-        </div>
-
-        {/* En Desktop usa Scroll horizontal. En Mobile es una lista normal (flex-col) */}
-        <div ref={sliderRef} className="flex flex-col lg:flex-row h-full items-center w-full lg:w-[200vw] lg:pl-12 gap-8 lg:gap-0 px-6 lg:px-0">
+      {/* --- LA BOUTIQUE: BENTO GRID MAGNÉTICO --- */}
+      <section className="relative w-full py-32 bg-white px-6 lg:px-16 rounded-t-[4rem] shadow-[0_-20px_50px_rgba(0,0,0,0.02)] z-20">
+        <div className="max-w-[90rem] mx-auto">
           
-          {/* Diapositiva 1 */}
-          <div className="slide-panel w-full lg:w-[60vw] h-auto lg:h-[70vh] flex-shrink-0 lg:px-6">
-            <div className="w-full h-full bg-white rounded-[2.5rem] lg:rounded-[3rem] shadow-sm hover:shadow-xl transition-shadow duration-500 p-8 lg:p-14 flex flex-col md:flex-row gap-10 items-center border border-black/5">
-              <div className="w-full md:w-1/2 h-56 md:h-full bg-lavender/40 rounded-[2rem] relative flex items-center justify-center overflow-hidden">
-                <span className="text-foreground/30 font-bold uppercase tracking-widest text-[10px] text-center px-4">[Placeholder Foto: Péndulo/Radiestesia]</span>
-              </div>
-              <div className="w-full md:w-1/2 flex flex-col justify-center">
-                <span className="text-6xl lg:text-[6rem] font-playfair text-lavender leading-none mb-4">01</span>
-                <h3 className="font-playfair text-3xl text-foreground mb-4">Radiestesia</h3>
-                <p className="text-foreground/70 leading-relaxed font-light text-sm lg:text-base">Diagnóstico y limpieza del campo áurico mediante péndulos. Detectamos y transmutamos bloqueos energéticos, devolviendo la vitalidad natural a tu cuerpo físico, mental y espiritual.</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Diapositiva 2 */}
-          <div className="slide-panel w-full lg:w-[60vw] h-auto lg:h-[70vh] flex-shrink-0 lg:px-6">
-            <div className="w-full h-full bg-white rounded-[2.5rem] lg:rounded-[3rem] shadow-sm hover:shadow-xl transition-shadow duration-500 p-8 lg:p-14 flex flex-col md:flex-row gap-10 items-center border border-black/5">
-              <div className="w-full md:w-1/2 h-56 md:h-full bg-lavender/40 rounded-[2rem] relative flex items-center justify-center overflow-hidden">
-                <span className="text-foreground/30 font-bold uppercase tracking-widest text-[10px] text-center px-4">[Placeholder Foto: Sesión de Terapia]</span>
-              </div>
-              <div className="w-full md:w-1/2 flex flex-col justify-center">
-                <span className="text-6xl lg:text-[6rem] font-playfair text-lavender leading-none mb-4">02</span>
-                <h3 className="font-playfair text-3xl text-foreground mb-4">Biodecodificación</h3>
-                <p className="text-foreground/70 leading-relaxed font-light text-sm lg:text-base">Toda dolencia tiene una raíz emocional. Encontramos el conflicto inconsciente detrás de tus síntomas, permitiendo que tu cuerpo suelte el estrés, la memoria enquistada y active su autosanación.</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Diapositiva 3 */}
-          <div className="slide-panel w-full lg:w-[60vw] h-auto lg:h-[70vh] flex-shrink-0 lg:px-6">
-            <div className="w-full h-full bg-white rounded-[2.5rem] lg:rounded-[3rem] shadow-sm hover:shadow-xl transition-shadow duration-500 p-8 lg:p-14 flex flex-col md:flex-row gap-10 items-center border border-black/5">
-              <div className="w-full md:w-1/2 h-56 md:h-full bg-lavender/40 rounded-[2rem] relative flex items-center justify-center overflow-hidden">
-                <span className="text-foreground/30 font-bold uppercase tracking-widest text-[10px] text-center px-4">[Placeholder Foto: Esencias/Cruz de Ankh]</span>
-              </div>
-              <div className="w-full md:w-1/2 flex flex-col justify-center">
-                <span className="text-6xl lg:text-[6rem] font-playfair text-lavender leading-none mb-4">03</span>
-                <h3 className="font-playfair text-3xl text-foreground mb-4">Sabiduría Ancestral</h3>
-                <p className="text-foreground/70 leading-relaxed font-light text-sm lg:text-base">Incorporamos el Péndulo Hebreo, la Cruz de Ankh y Esencias de Bach como catalizadores vibracionales. Un enfoque integral para sellar la sanación en todas las capas de tu ser.</p>
-              </div>
-            </div>
-          </div>
-
-        </div>
-      </section>
-
-      {/* --- LA BOUTIQUE (PURGADA Y ORGANIZADA) --- */}
-      <section id="boutique" className="w-full py-32 px-6 lg:px-12 bg-white border-y border-foreground/5 relative z-10">
-        <div className="scroll-reveal max-w-[85rem] mx-auto">
-          
-          <div className="flex flex-col md:flex-row justify-between items-end mb-16 gap-8">
+          <div className="flex flex-col lg:flex-row justify-between items-end mb-16 border-b border-[var(--purple-deep)]/10 pb-8 gap-6">
             <div>
-              <h2 className="font-playfair text-4xl md:text-5xl text-foreground mb-3">La Boutique</h2>
-              <p className="text-foreground/50 text-sm font-light">Piezas de luz y herramientas canalizadas para tu protección.</p>
+              <h2 className="font-playfair text-5xl text-[var(--purple-deep)] mb-4">Reliquias & Materia</h2>
+              <p className="text-zinc-500 font-light">Herramientas canalizadas para sostener tu trabajo interno.</p>
             </div>
             
-            {/* Filtros dinámicos (Se ocultan si no hay categorías) */}
-            {dynamicFilters.length > 1 && (
-              <div className="flex flex-wrap gap-2">
-                {dynamicFilters.map((filter) => (
-                  <button
-                    key={filter.id} onClick={() => setActiveFilter(filter.id)}
-                    className={`px-6 py-3 rounded-full text-[10px] font-bold tracking-widest uppercase transition-all duration-300 ${
-                      activeFilter === filter.id ? 'bg-foreground text-white shadow-md' : 'bg-background text-foreground/50 border border-black/5 hover:border-gold hover:text-foreground'
-                    }`}
-                  >
-                    {filter.label}
-                  </button>
-                ))}
-              </div>
-            )}
+            <div className="flex flex-wrap gap-3">
+              {dynamicFilters.map(f => (
+                <button
+                  key={f.id} onClick={() => setActiveFilter(f.id)}
+                  className={`px-5 py-2.5 rounded-full text-[10px] font-bold tracking-widest uppercase transition-all duration-300 ${
+                    activeFilter === f.id ? 'bg-[var(--purple-deep)] text-white' : 'bg-transparent text-zinc-400 border border-zinc-200 hover:border-[var(--gold-magic)] hover:text-[var(--purple-deep)]'
+                  }`}
+                >
+                  {f.label}
+                </button>
+              ))}
+            </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="boutique-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {filteredProducts.map((product) => (
-              <article key={product.id} className="bg-background rounded-[2rem] p-4 shadow-sm border border-black/5 flex flex-col hover:shadow-xl hover:-translate-y-2 transition-all duration-500 group">
-                
-                <div className="relative w-full aspect-square rounded-[1.5rem] overflow-hidden bg-lavender/30 mb-5 flex items-center justify-center">
+              <div key={product.id} className="boutique-item group flex flex-col cursor-pointer">
+                <div className="w-full aspect-[4/5] bg-[var(--purple-light)]/20 rounded-[2rem] overflow-hidden relative mb-6">
                   {product.imageUrl ? (
-                    <Image src={product.imageUrl} alt={product.name} fill className="object-cover group-hover:scale-110 transition-transform duration-[1.5s]" sizes="(max-width: 768px) 100vw, 25vw" />
+                    <Image src={product.imageUrl} alt={product.name} fill className="object-cover group-hover:scale-105 transition-transform duration-700 ease-out" />
                   ) : (
-                    <span className="text-foreground/30 text-[10px] uppercase font-bold tracking-widest">[Foto de {product.name}]</span>
+                    <div className="absolute inset-0 flex items-center justify-center">
+                       <Sparkles className="text-[var(--purple-deep)]/20" size={40}/>
+                    </div>
                   )}
-                  {/* Etiqueta de Producto (Materia Física) */}
-                  <span className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm text-foreground text-[9px] font-bold px-3 py-1.5 rounded-full uppercase tracking-widest shadow-sm">
-                    Materia
-                  </span>
-                </div>
-                
-                <div className="px-2 flex flex-col flex-grow">
-                  <h3 className="font-playfair text-xl text-foreground mb-2 leading-tight">{product.name}</h3>
-                  <p className="text-xs text-foreground/60 line-clamp-2 mb-6 flex-grow font-light leading-relaxed">{product.description}</p>
                   
-                  <div className="flex items-center justify-between border-t border-black/5 pt-4">
-                    <span className="font-playfair text-2xl text-foreground">{formatPrice(product.price)}</span>
+                  {/* Glassmorphism Add Button */}
+                  <div className="absolute bottom-4 left-4 right-4 flex justify-between items-center bg-white/70 backdrop-blur-md p-2 pl-4 rounded-2xl border border-white/50 opacity-0 translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300">
+                    <span className="font-playfair text-lg text-[var(--purple-deep)]">{formatPrice(product.price)}</span>
                     <button 
-                      onClick={() => addItem({ id: product.id, name: product.name, price: product.price, imageUrl: product.imageUrl || null })}
+                      onClick={(e) => { e.stopPropagation(); addItem({ id: product.id, name: product.name, price: product.price, imageUrl: product.imageUrl || null }); }}
                       disabled={product.stock === 0}
-                      className="w-12 h-12 bg-lavender text-foreground rounded-full flex items-center justify-center hover:bg-gold hover:text-white transition-colors duration-300 disabled:opacity-50"
-                      title={product.stock === 0 ? "Agotado" : "Añadir a la cesta"}
+                      className="w-10 h-10 bg-[var(--purple-deep)] text-white rounded-xl flex items-center justify-center hover:bg-[var(--gold-magic)] transition-colors disabled:opacity-50"
                     >
-                      {product.stock === 0 ? <span className="text-xs font-bold">✕</span> : <Plus size={18} strokeWidth={1.5} />}
+                      {product.stock === 0 ? <span className="text-[10px]">NO</span> : <Plus size={18} />}
                     </button>
                   </div>
                 </div>
-              </article>
-            ))}
-
-            {/* Mensaje de vacío si no hay productos físicos cargados */}
-            {filteredProducts.length === 0 && (
-              <div className="col-span-full text-center py-24 bg-background rounded-[2rem] border border-dashed border-foreground/10">
-                <Sparkles className="text-gold/50 mx-auto mb-4" size={32} />
-                <p className="text-foreground/50 italic font-playfair text-2xl">La boutique se encuentra preparando nuevas reliquias...</p>
+                
+                <h3 className="font-playfair text-2xl text-[var(--purple-deep)] mb-2 group-hover:text-[var(--gold-magic)] transition-colors">{product.name}</h3>
+                <p className="text-zinc-500 text-sm font-light line-clamp-2">{product.description}</p>
               </div>
-            )}
+            ))}
           </div>
         </div>
       </section>
-
     </div>
   );
 }
