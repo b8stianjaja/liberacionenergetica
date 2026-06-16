@@ -4,13 +4,17 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { ShoppingCart, User, Menu, X, ArrowRight } from 'lucide-react';
-import { useCart } from '@/context/CartContext'; // NUEVO: Importación del contexto
+import { useCart } from '@/context/CartContext';
+
+// REEMPLAZAR con el número real de contacto (Ej: 56912345678 para Chile)
+const WHATSAPP_NUMBER = "56900000000"; 
+const WHATSAPP_MESSAGE = encodeURIComponent("Hola Johanna, me gustaría agendar una sesión.");
 
 export default function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const pathname = usePathname();
-  const { itemsCount, toggleCart } = useCart(); // NUEVO: Consumo del contexto
+  const { itemsCount, toggleCart, isLoaded } = useCart();
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20);
@@ -18,6 +22,7 @@ export default function Header() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // Cerrar menú móvil automáticamente al cambiar de ruta
   useEffect(() => setMobileMenuOpen(false), [pathname]);
 
   const navLinks = [
@@ -55,13 +60,14 @@ export default function Header() {
 
           <div className="flex items-center space-x-4 md:space-x-6 z-[90]">
             <div className="hidden sm:flex items-center space-x-5">
-              <Link href="/login" className="text-[var(--purple-deep)] hover:text-[var(--gold-magic)] transition-colors">
+              <Link href="/login" aria-label="Portal de Usuario" className="text-[var(--purple-deep)] hover:text-[var(--gold-magic)] transition-colors">
                 <User size={20} strokeWidth={1.5} />
               </Link>
-              {/* BOTÓN DEL CARRITO INTERACTIVO */}
-              <button onClick={toggleCart} className="text-[var(--purple-deep)] hover:text-[var(--gold-magic)] transition-colors relative group">
+              
+              <button onClick={toggleCart} aria-label="Abrir carrito" className="text-[var(--purple-deep)] hover:text-[var(--gold-magic)] transition-colors relative group">
                 <ShoppingCart size={20} strokeWidth={1.5} className="group-hover:scale-110 transition-transform" />
-                {itemsCount > 0 && (
+                {/* Solo renderiza el badge si el contexto ya se cargó y hay items */}
+                {isLoaded && itemsCount > 0 && (
                   <span className="absolute -top-1.5 -right-2 bg-[var(--gold-magic)] text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center shadow-sm animate-in zoom-in">
                     {itemsCount}
                   </span>
@@ -69,11 +75,20 @@ export default function Header() {
               </button>
             </div>
 
-            <a href="https://wa.me/tunumerowhatsapp" target="_blank" rel="noopener noreferrer" className="hidden lg:inline-flex items-center gap-2 bg-[var(--purple-deep)] text-white px-6 py-2.5 rounded-full text-xs tracking-wider uppercase font-bold hover:bg-[var(--gold-magic)] transition-all shadow-md hover:-translate-y-0.5">
+            <a 
+              href={`https://wa.me/${WHATSAPP_NUMBER}?text=${WHATSAPP_MESSAGE}`} 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="hidden lg:inline-flex items-center gap-2 bg-[var(--purple-deep)] text-white px-6 py-2.5 rounded-full text-xs tracking-wider uppercase font-bold hover:bg-[var(--gold-magic)] transition-all shadow-md hover:-translate-y-0.5"
+            >
               Agenda tu sesión <ArrowRight size={14} />
             </a>
 
-            <button className="md:hidden text-[var(--purple-deep)] p-2 focus:outline-none" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
+            <button 
+              className="md:hidden text-[var(--purple-deep)] p-2 focus:outline-none" 
+              aria-label="Menú principal"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            >
               {mobileMenuOpen ? <X size={24} strokeWidth={1.5} /> : <Menu size={24} strokeWidth={1.5} />}
             </button>
           </div>
@@ -93,8 +108,9 @@ export default function Header() {
             <Link href="/login" className="flex items-center gap-3 text-lg text-zinc-600 font-playfair">
               <User size={22} className="text-[var(--gold-magic)]" /> Portal Admin
             </Link>
-            <button onClick={() => { setMobileMenuOpen(false); toggleCart(); }} className="flex items-center gap-3 text-lg text-zinc-600 text-left font-playfair">
-              <ShoppingCart size={22} className="text-[var(--gold-magic)]" /> Ver Cesta ({itemsCount})
+            <button onClick={() => { setMobileMenuOpen(false); toggleCart(); }} className="flex items-center gap-3 text-lg text-zinc-600 text-left font-playfair w-full">
+              <ShoppingCart size={22} className="text-[var(--gold-magic)]" /> 
+              Ver Cesta {isLoaded && itemsCount > 0 ? `(${itemsCount})` : ''}
             </button>
           </div>
         </div>

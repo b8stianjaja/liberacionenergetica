@@ -21,6 +21,7 @@ interface CartContextType {
   setIsOpen: (isOpen: boolean) => void;
   toggleCart: () => void;
   itemsCount: number;
+  isLoaded: boolean; // NUEVO: Evita errores de hidratación en Next.js
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -28,19 +29,27 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
   const [isOpen, setIsOpen] = useState(false);
-  const [isMounted, setIsMounted] = useState(false);
+  const [isLoaded, setIsLoaded] = useState(false); // Rastrea si se cargó el localStorage
 
-  // Cargar desde localStorage al montar
+  // Cargar desde localStorage al montar (Solo en el cliente)
   useEffect(() => {
-    setIsMounted(true);
     const savedCart = localStorage.getItem('jg_cart');
-    if (savedCart) setItems(JSON.parse(savedCart));
+    if (savedCart) {
+      try {
+        setItems(JSON.parse(savedCart));
+      } catch (error) {
+        console.error('Error parsing cart from local storage', error);
+      }
+    }
+    setIsLoaded(true); // Indica que ya podemos renderizar cantidades reales de forma segura
   }, []);
 
   // Guardar en localStorage cada vez que cambien los items
   useEffect(() => {
-    if (isMounted) localStorage.setItem('jg_cart', JSON.stringify(items));
-  }, [items, isMounted]);
+    if (isLoaded) {
+      localStorage.setItem('jg_cart', JSON.stringify(items));
+    }
+  }, [items, isLoaded]);
 
   const addItem = (newItem: Omit<CartItem, 'quantity'>) => {
     setItems((prev) => {
@@ -72,7 +81,19 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const itemsCount = items.reduce((sum, item) => sum + item.quantity, 0);
 
   return (
-    <CartContext.Provider value={{ items, addItem, removeItem, updateQuantity, clearCart, total, isOpen, setIsOpen, toggleCart, itemsCount }}>
+    <CartContext.Provider value={{ 
+      items, 
+      addItem, 
+      removeItem, 
+      updateQuantity, 
+      clearCart, 
+      total, 
+      isOpen, 
+      setIsOpen, 
+      toggleCart, 
+      itemsCount,
+      isLoaded 
+    }}>
       {children}
     </CartContext.Provider>
   );
