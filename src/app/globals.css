@@ -1,17 +1,17 @@
 @import "tailwindcss";
 
 :root {
-  --bg-pure: #FEFCFF;        /* Blanco con un micro-toque lila */
-  --text-amethyst: #382A4F;  /* Lila oscurecido profundo (Contraste alto y maduro) */
-  --gold-light: #D1B370;     /* Dorado etéreo y suave */
-  --lavender-lila: #EBE4F5;  /* Lila lavender pastel */
+  --bg-pure: #FCFAFF;        /* Blanco nieve con 1% de lavanda */
+  --text-void: #221533;      /* Amatista profundo (máxima legibilidad) */
+  --gold-essence: #D4B872;   /* Dorado etéreo */
+  --lavender-mist: #E8E0F5;  /* Lavanda suave */
 }
 
 @theme inline {
   --color-background: var(--bg-pure);
-  --color-foreground: var(--text-amethyst);
-  --color-gold: var(--gold-light);
-  --color-lavender: var(--lavender-lila);
+  --color-foreground: var(--text-void);
+  --color-gold: var(--gold-essence);
+  --color-lavender: var(--lavender-mist);
 }
 
 body {
@@ -20,31 +20,61 @@ body {
   font-family: var(--font-lato), sans-serif;
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
 }
 
 .font-playfair { font-family: var(--font-playfair), serif; }
 
-/* El efecto "Golden Rainbow" (Iridiscencia Mágica) */
-.golden-rainbow-text {
-  background: linear-gradient(90deg, #D1B370, #FDF4D4, #D5C2ED, #CDE9F2, #FDF4D4, #D1B370);
+/* 1. El Aura Viva (Background Orgánico) */
+.energy-blob {
+  position: absolute;
+  filter: blur(80px);
+  z-index: 0;
+  opacity: 0.6;
+  animation: morph 15s ease-in-out infinite both alternate;
+}
+@keyframes morph {
+  0% { border-radius: 40% 60% 70% 30% / 40% 50% 60% 50%; transform: rotate(0deg) scale(1); }
+  50% { border-radius: 70% 30% 50% 50% / 30% 30% 70% 70%; transform: rotate(180deg) scale(1.1); }
+  100% { border-radius: 40% 60% 70% 30% / 40% 50% 60% 50%; transform: rotate(360deg) scale(1); }
+}
+
+/* 2. El Efecto Golden Rainbow (Iridiscencia) */
+.iridescent-border {
+  position: relative;
+  background: var(--color-background);
+  border-radius: 2.5rem;
+  z-index: 1;
+}
+.iridescent-border::before {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  border-radius: 2.6rem;
+  background: linear-gradient(120deg, #E8E0F5, #D4B872, #FFFFFF, #D4B872, #E8E0F5);
+  background-size: 300% 300%;
+  z-index: -1;
+  opacity: 0;
+  transition: opacity 0.7s ease;
+  animation: shimmer 4s linear infinite;
+}
+.iridescent-border:hover::before { opacity: 1; }
+
+.iridescent-text {
+  background: linear-gradient(to right, #D4B872, #A88B4E, #D4B872);
   background-size: 200% auto;
   color: transparent;
   -webkit-background-clip: text;
   background-clip: text;
-  animation: shine 8s linear infinite;
+  animation: shimmer 5s linear infinite;
 }
 
-.golden-rainbow-bg {
-  background: linear-gradient(135deg, rgba(235, 228, 245, 0.6) 0%, rgba(253, 244, 212, 0.6) 50%, rgba(205, 233, 242, 0.4) 100%);
-  backdrop-filter: blur(20px);
+@keyframes shimmer {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
 }
 
-@keyframes shine {
-  to { background-position: 200% center; }
-}
-
-/* Transiciones suaves para interacciones */
-.btn-transition {
-  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+/* 3. Textura de lujo (Noise) imperceptible pero efectiva */
+.luxury-noise {
+  position: fixed; inset: 0; z-index: 9999; opacity: 0.03; pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
 }
