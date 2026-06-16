@@ -6,31 +6,53 @@ import { usePathname } from 'next/navigation';
 import { ShoppingCart, User, Menu, X, ArrowRight } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 
-// REEMPLAZAR con el número real de contacto (Ej: 56912345678 para Chile)
 const WHATSAPP_NUMBER = "56900000000"; 
 const WHATSAPP_MESSAGE = encodeURIComponent("Hola Johanna, me gustaría agendar una sesión.");
 
 export default function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [activeHash, setActiveHash] = useState('');
   const pathname = usePathname();
   const { itemsCount, toggleCart, isLoaded } = useCart();
 
+  // Detección de scroll y hash activo
   useEffect(() => {
-    const handleScroll = () => setIsScrolled(window.scrollY > 20);
-    window.addEventListener('scroll', handleScroll);
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 20);
+      
+      // Actualizar hash activo basado en la posición de scroll
+      const sections = ['inicio', 'sobre-mi', 'terapias', 'testimonios', 'boutique'];
+      let current = '';
+      
+      for (const section of sections) {
+        const element = document.getElementById(section);
+        if (element) {
+          const rect = element.getBoundingClientRect();
+          // Si el top de la sección está por encima del medio de la pantalla
+          if (rect.top <= window.innerHeight / 2) {
+            current = `#${section}`;
+          }
+        }
+      }
+      setActiveHash(current || '/');
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    // Run once on mount
+    handleScroll();
+    
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Cerrar menú móvil automáticamente al cambiar de ruta
-  useEffect(() => setMobileMenuOpen(false), [pathname]);
+  useEffect(() => setMobileMenuOpen(false), [pathname, activeHash]);
 
   const navLinks = [
     { name: 'Inicio', href: '/' },
-    { name: 'Sobre mí', href: '/sobre-mi' },
-    { name: 'Terapias', href: '/terapias' },
-    { name: 'Testimonios', href: '/testimonios' },
-    { name: 'Boutique', href: '/boutique' },
+    { name: 'Sobre mí', href: '/#sobre-mi' },
+    { name: 'Terapias', href: '/#terapias' },
+    { name: 'Testimonios', href: '/#testimonios' },
+    { name: 'Boutique', href: '/#boutique' },
   ];
 
   return (
@@ -40,7 +62,7 @@ export default function Header() {
       }`}>
         <div className="max-w-[90rem] mx-auto px-6 lg:px-16 flex justify-between items-center">
           
-          <Link href="/" className="flex flex-col items-start group relative z-[90]">
+          <Link href="/" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="flex flex-col items-start group relative z-[90]">
             <span className="font-serif text-2xl md:text-3xl text-[var(--purple-deep)] leading-none tracking-wide group-hover:text-[var(--gold-magic)] transition-colors duration-500">
               Johanna Grandón
             </span>
@@ -50,12 +72,19 @@ export default function Header() {
           </Link>
           
           <nav className="hidden md:flex space-x-8 text-[12px] uppercase tracking-[0.15em] font-bold text-zinc-500">
-            {navLinks.map((link) => (
-              <Link key={link.name} href={link.href} className={`relative overflow-hidden group py-1 transition-colors hover:text-[var(--purple-deep)] ${pathname === link.href ? 'text-[var(--purple-deep)]' : ''}`}>
-                {link.name}
-                <span className={`absolute bottom-0 left-0 w-full h-[2px] bg-[var(--gold-magic)] transform origin-left transition-transform duration-300 ease-out ${pathname === link.href ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100'}`} />
-              </Link>
-            ))}
+            {navLinks.map((link) => {
+              const isActive = activeHash === link.href || (activeHash === '/' && link.href === '/');
+              return (
+                <Link 
+                  key={link.name} 
+                  href={link.href} 
+                  className={`relative overflow-hidden group py-1 transition-colors hover:text-[var(--purple-deep)] ${isActive ? 'text-[var(--purple-deep)]' : ''}`}
+                >
+                  {link.name}
+                  <span className={`absolute bottom-0 left-0 w-full h-[2px] bg-[var(--gold-magic)] transform origin-left transition-transform duration-300 ease-out ${isActive ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100'}`} />
+                </Link>
+              );
+            })}
           </nav>
 
           <div className="flex items-center space-x-4 md:space-x-6 z-[90]">
@@ -66,7 +95,6 @@ export default function Header() {
               
               <button onClick={toggleCart} aria-label="Abrir carrito" className="text-[var(--purple-deep)] hover:text-[var(--gold-magic)] transition-colors relative group">
                 <ShoppingCart size={20} strokeWidth={1.5} className="group-hover:scale-110 transition-transform" />
-                {/* Solo renderiza el badge si el contexto ya se cargó y hay items */}
                 {isLoaded && itemsCount > 0 && (
                   <span className="absolute -top-1.5 -right-2 bg-[var(--gold-magic)] text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center shadow-sm animate-in zoom-in">
                     {itemsCount}
@@ -100,12 +128,19 @@ export default function Header() {
         <div className="flex flex-col h-full justify-center px-8 pb-20 space-y-8">
           <nav className="flex flex-col space-y-6">
             {navLinks.map((link) => (
-              <Link key={link.name} href={link.href} className="text-3xl font-playfair text-[var(--purple-deep)] hover:text-[var(--gold-magic)] transition-colors">{link.name}</Link>
+              <Link 
+                key={link.name} 
+                href={link.href} 
+                onClick={() => setMobileMenuOpen(false)}
+                className="text-3xl font-playfair text-[var(--purple-deep)] hover:text-[var(--gold-magic)] transition-colors"
+              >
+                {link.name}
+              </Link>
             ))}
           </nav>
           <div className="w-full h-px bg-gradient-to-r from-transparent via-[var(--gold-magic)]/30 to-transparent my-4" />
           <div className="flex flex-col space-y-6">
-            <Link href="/login" className="flex items-center gap-3 text-lg text-zinc-600 font-playfair">
+            <Link href="/login" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 text-lg text-zinc-600 font-playfair">
               <User size={22} className="text-[var(--gold-magic)]" /> Portal Admin
             </Link>
             <button onClick={() => { setMobileMenuOpen(false); toggleCart(); }} className="flex items-center gap-3 text-lg text-zinc-600 text-left font-playfair w-full">
