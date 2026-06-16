@@ -1,43 +1,50 @@
 @import "tailwindcss";
 
 :root {
-  --background: #FCFAFF; /* Aún más luminoso */
-  --foreground: #341D4F; /* Púrpura súper profundo casi negro */
-  --gold: #C49A45;       /* Dorado elegante */
-  --lavender: #EADDFF;
+  --bg-sand: #F4F2ED;      /* Tono arena/pergamino muy sutil */
+  --text-ink: #1F1A24;     /* Tinta oscura */
+  --gold-raw: #B5955C;     /* Dorado crudo */
+  --lavender-mist: #E5DFF0;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-gold: var(--gold);
-  --color-lavender: var(--lavender);
+  --color-background: var(--bg-sand);
+  --color-foreground: var(--text-ink);
+  --color-gold: var(--gold-raw);
+  --color-lavender: var(--lavender-mist);
 }
 
 body {
-  background-color: var(--background);
-  color: var(--foreground);
+  background-color: var(--bg-sand);
+  color: var(--text-ink);
   font-family: var(--font-lato), sans-serif;
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
 }
 
-/* Tipografía Serif */
 .font-playfair { font-family: var(--font-playfair), serif; }
 
-/* Ocultar el cursor por defecto en escritorio para usar el nuestro mágico */
-@media (hover: hover) and (pointer: fine) {
-  body { cursor: none; }
-  a, button, input, textarea, select { cursor: none; }
+/* Utilidades Premium */
+.glass-pill {
+  background: rgba(244, 242, 237, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(31, 26, 36, 0.05);
+  box-shadow: 0 20px 40px rgba(0,0,0,0.05);
 }
 
-/* Utilidades Premium */
-.clip-text-mask { clip-path: polygon(0 0, 100% 0, 100% 100%, 0% 100%); }
-.glass-panel { background: rgba(255, 255, 255, 0.6); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.4); }
-.text-gradient-gold { background: linear-gradient(to right, #C49A45, #E5C984); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+/* Forma de portal/arco para la imagen del hero */
+.arch-clip {
+  clip-path: polygon(50% 0%, 100% 20%, 100% 100%, 0 100%, 0% 20%);
+  border-radius: 40vw 40vw 0 0;
+}
 
-.custom-scrollbar { scrollbar-width: thin; scrollbar-color: var(--gold) transparent; }
-.custom-scrollbar::-webkit-scrollbar { width: 4px; }
-.custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-.custom-scrollbar::-webkit-scrollbar-thumb { background: var(--gold); border-radius: 99px; }
+/* Scroll horizontal limpio para la boutique */
+.hide-scroll::-webkit-scrollbar { display: none; }
+.hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* Tipografía hueca */
+.text-outline-gold {
+  color: transparent;
+  -webkit-text-stroke: 1px var(--gold-raw);
+}
