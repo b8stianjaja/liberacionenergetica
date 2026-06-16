@@ -3,13 +3,13 @@
 import { useRef, useState, useMemo, useEffect } from "react";
 import Image from "next/image";
 import { useCart } from "@/context/CartContext";
-import { Star, Laptop, MessageCircle, Mail, X, Plus, Sparkles } from "lucide-react";
+import { Star, Laptop, MessageCircle, Mail, X, ArrowRight } from "lucide-react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
 
 if (typeof window !== "undefined") {
-  gsap.registerPlugin(useGSAP, ScrollTrigger);
+  gsap.registerPlugin(ScrollTrigger, useGSAP);
 }
 
 export type Category = { id: string; name: string; };
@@ -20,282 +20,272 @@ interface HomeClientProps { products: Product[]; categories: Category[]; banners
 
 export default function HomeClient({ products, categories, banners }: HomeClientProps) {
   const container = useRef<HTMLDivElement>(null);
-  const cursorDot = useRef<HTMLDivElement>(null);
-  const cursorAura = useRef<HTMLDivElement>(null);
+  const cursorRef = useRef<HTMLDivElement>(null);
+  const cursorDotRef = useRef<HTMLDivElement>(null);
   
   const { addItem } = useCart();
   const [activeFilter, setActiveFilter] = useState<string>('ALL');
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
-  // Filtros
-  const dynamicFilters = useMemo(() => [{ id: 'ALL', label: 'El Compendio' }, ...categories.map(cat => ({ id: cat.id, label: cat.name }))], [categories]);
-  const filteredProducts = useMemo(() => products.filter(product => activeFilter === 'ALL' || product.categoryId === activeFilter || product.type === activeFilter), [products, activeFilter]);
-  const formatPrice = (price: number) => new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 }).format(price);
-
-  // Lógica del Scroll Modal
   useEffect(() => {
-    if (selectedProduct) document.body.style.overflow = 'hidden';
-    else document.body.style.overflow = '';
+    document.body.style.overflow = selectedProduct ? 'hidden' : '';
     return () => { document.body.style.overflow = ''; };
   }, [selectedProduct]);
 
-  // ANIMACIONES GSAP (LA MAGIA)
-  useGSAP(() => {
-    // 1. Cursor Mágico (Solo en Desktop)
-    const isDesktop = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
-    if (isDesktop && cursorDot.current && cursorAura.current) {
-      gsap.set([cursorDot.current, cursorAura.current], { xPercent: -50, yPercent: -50 });
-      const xDot = gsap.quickTo(cursorDot.current, "x", { duration: 0.1, ease: "power3" });
-      const yDot = gsap.quickTo(cursorDot.current, "y", { duration: 0.1, ease: "power3" });
-      const xAura = gsap.quickTo(cursorAura.current, "x", { duration: 0.5, ease: "power3.out" });
-      const yAura = gsap.quickTo(cursorAura.current, "y", { duration: 0.5, ease: "power3.out" });
+  const dynamicFilters = useMemo(() => [{ id: 'ALL', label: 'Compendio' }, ...categories.map(cat => ({ id: cat.id, label: cat.name }))], [categories]);
+  const filteredProducts = useMemo(() => products.filter(product => activeFilter === 'ALL' || product.categoryId === activeFilter || product.type === activeFilter), [products, activeFilter]);
+  const formatPrice = (price: number) => new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 }).format(price);
 
-      window.addEventListener("mousemove", (e) => {
-        xDot(e.clientX); yDot(e.clientY);
-        xAura(e.clientX); yAura(e.clientY);
+  // === GSAP ANIMATIONS ===
+  useGSAP(() => {
+    // 1. Custom Cursor Logic (Only Desktop)
+    const isTouch = window.matchMedia('(hover: none), (pointer: coarse)').matches;
+    if (!isTouch && cursorRef.current && cursorDotRef.current) {
+      const xTo = gsap.quickTo(cursorRef.current, "x", { duration: 0.5, ease: "power3.out" });
+      const yTo = gsap.quickTo(cursorRef.current, "y", { duration: 0.5, ease: "power3.out" });
+      const xDotTo = gsap.quickTo(cursorDotRef.current, "x", { duration: 0.1, ease: "power3.out" });
+      const yDotTo = gsap.quickTo(cursorDotRef.current, "y", { duration: 0.1, ease: "power3.out" });
+
+      const moveCursor = (e: MouseEvent) => {
+        xTo(e.clientX); yTo(e.clientY);
+        xDotTo(e.clientX); yDotTo(e.clientY);
+      };
+      window.addEventListener("mousemove", moveCursor);
+
+      // Magnetic hover states
+      const hoverElements = document.querySelectorAll('.hover-trigger');
+      hoverElements.forEach(el => {
+        el.addEventListener('mouseenter', () => gsap.to(cursorRef.current, { scale: 2.5, backgroundColor: 'rgba(196, 154, 69, 0.1)', borderColor: 'rgba(196, 154, 69, 0.5)', duration: 0.3 }));
+        el.addEventListener('mouseleave', () => gsap.to(cursorRef.current, { scale: 1, backgroundColor: 'transparent', borderColor: 'rgba(196, 154, 69, 0.3)', duration: 0.3 }));
       });
+
+      return () => window.removeEventListener("mousemove", moveCursor);
     }
 
-    // 2. Parallax del Hero
-    gsap.to(".hero-image", {
+    // 2. Hero Initial Reveal (Text Masking)
+    const tl = gsap.timeline();
+    tl.from(".hero-line", { y: 150, opacity: 0, duration: 1.5, stagger: 0.15, ease: "power4.out", delay: 0.2 })
+      .from(".hero-image-wrapper", { scale: 1.1, opacity: 0, duration: 2, ease: "expo.out" }, "-=1.2")
+      .from(".hero-subtitle", { y: 20, opacity: 0, duration: 1, ease: "power2.out" }, "-=1");
+
+    // 3. Parallax Hero Image
+    gsap.to(".hero-parallax-img", {
       yPercent: 20,
       ease: "none",
       scrollTrigger: { trigger: ".hero-section", start: "top top", end: "bottom top", scrub: true }
     });
 
-    // 3. Revelado Suave de Secciones (Fade Up)
-    const sections = gsap.utils.toArray('.gsap-reveal');
-    sections.forEach((sec: any) => {
-      gsap.fromTo(sec, 
-        { opacity: 0, y: 50 }, 
-        { opacity: 1, y: 0, duration: 1.2, ease: "power3.out", scrollTrigger: { trigger: sec, start: "top 80%", toggleActions: "play none none reverse" } }
-      );
+    // 4. Staggered Reveals for Elements on Scroll
+    const revealSections = gsap.utils.toArray('.reveal-section');
+    revealSections.forEach((section: any) => {
+      gsap.from(section, { scrollTrigger: { trigger: section, start: "top 80%" }, y: 50, opacity: 0, duration: 1.2, ease: "power3.out" });
     });
 
-    // 4. Stagger de Tarjetas y Productos (Aparición en cascada)
-    const staggerContainers = gsap.utils.toArray('.gsap-stagger-container');
-    staggerContainers.forEach((container: any) => {
-      const items = container.querySelectorAll('.gsap-stagger-item');
-      gsap.fromTo(items,
-        { opacity: 0, y: 30, scale: 0.95 },
-        { opacity: 1, y: 0, scale: 1, duration: 0.8, stagger: 0.15, ease: "back.out(1.2)", scrollTrigger: { trigger: container, start: "top 75%" } }
-      );
+    const revealCards = gsap.utils.toArray('.reveal-card');
+    revealCards.forEach((card: any, i) => {
+      gsap.from(card, { scrollTrigger: { trigger: card, start: "top 85%" }, y: 40, opacity: 0, duration: 1, ease: "power3.out", delay: (i % 4) * 0.1 });
     });
+
   }, { scope: container, dependencies: [filteredProducts] });
 
-  const handleAddToCart = (product: Product, e?: React.MouseEvent) => {
-    if (e) e.stopPropagation();
-    addItem({ id: product.id, name: product.name, price: product.price, imageUrl: product.imageUrl || null });
-    // Pequeño pulso en el botón al añadir
-    if (e?.currentTarget) {
-      gsap.fromTo(e.currentTarget, { scale: 0.8 }, { scale: 1, duration: 0.4, ease: "elastic.out(1, 0.5)" });
-    }
-  };
-
   return (
-    <div ref={container} className="w-full relative md:cursor-none">
+    <div ref={container} className="w-full relative">
       
-      {/* CURSOR MÁGICO */}
-      <div className="hidden md:block pointer-events-none z-[9999]">
-        <div ref={cursorDot} className="fixed top-0 left-0 w-2 h-2 bg-gold rounded-full mix-blend-difference" />
-        <div ref={cursorAura} className="fixed top-0 left-0 w-10 h-10 border border-gold/50 bg-gold/10 rounded-full" />
+      {/* Custom Cursor HTML */}
+      <div className="hidden lg:block pointer-events-none z-[99999]">
+        <div ref={cursorDotRef} className="fixed top-0 left-0 w-2 h-2 bg-gold rounded-full -translate-x-1/2 -translate-y-1/2" />
+        <div ref={cursorRef} className="fixed top-0 left-0 w-10 h-10 border border-gold/30 rounded-full -translate-x-1/2 -translate-y-1/2 transition-colors" />
       </div>
 
-      {/* 1. HERO CON PARALLAX */}
-      {banners.length > 0 && (
-        <section className="hero-section w-full max-w-[90rem] mx-auto px-4 mt-6 overflow-hidden rounded-[2.5rem] h-[50vh] sm:h-[70vh] relative gsap-reveal">
-          <div className="absolute inset-0 w-full h-[120%] -top-[10%]">
-             <Image src={banners[0].imageUrl} alt={banners[0].title} fill className="hero-image object-cover" priority sizes="100vw" />
+      {/* 1. HERO SECTION (Awwwards Style) */}
+      <section className="hero-section relative w-full h-[100svh] flex flex-col justify-center overflow-hidden pt-20 px-4 md:px-12">
+        <div className="max-w-[90rem] w-full mx-auto flex flex-col lg:flex-row items-center justify-between gap-12 z-10">
+          
+          <div className="w-full lg:w-1/2 flex flex-col z-20">
+            <h1 className="font-playfair text-[3.5rem] leading-[1] md:text-[6rem] lg:text-[7.5rem] text-foreground tracking-[-0.03em] clip-text-mask pb-2">
+              <div className="hero-line block">Conecta</div>
+              <div className="hero-line block text-gold italic font-light">tu luz</div>
+              <div className="hero-line block">interior.</div>
+            </h1>
+            <p className="hero-subtitle text-gray-500 mt-8 max-w-md text-sm md:text-base leading-relaxed font-light">
+              Espacio dedicado a la sanación profunda a través de la radiestesia, biodecodificación y herramientas ancestrales.
+            </p>
           </div>
-          <div className="absolute inset-0 bg-gradient-to-t from-foreground/80 via-foreground/20 to-transparent flex flex-col justify-end p-8 sm:p-20 text-white">
-            <h2 className="font-playfair text-5xl sm:text-7xl mb-4 drop-shadow-lg">{banners[0].title}</h2>
-            <p className="text-xs sm:text-sm uppercase tracking-[0.3em] font-bold text-gold drop-shadow-md">{banners[0].subtitle}</p>
-          </div>
-        </section>
-      )}
 
-      {/* 2. TESTIMONIOS */}
-      <section id="testimonios" className="w-full max-w-6xl mx-auto px-4 py-32 text-center gsap-reveal">
-        <Sparkles className="w-8 h-8 text-gold mx-auto mb-6 animate-float" />
-        <h1 className="font-playfair text-5xl md:text-7xl text-foreground mb-4">
-          Testimonios <br/><span className="text-gradient-gold italic font-light">de corazón</span>
-        </h1>
-        <p className="text-gray-500 max-w-2xl mx-auto text-sm md:text-base mb-20 tracking-wide">
-          Cada testimonio es una historia de transformación y un recordatorio de que sanar es posible.
-        </p>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-left gsap-stagger-container">
-          {[1, 2, 3].map((item) => (
-            <div key={item} className="gsap-stagger-item glass-panel p-10 rounded-[2rem] hover:shadow-2xl hover:shadow-gold/10 hover:-translate-y-2 transition-all duration-500 flex flex-col h-full relative overflow-hidden group">
-              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-gold/0 via-gold/50 to-gold/0 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-700"></div>
-              <div className="flex text-gold mb-8">
-                {[...Array(5)].map((_, i) => <Star key={i} size={14} fill="currentColor" className="mr-1" />)}
-              </div>
-              <p className="text-[15px] text-gray-600 leading-loose mb-8 flex-grow font-light">
-                "Hola Johana, buenos días. Quiero agradecerte de corazón tu limpieza, hace muchos meses que no sentía esta tranquilidad... Estoy tan feliz, no siento odio, solo tranquilidad."
-              </p>
-              <div className="text-center text-gold/30 text-2xl font-serif">❦</div>
+          {banners.length > 0 && (
+            <div className="hero-image-wrapper w-full lg:w-1/2 h-[50vh] lg:h-[75vh] relative rounded-[2rem] overflow-hidden shadow-2xl origin-bottom">
+              <div className="absolute inset-0 z-10 bg-gradient-to-tr from-foreground/20 to-transparent mix-blend-multiply"></div>
+              <Image 
+                src={banners[0].imageUrl} alt="Luz Interior" fill priority sizes="(max-width: 1024px) 100vw, 50vw" 
+                className="hero-parallax-img object-cover object-center scale-110" 
+              />
             </div>
-          ))}
+          )}
         </div>
       </section>
 
-      {/* 3. TERAPIAS */}
-      <section id="terapias" className="w-full bg-white/50 backdrop-blur-md py-32 border-y border-gold/10 relative gsap-reveal">
-        <div className="max-w-6xl mx-auto px-4 text-center">
-          <h2 className="font-playfair text-4xl sm:text-5xl text-foreground mb-3">Acompaño tu proceso</h2>
-          <h3 className="font-playfair text-3xl sm:text-4xl text-gold italic mb-12">de transformación</h3>
+      {/* 2. TERAPIAS SECTION */}
+      <section id="terapias" className="w-full bg-white py-32 rounded-t-[4rem] relative z-20 -mt-10 shadow-[0_-20px_50px_rgba(0,0,0,0.02)]">
+        <div className="max-w-[90rem] mx-auto px-6 lg:px-12">
+          <div className="reveal-section flex flex-col md:flex-row justify-between items-end mb-20 gap-8">
+            <h2 className="font-playfair text-5xl md:text-7xl text-foreground leading-tight tracking-tight">
+              Acompaño tu <br/><span className="text-gold italic">transformación</span>
+            </h2>
+            <p className="max-w-sm text-gray-500 text-sm leading-relaxed pb-2">Herramientas poderosas para liberar bloqueos emocionales y recuperar el bienestar natural de tu ser.</p>
+          </div>
           
-          <div className="flex flex-wrap justify-center gap-12 md:gap-24 mt-16 gsap-stagger-container">
-            {['Radiestesia', 'Péndulo Hebreo', 'Cruz de Ankh', 'Esencias de Bach', 'Biodecodificación'].map((therapy) => (
-              <div key={therapy} className="gsap-stagger-item flex flex-col items-center group cursor-pointer">
-                <div className="w-24 h-24 rounded-full bg-background border border-gold/20 flex items-center justify-center mb-6 group-hover:bg-foreground group-hover:border-foreground transition-colors duration-500 shadow-lg shadow-gold/5 relative">
-                  <div className="absolute inset-0 rounded-full border border-gold/40 scale-[1.15] opacity-0 group-hover:opacity-100 group-hover:scale-100 transition-all duration-500"></div>
-                  <span className="text-3xl animate-float" style={{ animationDelay: `${Math.random() * 2}s` }}>✨</span>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
+            {['Radiestesia', 'Péndulo Hebreo', 'Cruz de Ankh', 'Biodecodificación'].map((therapy, i) => (
+              <div key={therapy} className="reveal-card group flex flex-col justify-between p-8 bg-background rounded-3xl h-64 border border-purple-50 hover-trigger hover:shadow-xl hover:-translate-y-2 transition-all duration-500 cursor-pointer">
+                <div className="text-3xl opacity-50 group-hover:opacity-100 group-hover:scale-110 transition-all duration-500">✨</div>
+                <div>
+                  <div className="w-8 h-[1px] bg-gold mb-4 group-hover:w-16 transition-all duration-500"></div>
+                  <span className="font-playfair text-xl md:text-2xl text-foreground block">{therapy}</span>
                 </div>
-                <span className="text-sm font-bold tracking-widest uppercase text-foreground/80 group-hover:text-gold transition-colors">{therapy}</span>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* 4. BOUTIQUE */}
-      <section id="boutique" className="w-full max-w-[90rem] mx-auto px-4 py-32 gsap-reveal">
-        <div className="text-center mb-20">
-          <h2 className="font-playfair text-5xl text-foreground mb-4">Boutique Holística</h2>
-          <div className="w-12 h-1 bg-gold mx-auto rounded-full"></div>
-        </div>
+      {/* 3. TESTIMONIOS (Scroller Horizontal Falso o Grid Limpio) */}
+      <section id="testimonios" className="w-full bg-background py-32 overflow-hidden">
+        <div className="max-w-[90rem] mx-auto px-6 lg:px-12">
+          <div className="reveal-section text-center mb-20">
+            <h2 className="font-playfair text-5xl md:text-6xl text-foreground mb-4">Palabras de <span className="italic text-gold">luz</span></h2>
+          </div>
 
-        <div className="flex flex-wrap justify-center gap-4 mb-16">
-          {dynamicFilters.map((filter) => (
-            <button
-              key={filter.id}
-              onClick={() => setActiveFilter(filter.id)}
-              className={`px-8 py-3 rounded-full text-[10px] font-bold tracking-[0.2em] uppercase transition-all duration-300 ${
-                activeFilter === filter.id 
-                  ? 'bg-foreground text-white shadow-lg shadow-purple-900/20 scale-105' 
-                  : 'bg-white text-gray-400 border border-gray-100 hover:border-gold/50 hover:text-foreground'
-              }`}
-            >
-              {filter.label}
-            </button>
-          ))}
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 gsap-stagger-container">
-          {filteredProducts.map((product) => (
-            <article 
-              key={product.id}
-              onClick={() => setSelectedProduct(product)}
-              className="gsap-stagger-item glass-panel rounded-[2.5rem] p-5 hover:shadow-2xl hover:shadow-gold/15 transition-all duration-500 cursor-pointer flex flex-col group relative overflow-hidden"
-            >
-              <div className="absolute top-0 right-0 w-32 h-32 bg-gold/10 rounded-full blur-[40px] group-hover:bg-gold/20 transition-colors pointer-events-none"></div>
-              
-              <div className="relative w-full aspect-[4/5] rounded-[2rem] overflow-hidden bg-background mb-6">
-                {product.imageUrl ? (
-                  <Image src={product.imageUrl} alt={product.name} fill className="object-cover group-hover:scale-110 transition-transform duration-1000 ease-out" sizes="(max-width: 768px) 100vw, 25vw" />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-4xl text-gray-300 bg-lavender/30">✨</div>
-                )}
-                <span className="absolute top-4 left-4 glass-panel text-foreground text-[9px] font-bold px-4 py-2 rounded-full uppercase tracking-[0.2em] shadow-sm">
-                  {product.type === 'SERVICE' ? 'Terapia' : 'Artefacto'}
-                </span>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {[1, 2, 3].map((item) => (
+              <div key={item} className="reveal-card bg-white p-10 lg:p-12 rounded-[2rem] shadow-sm border border-transparent hover:border-gold/20 transition-colors h-full flex flex-col hover-trigger">
+                <div className="flex text-gold mb-8">
+                  {[...Array(5)].map((_, i) => <Star key={i} size={14} fill="currentColor" className="mr-1" />)}
+                </div>
+                <p className="text-foreground/80 leading-loose mb-8 flex-grow text-sm lg:text-base italic font-light">
+                  "Quiero agradecerte de corazón tu limpieza, hace meses no sentía esta tranquilidad. Estoy tan feliz, no siento odio, solo una paz inmensa."
+                </p>
+                <div className="w-full h-[1px] bg-gradient-to-r from-transparent via-gold/30 to-transparent"></div>
               </div>
-              
-              <div className="px-2 pb-2 flex flex-col flex-grow">
-                <h3 className="font-playfair text-2xl text-foreground mb-3 line-clamp-1">{product.name}</h3>
-                <p className="text-[13px] text-gray-500 line-clamp-2 mb-6 flex-grow leading-relaxed font-light">{product.description}</p>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* 4. BOUTIQUE (Grid Premium) */}
+      <section id="boutique" className="w-full bg-white py-32 rounded-[4rem] shadow-[0_-20px_50px_rgba(0,0,0,0.02)] relative z-20">
+        <div className="max-w-[90rem] mx-auto px-6 lg:px-12">
+          <div className="reveal-section flex flex-col md:flex-row justify-between items-end mb-16 gap-8">
+            <h2 className="font-playfair text-5xl md:text-7xl text-foreground tracking-tight">La <span className="italic text-gold">Boutique</span></h2>
+            
+            <div className="flex flex-wrap gap-2 md:gap-4">
+              {dynamicFilters.map((filter) => (
+                <button
+                  key={filter.id} onClick={() => setActiveFilter(filter.id)}
+                  className={`px-6 py-3 rounded-full text-[10px] font-bold tracking-widest uppercase transition-all duration-500 hover-trigger ${
+                    activeFilter === filter.id ? 'bg-foreground text-white' : 'bg-background text-foreground/50 hover:text-foreground hover:bg-lavender'
+                  }`}
+                >
+                  {filter.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-8 gap-y-16 mt-20">
+            {filteredProducts.map((product) => (
+              <article key={product.id} onClick={() => setSelectedProduct(product)} className="reveal-card group cursor-pointer hover-trigger flex flex-col h-full">
+                {/* Contenedor de Imagen Premium */}
+                <div className="relative w-full aspect-[3/4] rounded-2xl overflow-hidden bg-background mb-6">
+                  {product.imageUrl ? (
+                    <Image src={product.imageUrl} alt={product.name} fill className="object-cover group-hover:scale-105 transition-transform duration-[1.5s] ease-[cubic-bezier(0.16,1,0.3,1)]" sizes="(max-width: 768px) 100vw, 33vw" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-4xl opacity-20">✨</div>
+                  )}
+                  {/* Etiqueta elegante */}
+                  <div className="absolute top-4 left-4 overflow-hidden">
+                    <span className="block px-4 py-2 bg-white/90 backdrop-blur-md text-foreground text-[9px] font-bold tracking-widest uppercase rounded-full transform translate-y-0 opacity-100 transition-all duration-500">
+                      {product.type === 'SERVICE' ? 'Terapia' : 'Materia'}
+                    </span>
+                  </div>
+                  {/* Overlay oscuro en hover */}
+                  <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex items-center justify-center">
+                    <span className="text-white text-[10px] font-bold tracking-[0.3em] uppercase translate-y-4 group-hover:translate-y-0 transition-all duration-500">Ver Visión</span>
+                  </div>
+                </div>
                 
-                <div className="flex items-center justify-between pt-4 border-t border-gold/10">
-                  <span className="font-playfair text-2xl font-medium text-foreground">{formatPrice(product.price)}</span>
+                {/* Info del producto */}
+                <h3 className="font-playfair text-2xl text-foreground mb-2 group-hover:text-gold transition-colors">{product.name}</h3>
+                <p className="text-xs text-gray-400 line-clamp-2 mb-4 flex-grow font-light leading-relaxed">{product.description}</p>
+                
+                <div className="flex items-center justify-between mt-auto border-t border-purple-50 pt-4 relative overflow-hidden">
+                  <span className="font-playfair text-xl text-foreground">{formatPrice(product.price)}</span>
                   <button 
-                    onClick={(e) => handleAddToCart(product, e)}
+                    onClick={(e) => { e.stopPropagation(); addItem({ id: product.id, name: product.name, price: product.price, imageUrl: product.imageUrl || null }); }}
                     disabled={product.stock === 0}
-                    className="w-12 h-12 rounded-full bg-lavender text-foreground flex items-center justify-center hover:bg-gold hover:text-white transition-all duration-300 disabled:opacity-50 hover:rotate-90"
+                    className="absolute right-0 flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-gold translate-x-full group-hover:translate-x-0 transition-transform duration-500 ease-out"
                   >
-                    <Plus size={20} strokeWidth={1.5} />
+                    Añadir <ArrowRight size={14} />
                   </button>
                 </div>
-              </div>
-            </article>
-          ))}
+              </article>
+            ))}
+          </div>
         </div>
       </section>
 
       {/* 5. CONTACTO */}
-      <section className="w-full max-w-5xl mx-auto px-4 pb-32 text-center gsap-reveal">
-        <h2 className="font-playfair text-4xl sm:text-5xl text-foreground mb-3">Estoy aquí para ti</h2>
-        <h3 className="font-playfair text-2xl sm:text-3xl text-gold italic mb-16">Agenda tu sesión</h3>
-        
-        <div className="glass-panel p-8 md:p-16 rounded-[3rem] shadow-xl shadow-purple-900/5 border border-white flex flex-col md:flex-row justify-around items-center gap-12 relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-white/50 to-transparent pointer-events-none"></div>
-          
-          <div className="flex flex-col items-center z-10 group cursor-pointer">
-            <div className="w-20 h-20 bg-background rounded-[2rem] flex items-center justify-center mb-6 text-gold group-hover:bg-gold group-hover:text-white transition-colors duration-500 shadow-sm rotate-3 group-hover:rotate-0">
-              <Laptop size={32} strokeWidth={1.5} />
-            </div>
-            <span className="font-medium text-foreground text-lg">Modalidad</span>
-            <span className="text-sm text-gray-500 mt-2 font-light">Online / Presencial</span>
-          </div>
-          
-          <div className="flex flex-col items-center z-10 group cursor-pointer">
-            <div className="w-20 h-20 bg-background rounded-[2rem] flex items-center justify-center mb-6 text-gold group-hover:bg-gold group-hover:text-white transition-colors duration-500 shadow-sm -rotate-3 group-hover:rotate-0">
-              <MessageCircle size={32} strokeWidth={1.5} />
-            </div>
-            <span className="font-medium text-foreground text-lg">WhatsApp</span>
-            <span className="text-sm text-gray-500 mt-2 font-light">+56 9 XXXX XXXX</span>
+      <section className="w-full bg-background py-32">
+        <div className="reveal-section max-w-4xl mx-auto px-6 text-center">
+          <h2 className="font-playfair text-5xl md:text-7xl text-foreground mb-16 tracking-tight">Conecta <span className="italic text-gold">conmigo</span></h2>
+          <div className="glass-panel p-8 md:p-16 rounded-[3rem] shadow-xl flex flex-col md:flex-row justify-around items-center gap-12 border border-white">
+            {[
+              { icon: Laptop, title: "Modalidad", desc: "Online / Presencial" },
+              { icon: MessageCircle, title: "WhatsApp", desc: "+56 9 XXXX XXXX" },
+              { icon: Mail, title: "Email", desc: "contacto@liberacion.cl" }
+            ].map((contact, i) => (
+              <div key={i} className="flex flex-col items-center hover-trigger group">
+                <contact.icon className="text-gold mb-6 group-hover:scale-110 transition-transform duration-500" size={36} strokeWidth={1} />
+                <span className="font-playfair text-2xl text-foreground mb-2">{contact.title}</span>
+                <span className="text-xs tracking-widest text-gray-500 uppercase font-bold">{contact.desc}</span>
+              </div>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* 6. MODAL DE PRODUCTO (Glassmorphism Mágico) */}
+      {/* 6. MODAL DE PRODUCTO (Glassmorphism) */}
       {selectedProduct && (
-        <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 sm:p-8">
-          <div className="absolute inset-0 bg-foreground/40 backdrop-blur-xl transition-opacity animate-in fade-in duration-500" onClick={() => setSelectedProduct(null)} />
-          
-          <div className="relative w-full max-w-6xl glass-panel bg-white/80 rounded-[3rem] overflow-hidden flex flex-col md:flex-row shadow-2xl shadow-gold/20 z-10 max-h-[90vh] animate-in slide-in-from-bottom-8 duration-500">
-            
-            <button onClick={() => setSelectedProduct(null)} className="absolute top-6 right-6 z-20 p-3 bg-white/50 backdrop-blur-md rounded-full text-foreground hover:bg-gold hover:text-white transition-colors duration-300">
-              <X size={20} />
+        <div className="fixed inset-0 z-[999999] flex items-end md:items-center justify-center p-0 md:p-8">
+          <div className="absolute inset-0 bg-foreground/90 backdrop-blur-xl transition-opacity animate-in fade-in duration-500" onClick={() => setSelectedProduct(null)} />
+          <div className="relative w-full max-w-[70rem] h-[90vh] md:h-[80vh] bg-background md:rounded-[2rem] overflow-hidden flex flex-col md:flex-row shadow-2xl animate-in slide-in-from-bottom-10 md:zoom-in-95 duration-500 ease-out">
+            <button onClick={() => setSelectedProduct(null)} className="absolute top-6 right-6 z-20 p-3 bg-white/50 backdrop-blur-md rounded-full text-foreground hover:bg-white hover:rotate-90 transition-all duration-300">
+              <X size={24} strokeWidth={1.5} />
             </button>
             
-            <div className="w-full md:w-1/2 relative min-h-[40vh] md:min-h-full bg-background/50">
-              {selectedProduct.imageUrl ? (
-                <Image src={selectedProduct.imageUrl} alt={selectedProduct.name} fill className="object-cover" priority sizes="(max-width: 768px) 100vw, 50vw" />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center text-6xl text-gold animate-pulse">✨</div>
-              )}
+            <div className="w-full md:w-1/2 relative h-[40vh] md:h-full bg-lavender/30">
+              {selectedProduct.imageUrl && <Image src={selectedProduct.imageUrl} alt={selectedProduct.name} fill className="object-cover" priority sizes="(max-width: 768px) 100vw, 50vw" />}
             </div>
             
-            <div className="w-full md:w-1/2 p-10 sm:p-16 flex flex-col overflow-y-auto custom-scrollbar">
-              <span className="inline-block px-5 py-2 text-[10px] font-bold tracking-[0.3em] uppercase rounded-full bg-gold/10 text-gold w-max mb-8 border border-gold/20">
-                {selectedProduct.type === 'SERVICE' ? 'Terapia' : 'Materia Fija'}
+            <div className="w-full md:w-1/2 p-8 md:p-16 flex flex-col overflow-y-auto custom-scrollbar bg-white">
+              <span className="inline-block px-4 py-2 text-[9px] font-bold tracking-[0.3em] uppercase rounded-full border border-gold text-gold w-max mb-8">
+                {selectedProduct.type === 'SERVICE' ? 'Sanación' : 'Herramienta'}
               </span>
               
-              <h2 className="font-playfair text-4xl sm:text-6xl text-foreground mb-6 leading-tight">{selectedProduct.name}</h2>
-              <div className="w-16 h-[1px] bg-gradient-to-r from-gold to-transparent mb-8"></div>
+              <h2 className="font-playfair text-4xl md:text-5xl lg:text-6xl text-foreground mb-8 leading-[1.1]">{selectedProduct.name}</h2>
+              <div className="w-16 h-[1px] bg-gold mb-8"></div>
               
-              <p className="text-gray-600 mb-8 flex-grow leading-loose font-light text-[15px] whitespace-pre-line">
+              <p className="text-gray-500 mb-12 flex-grow leading-loose font-light text-sm md:text-base whitespace-pre-line">
                 {selectedProduct.description}
               </p>
-
-              {selectedProduct.duration && (
-                <p className="text-[11px] font-bold tracking-[0.2em] text-gold uppercase mb-8 flex items-center">
-                  <Sparkles size={14} className="mr-2" />
-                  Duración: {selectedProduct.duration} minutos
-                </p>
-              )}
               
-              <div className="flex items-center justify-between pt-8 border-t border-gold/10 mt-auto">
+              <div className="flex items-center justify-between pt-8 border-t border-purple-50 mt-auto">
                 <span className="font-playfair text-4xl text-foreground">{formatPrice(selectedProduct.price)}</span>
                 <button 
-                  onClick={() => { handleAddToCart(selectedProduct); setSelectedProduct(null); }}
+                  onClick={() => { addItem({ id: selectedProduct.id, name: selectedProduct.name, price: selectedProduct.price, imageUrl: selectedProduct.imageUrl || null }); setSelectedProduct(null); }}
                   disabled={selectedProduct.stock === 0}
-                  className="relative overflow-hidden group bg-foreground text-white px-10 py-5 rounded-full text-[11px] font-bold tracking-widest uppercase transition-all duration-300 shadow-lg hover:shadow-gold/30 hover:-translate-y-1 disabled:opacity-50 disabled:hover:translate-y-0"
+                  className="bg-foreground text-white px-10 py-5 rounded-full text-[10px] font-bold tracking-[0.2em] uppercase hover:bg-gold transition-colors duration-500 disabled:opacity-50"
                 >
-                  <span className="absolute inset-0 bg-gradient-to-r from-gold/0 via-gold/30 to-gold/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></span>
-                  <span className="relative">{selectedProduct.stock === 0 ? 'Agotado' : 'Adquirir al compendio'}</span>
+                  {selectedProduct.stock === 0 ? 'Agotado' : 'Adquirir obra'}
                 </button>
               </div>
             </div>

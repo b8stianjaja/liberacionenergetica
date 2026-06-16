@@ -1,10 +1,10 @@
 @import "tailwindcss";
 
 :root {
-  --background: #fbf9ff; 
-  --foreground: #4a2e6b; 
-  --gold: #cfaa66;       
-  --lavender: #eaddff;
+  --background: #FCFAFF; /* Aún más luminoso */
+  --foreground: #341D4F; /* Púrpura súper profundo casi negro */
+  --gold: #C49A45;       /* Dorado elegante */
+  --lavender: #EADDFF;
 }
 
 @theme inline {
@@ -20,42 +20,24 @@ body {
   font-family: var(--font-lato), sans-serif;
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-.font-playfair {
-  font-family: var(--font-playfair), serif;
+/* Tipografía Serif */
+.font-playfair { font-family: var(--font-playfair), serif; }
+
+/* Ocultar el cursor por defecto en escritorio para usar el nuestro mágico */
+@media (hover: hover) and (pointer: fine) {
+  body { cursor: none; }
+  a, button, input, textarea, select { cursor: none; }
 }
 
-/* Efectos de Magia */
-.glass-panel {
-  background: rgba(255, 255, 255, 0.7);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.5);
-}
+/* Utilidades Premium */
+.clip-text-mask { clip-path: polygon(0 0, 100% 0, 100% 100%, 0% 100%); }
+.glass-panel { background: rgba(255, 255, 255, 0.6); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.4); }
+.text-gradient-gold { background: linear-gradient(to right, #C49A45, #E5C984); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
 
-.text-gradient-gold {
-  background: linear-gradient(135deg, #cfaa66 0%, #e8d099 50%, #cfaa66 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-@keyframes floatY {
-  0% { transform: translateY(0px); }
-  50% { transform: translateY(-10px); }
-  100% { transform: translateY(0px); }
-}
-
-.animate-float {
-  animation: floatY 6s ease-in-out infinite;
-}
-
-/* Scrollbar */
-.custom-scrollbar {
-  scrollbar-width: thin;
-  scrollbar-color: var(--gold) transparent; 
-}
-.custom-scrollbar::-webkit-scrollbar { width: 6px; }
+.custom-scrollbar { scrollbar-width: thin; scrollbar-color: var(--gold) transparent; }
+.custom-scrollbar::-webkit-scrollbar { width: 4px; }
 .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
 .custom-scrollbar::-webkit-scrollbar-thumb { background: var(--gold); border-radius: 99px; }
