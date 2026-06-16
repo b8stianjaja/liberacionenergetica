@@ -17,42 +17,36 @@ function Header() {
   }, []);
 
   return (
-    <header className={`fixed w-full top-0 z-50 transition-all duration-500 ${scrolled ? 'py-3 bg-background/95 backdrop-blur-md shadow-sm' : 'py-5 bg-transparent'}`}>
-      <div className="max-w-[85rem] mx-auto px-6 lg:px-12 flex justify-between items-center">
+    <header className={`fixed w-full top-0 z-50 transition-all duration-700 ease-out ${scrolled ? 'py-4 bg-white/80 backdrop-blur-xl shadow-sm' : 'py-8 bg-transparent'}`}>
+      <div className="max-w-[90rem] mx-auto px-6 lg:px-12 flex justify-between items-center">
         
-        {/* Logo idéntico a la imagen */}
-        <Link href="/" className="flex items-center gap-3 group">
-          <Heart className="text-gold fill-transparent group-hover:fill-gold transition-colors" size={28} strokeWidth={1.5} />
+        <Link href="/" className="flex items-center gap-4 group">
+          <Heart className="text-gold fill-transparent group-hover:fill-gold transition-all duration-500 transform group-hover:scale-110" size={32} strokeWidth={1} />
           <div className="flex flex-col">
-            <span className="font-playfair text-2xl text-foreground">Johanna Grandón</span>
-            <span className="text-[8px] text-foreground/70 tracking-widest uppercase">Radiestesia • Biodecodificación Emocional<br/>Terapias Holísticas</span>
+            <span className="font-playfair text-2xl lg:text-3xl text-foreground font-medium tracking-tight">Johanna Grandón</span>
+            <span className="text-[8px] lg:text-[9px] text-foreground/60 tracking-[0.3em] uppercase font-bold mt-1 group-hover:golden-rainbow-text transition-all duration-500">Liberación Energética</span>
           </div>
         </Link>
         
-        {/* Navegación central */}
-        <nav className="hidden md:flex space-x-8 text-[13px] font-medium text-foreground/80">
-          <Link href="/" className="hover:text-gold transition-colors">Inicio</Link>
-          <Link href="/sobre-mi" className="hover:text-gold transition-colors">Sobre mí</Link>
-          <button onClick={() => document.getElementById('terapias')?.scrollIntoView({behavior: 'smooth'})} className="hover:text-gold transition-colors">Terapias</button>
-          <button onClick={() => document.getElementById('testimonios')?.scrollIntoView({behavior: 'smooth'})} className="hover:text-gold transition-colors">Testimonios</button>
-          <button onClick={() => document.getElementById('boutique')?.scrollIntoView({behavior: 'smooth'})} className="hover:text-gold transition-colors">Boutique</button>
-          <Link href="/contacto" className="hover:text-gold transition-colors">Contacto</Link>
+        <nav className="hidden md:flex space-x-12 text-[11px] font-bold tracking-[0.2em] uppercase text-foreground/70">
+          <button onClick={() => document.getElementById('terapias')?.scrollIntoView({behavior: 'smooth'})} className="hover:text-gold transition-colors duration-300">Terapias</button>
+          <button onClick={() => document.getElementById('testimonios')?.scrollIntoView({behavior: 'smooth'})} className="hover:text-gold transition-colors duration-300">Testimonios</button>
+          <button onClick={() => document.getElementById('boutique')?.scrollIntoView({behavior: 'smooth'})} className="hover:text-gold transition-colors duration-300">Boutique</button>
         </nav>
 
-        {/* Botón Agenda tu Sesión y Carrito */}
-        <div className="flex items-center space-x-5">
-          <button onClick={openCart} className="text-foreground hover:text-gold transition-colors relative">
-            <ShoppingCart size={20} strokeWidth={1.5} />
+        <div className="flex items-center space-x-6">
+          <a href="https://wa.me/569XXXXXXXX" target="_blank" rel="noopener noreferrer" className="hidden lg:inline-flex bg-foreground text-white px-8 py-3.5 rounded-full text-[10px] tracking-[0.2em] font-bold uppercase hover:bg-gold hover:shadow-lg hover:-translate-y-1 transition-all duration-500">
+            Agenda tu sesión
+          </a>
+          <button onClick={openCart} className="text-foreground hover:text-gold transition-all duration-500 relative hover:scale-110">
+            <ShoppingCart size={24} strokeWidth={1} />
             {totalItems > 0 && (
-              <span className="absolute -top-2 -right-2 bg-gold text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold">
+              <span className="absolute -top-2 -right-2 bg-gold text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center font-bold shadow-md">
                 {totalItems}
               </span>
             )}
           </button>
-          <a href="https://wa.me/569XXXXXXXX" target="_blank" rel="noopener noreferrer" className="hidden lg:inline-flex bg-foreground text-white px-6 py-2.5 rounded-full text-sm hover:bg-foreground/80 transition-colors shadow-sm">
-            Agenda tu sesión <span className="ml-2">💬</span>
-          </a>
-          <button className="md:hidden text-foreground"><Menu size={24} strokeWidth={1.5} /></button>
+          <button className="md:hidden text-foreground"><Menu size={28} strokeWidth={1} /></button>
         </div>
       </div>
     </header>
@@ -61,27 +55,21 @@ function Header() {
 
 function Footer() {
   return (
-    <footer className="bg-foreground text-background pt-16 pb-10 px-6 mt-20">
-      <div className="max-w-[85rem] mx-auto flex flex-col items-center text-center">
-        <h3 className="font-playfair text-3xl md:text-4xl mb-4">
-          Sanar es recordar quién eres en esencia.
+    <footer className="bg-lavender/30 text-foreground pt-32 pb-16 px-6 mt-20 relative overflow-hidden border-t border-white">
+      <div className="max-w-[90rem] mx-auto flex flex-col items-center text-center relative z-10">
+        <Heart className="text-gold mb-8 animate-pulse" size={40} strokeWidth={1} />
+        <h3 className="font-playfair text-4xl md:text-6xl mb-8 tracking-tight">
+          Sanar es recordar <br className="hidden md:block" />
+          <span className="golden-rainbow-text italic font-light">quién eres en esencia.</span>
         </h3>
-        <Heart className="text-gold mb-12" size={24} strokeWidth={1} />
+        <p className="text-foreground/60 max-w-lg mx-auto text-sm md:text-base mb-16 leading-relaxed">
+          Un espacio diseñado para brindarte paz profunda, desde los más pequeños de la familia hasta los más grandes.
+        </p>
         
-        <div className="flex flex-col md:flex-row justify-between items-center w-full border-t border-white/20 pt-8 gap-6">
-          <div className="flex items-center gap-3 text-left">
-            <Heart className="text-gold" size={24} strokeWidth={1.5} />
-            <div>
-              <p className="font-playfair text-lg">Johanna Grandón</p>
-              <p className="text-[10px] text-white/70 uppercase tracking-widest">Radiestesista • Biodecodificador emocional<br/>y Terapeuta Profesional</p>
-            </div>
-          </div>
-          
-          <div className="flex flex-col items-center md:items-end text-gold italic font-playfair text-xl">
-            <p>Con amor,</p>
-            <p>para tu bienestar.</p>
-            <Heart size={16} strokeWidth={1} className="mt-2" />
-          </div>
+        <div className="w-full h-[1px] bg-foreground/10 mb-12"></div>
+        <div className="flex flex-col md:flex-row justify-between w-full text-[10px] tracking-widest text-foreground/50 uppercase font-bold gap-6">
+          <p>&copy; {new Date().getFullYear()} Johanna Grandón. Creado en Luz.</p>
+          <Link href="/login" className="hover:text-gold transition-colors">Portal de Gestión</Link>
         </div>
       </div>
     </footer>
@@ -92,9 +80,9 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
   return (
     <CartProvider>
       <CartDrawer />
-      <div className="min-h-screen flex flex-col bg-background selection:bg-lavender selection:text-foreground">
+      <div className="min-h-screen flex flex-col bg-background">
         <Header />
-        <main className="flex-grow w-full">
+        <main className="flex-grow w-full relative z-10">
           {children}
         </main>
         <Footer />

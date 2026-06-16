@@ -1,16 +1,16 @@
 @import "tailwindcss";
 
 :root {
-  --bg-cream: #FDFCF8;      /* Fondo principal crema/marfil */
-  --purple-main: #5B3A80;   /* Morado profundo de tus textos */
-  --purple-light: #F1E8FA;  /* Lavanda de fondo */
-  --gold-accent: #D4A373;   /* Acentos dorados/naranjas */
+  --bg-canvas: #FDFCF8;     /* Blanco crema súper puro */
+  --purple-deep: #5B3A80;   /* Púrpura profundo para anclar la lectura */
+  --purple-light: #F1E8FA;  /* Lila Lavanda */
+  --gold-magic: #D4A373;    /* Dorado cálido */
 }
 
 @theme inline {
-  --color-background: var(--bg-cream);
-  --color-foreground: var(--purple-main);
-  --color-gold: var(--gold-accent);
+  --color-background: var(--bg-canvas);
+  --color-foreground: var(--purple-deep);
+  --color-gold: var(--gold-magic);
   --color-lavender: var(--purple-light);
 }
 
@@ -24,24 +24,27 @@ body {
 
 .font-playfair { font-family: var(--font-playfair), serif; }
 
-/* Utilidad para la línea con el corazón en el centro */
-.heart-divider {
-  display: flex;
-  align-items: center;
-  text-align: center;
-  color: var(--gold-accent);
+/* El efecto "Golden Rainbow" (Iridiscencia Mágica) para textos y fondos */
+.golden-rainbow-text {
+  background: linear-gradient(90deg, #D4A373, #FDFCF8, #C2A3D1, #A3C9D4, #FDFCF8, #D4A373);
+  background-size: 200% auto;
+  color: transparent;
+  -webkit-background-clip: text;
+  background-clip: text;
+  animation: shine 8s linear infinite;
 }
-.heart-divider::before, .heart-divider::after {
-  content: '';
-  flex: 1;
-  border-bottom: 1px solid var(--gold-accent);
-  opacity: 0.4;
-}
-.heart-divider::before { margin-right: .5em; }
-.heart-divider::after { margin-left: .5em; }
 
-/* Scrollbar sutil */
+.golden-rainbow-bg {
+  background: linear-gradient(135deg, rgba(241, 232, 250, 0.8) 0%, rgba(253, 252, 248, 0.5) 50%, rgba(212, 163, 115, 0.2) 100%);
+  backdrop-filter: blur(20px);
+}
+
+@keyframes shine {
+  to { background-position: 200% center; }
+}
+
+/* Scrollbar sutil y elegante */
 ::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: var(--bg-cream); }
+::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--purple-light); border-radius: 10px; }
-::-webkit-scrollbar-thumb:hover { background: var(--purple-main); }
+::-webkit-scrollbar-thumb:hover { background: var(--gold-magic); }
