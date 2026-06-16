@@ -1,50 +1,31 @@
 @import "tailwindcss";
 
 :root {
-  --bg-sand: #F4F2ED;      /* Tono arena/pergamino muy sutil */
-  --text-ink: #1F1A24;     /* Tinta oscura */
-  --gold-raw: #B5955C;     /* Dorado crudo */
-  --lavender-mist: #E5DFF0;
+  --bg-warm: #FCFBF9;       /* Crema muy suave, relaja la vista */
+  --text-deep: #2A1B38;     /* Púrpura casi negro (Alto contraste) */
+  --gold-soft: #B89047;     /* Dorado elegante, no estridente */
+  --lavender-light: #F0EBF5;/* Lavanda para fondos secundarios */
 }
 
 @theme inline {
-  --color-background: var(--bg-sand);
-  --color-foreground: var(--text-ink);
-  --color-gold: var(--gold-raw);
-  --color-lavender: var(--lavender-mist);
+  --color-background: var(--bg-warm);
+  --color-foreground: var(--text-deep);
+  --color-gold: var(--gold-soft);
+  --color-lavender: var(--lavender-light);
 }
 
 body {
-  background-color: var(--bg-sand);
-  color: var(--text-ink);
+  background-color: var(--bg-warm);
+  color: var(--text-deep);
   font-family: var(--font-lato), sans-serif;
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 .font-playfair { font-family: var(--font-playfair), serif; }
 
-/* Utilidades Premium */
-.glass-pill {
-  background: rgba(244, 242, 237, 0.7);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(31, 26, 36, 0.05);
-  box-shadow: 0 20px 40px rgba(0,0,0,0.05);
-}
-
-/* Forma de portal/arco para la imagen del hero */
-.arch-clip {
-  clip-path: polygon(50% 0%, 100% 20%, 100% 100%, 0 100%, 0% 20%);
-  border-radius: 40vw 40vw 0 0;
-}
-
-/* Scroll horizontal limpio para la boutique */
-.hide-scroll::-webkit-scrollbar { display: none; }
-.hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
-
-/* Tipografía hueca */
-.text-outline-gold {
-  color: transparent;
-  -webkit-text-stroke: 1px var(--gold-raw);
+/* Transiciones suaves para botones */
+.btn-transition {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }

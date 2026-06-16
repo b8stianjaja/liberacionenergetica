@@ -8,6 +8,7 @@ const playfair = Playfair_Display({
   weight: ["400", "500", "600", "700"]
 });
 
+// Lato es excelente para la legibilidad en todas las edades
 const lato = Lato({ 
   subsets: ["latin"], 
   variable: "--font-lato",
@@ -16,7 +17,7 @@ const lato = Lato({
 
 export const metadata: Metadata = {
   title: "Johanna Grandón | Liberación Energética",
-  description: "Terapias Holísticas, Radiestesia y Biodecodificación Emocional",
+  description: "Acompañamiento holístico y sanación energética para todas las edades.",
 };
 
 export default function RootLayout({
@@ -26,7 +27,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es" className={`${playfair.variable} ${lato.variable}`}>
-      <body className="antialiased bg-background text-foreground font-sans selection:bg-lavender selection:text-foreground">
+      <body className="antialiased bg-background text-foreground font-sans selection:bg-gold/20 selection:text-foreground">
         {children}
       </body>
     </html>

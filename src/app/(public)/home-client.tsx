@@ -1,9 +1,9 @@
 "use client";
 
-import { useRef, useState, useMemo, useEffect } from "react";
+import { useRef, useState, useMemo } from "react";
 import Image from "next/image";
 import { useCart } from "@/context/CartContext";
-import { ArrowRight, Sparkles, X, Star } from "lucide-react";
+import { Star, ArrowRight, HeartHandshake, X } from "lucide-react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
@@ -20,187 +20,135 @@ interface HomeClientProps { products: Product[]; categories: Category[]; banners
 
 export default function HomeClient({ products, categories, banners }: HomeClientProps) {
   const container = useRef<HTMLDivElement>(null);
-  const portalRef = useRef<HTMLDivElement>(null);
   
   const { addItem } = useCart();
   const [activeFilter, setActiveFilter] = useState<string>('ALL');
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
-  useEffect(() => {
-    document.body.style.overflow = selectedProduct ? 'hidden' : '';
-    return () => { document.body.style.overflow = ''; };
-  }, [selectedProduct]);
-
-  const dynamicFilters = useMemo(() => [{ id: 'ALL', label: 'Todo' }, ...categories.map(cat => ({ id: cat.id, label: cat.name }))], [categories]);
+  const dynamicFilters = useMemo(() => [{ id: 'ALL', label: 'Ver Todo' }, ...categories.map(cat => ({ id: cat.id, label: cat.name }))], [categories]);
   const filteredProducts = useMemo(() => products.filter(product => activeFilter === 'ALL' || product.categoryId === activeFilter || product.type === activeFilter), [products, activeFilter]);
   const formatPrice = (price: number) => new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 }).format(price);
 
   useGSAP(() => {
-    let mm = gsap.matchMedia();
-
-    mm.add("(min-width: 768px)", () => {
-      // 1. Efecto Portal Zoom (Solo Desktop para evitar fallos en Safari Mobile)
-      const tl = gsap.timeline({
-        scrollTrigger: {
-          trigger: ".hero-pin-container",
-          start: "top top",
-          end: "+=120%",
-          scrub: 1,
-          pin: true,
-        }
-      });
-
-      tl.to(".hero-title-wrap", { opacity: 0, y: -50, duration: 0.5 })
-        .to(portalRef.current, {
-          width: "100vw",
-          height: "100vh",
-          borderRadius: "0px",
-          clipPath: "polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)",
-          ease: "power2.inOut",
-          duration: 1.5
-        }, "-=0.3");
+    // Animación muy suave y respetuosa
+    const fadeElements = gsap.utils.toArray('.fade-up');
+    fadeElements.forEach((el: any) => {
+      gsap.fromTo(el, 
+        { y: 30, opacity: 0 }, 
+        { scrollTrigger: { trigger: el, start: "top 85%" }, y: 0, opacity: 1, duration: 1, ease: "power2.out" }
+      );
     });
-
-    // Fade in normal para los testimonios
-    gsap.utils.toArray('.fade-up').forEach((el: any) => {
-      gsap.fromTo(el, { y: 40, opacity: 0 }, {
-        y: 0, opacity: 1, duration: 1, ease: "power3.out",
-        scrollTrigger: { trigger: el, start: "top 85%" }
-      });
-    });
-
   }, { scope: container });
 
   return (
-    <div ref={container} className="w-full relative">
+    <div ref={container} className="w-full">
       
-      {/* 1. HERO: El Portal */}
-      <section className="hero-pin-container relative w-full h-[100svh] flex flex-col items-center justify-center overflow-hidden bg-background">
-        <div className="hero-title-wrap absolute top-[15%] md:top-[20%] text-center z-20 px-4">
-          <span className="text-[10px] text-gold tracking-[0.4em] uppercase font-bold mb-6 block">Sanación Energética</span>
-          <h1 className="font-playfair text-[12vw] md:text-[8vw] leading-[0.85] tracking-tighter text-foreground mix-blend-multiply">
-            El arte de <br />
-            <span className="text-outline-gold italic font-light">liberar.</span>
-          </h1>
-        </div>
-
-        {banners.length > 0 ? (
-          <div 
-            ref={portalRef}
-            className="absolute bottom-0 w-[85vw] md:w-[40vw] h-[60vh] md:h-[65vh] arch-clip overflow-hidden shadow-2xl z-10 origin-bottom"
-          >
-            <Image src={banners[0].imageUrl} alt="Portal" fill priority className="object-cover scale-110" sizes="(max-width: 768px) 100vw, 50vw" />
-            <div className="absolute inset-0 bg-gradient-to-t from-foreground/60 to-transparent"></div>
-          </div>
-        ) : (
-          <div ref={portalRef} className="absolute bottom-0 w-[40vw] h-[65vh] arch-clip bg-gold z-10"></div>
-        )}
-      </section>
-
-      {/* 2. TESTIMONIOS: Diseño Editorial */}
-      <section className="w-full py-24 md:py-40 px-6 md:px-12 bg-white relative z-20">
-        <div className="max-w-5xl mx-auto text-center fade-up">
-          <Sparkles className="text-gold mx-auto mb-6" size={24} strokeWidth={1} />
-          <h2 className="font-playfair text-3xl md:text-5xl lg:text-6xl text-foreground leading-tight mb-16">
-            "Hace meses que no sentía esta tranquilidad. No siento odio, ni pena, solo una paz inmensa que buscaba hace tanto tiempo."
-          </h2>
-          <div className="flex items-center justify-center gap-2 text-gold">
-            {[...Array(5)].map((_, i) => <Star key={i} size={16} fill="currentColor" />)}
-          </div>
-          <span className="block mt-4 text-[10px] tracking-widest uppercase font-bold text-gray-400">Palabras de Luz</span>
-        </div>
-      </section>
-
-      {/* 3. TERAPIAS: Stacking Cards (Cartas Apiladas) */}
-      <section id="terapias" className="w-full py-24 px-6 md:px-12 bg-background relative">
-        <div className="max-w-[90rem] mx-auto flex flex-col lg:flex-row gap-12 lg:gap-24 relative">
-          
-          {/* Título pegajoso a la izquierda */}
-          <div className="lg:w-1/3 lg:sticky lg:top-32 h-fit mb-12 lg:mb-0">
-            <h2 className="font-playfair text-5xl md:text-7xl text-foreground tracking-tight leading-[0.9] mb-6">
-              Tus <br /><span className="text-gold italic">Caminos</span>
-            </h2>
-            <p className="text-gray-500 font-light leading-relaxed max-w-sm">
-              Cada terapia es una llave distinta diseñada para abrir los candados de tu subconsciente y restaurar tu flujo vital.
+      {/* --- HERO SECTION --- */}
+      <section className="w-full pt-32 pb-20 md:pt-48 md:pb-32 px-6">
+        <div className="max-w-[85rem] mx-auto flex flex-col lg:flex-row items-center gap-12 lg:gap-20">
+          <div className="w-full lg:w-1/2 flex flex-col fade-up">
+            <span className="text-gold font-bold tracking-widest uppercase text-xs mb-6 flex items-center gap-2">
+              <HeartHandshake size={16} /> Bienvenida a tu espacio seguro
+            </span>
+            <h1 className="font-playfair text-5xl md:text-6xl lg:text-7xl text-foreground leading-tight mb-8">
+              Sanación <br/>
+              <span className="italic text-gold font-light">energética</span> para el alma.
+            </h1>
+            <p className="text-lg text-foreground/70 leading-relaxed mb-10 max-w-lg">
+              Te acompaño a ti y a tu familia a liberar bloqueos emocionales, restaurando el equilibrio natural desde la raíz con herramientas compasivas y efectivas.
             </p>
+            <div className="flex gap-4">
+              <a href="#terapias" className="bg-foreground text-white px-8 py-4 rounded-full text-sm font-bold tracking-wider hover:bg-gold btn-transition">
+                Conocer Terapias
+              </a>
+            </div>
           </div>
 
-          {/* Cartas apiladas a la derecha */}
-          <div className="lg:w-2/3 flex flex-col gap-6 md:gap-8 relative pb-24">
+          {/* Imagen Cálida y Armoniosa */}
+          {banners.length > 0 && (
+            <div className="w-full lg:w-1/2 fade-up">
+              <div className="relative w-full aspect-square md:aspect-[4/3] rounded-[2rem] md:rounded-[3rem] overflow-hidden shadow-lg border-4 border-white">
+                <Image src={banners[0].imageUrl} alt="Armonía" fill priority className="object-cover" sizes="(max-width: 1024px) 100vw, 50vw" />
+              </div>
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* --- TERAPIAS --- */}
+      <section id="terapias" className="w-full bg-white py-24 px-6 border-y border-foreground/5">
+        <div className="max-w-[85rem] mx-auto">
+          <div className="text-center mb-16 fade-up">
+            <h2 className="font-playfair text-4xl md:text-5xl text-foreground mb-4">Mis Herramientas</h2>
+            <p className="text-foreground/60 text-lg max-w-2xl mx-auto">Técnicas nobles y adaptables para cada etapa de la vida.</p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {[
-              { title: 'Radiestesia', desc: 'Diagnóstico y limpieza del campo áurico mediante el uso del péndulo.', color: 'bg-white' },
-              { title: 'Péndulo Hebreo', desc: 'Terapia de alta vibración que utiliza letras sagradas para desprogramar energías densas.', color: 'bg-lavender' },
-              { title: 'Biodecodificación', desc: 'Encuentra y libera la emoción oculta detrás de tus síntomas físicos.', color: 'bg-gold text-white' }
+              { title: 'Radiestesia', desc: 'Evaluación y armonización del campo electromagnético (Aura y Chakras). Ideal para devolver la vitalidad.' },
+              { title: 'Péndulo Hebreo', desc: 'Desprogramación de energías densas y memorias de dolor a través de letras sagradas. Una limpieza profunda y liberadora.' },
+              { title: 'Biodecodificación', desc: 'Encuentra el origen emocional oculto detrás de tus molestias físicas para soltarlas de manera consciente.' }
             ].map((therapy, i) => (
-              <div 
-                key={therapy.title} 
-                className={`sticky top-24 md:top-32 w-full min-h-[40vh] md:min-h-[50vh] p-8 md:p-12 rounded-[2rem] md:rounded-[3rem] shadow-xl border border-black/5 flex flex-col justify-between transition-all duration-500 hover:-translate-y-2 ${therapy.color}`}
-                style={{ zIndex: i + 1, marginTop: i > 0 ? '10vh' : '0' }}
-              >
-                <span className="text-5xl md:text-7xl font-playfair opacity-20">0{i+1}</span>
-                <div>
-                  <h3 className="font-playfair text-3xl md:text-5xl mb-4">{therapy.title}</h3>
-                  <p className={`text-sm md:text-base max-w-md leading-relaxed ${therapy.color.includes('text-white') ? 'text-white/80' : 'text-gray-600'}`}>
-                    {therapy.desc}
-                  </p>
-                </div>
+              <div key={i} className="bg-background p-10 rounded-[2rem] shadow-sm border border-black/5 hover:shadow-md btn-transition fade-up">
+                <div className="w-14 h-14 bg-lavender text-foreground flex items-center justify-center rounded-2xl mb-6 text-2xl">✨</div>
+                <h3 className="font-playfair text-2xl text-foreground mb-4">{therapy.title}</h3>
+                <p className="text-foreground/70 leading-relaxed">{therapy.desc}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* 4. BOUTIQUE: Galería Horizontal Libre */}
-      <section id="boutique" className="w-full py-32 bg-white relative overflow-hidden">
-        <div className="px-6 md:px-12 mb-12 flex flex-col md:flex-row justify-between items-end gap-6 max-w-[100rem] mx-auto fade-up">
-          <h2 className="font-playfair text-5xl md:text-7xl text-foreground">El <span className="italic text-gold">Bazar</span></h2>
-          <div className="flex flex-wrap gap-2">
-            {dynamicFilters.map((filter) => (
-              <button
-                key={filter.id} onClick={() => setActiveFilter(filter.id)}
-                className={`px-5 py-2.5 rounded-full text-[9px] font-bold tracking-widest uppercase transition-all duration-300 border ${
-                  activeFilter === filter.id ? 'bg-foreground text-white border-foreground' : 'bg-transparent text-gray-400 border-gray-200 hover:border-gold hover:text-foreground'
-                }`}
-              >
-                {filter.label}
-              </button>
-            ))}
+      {/* --- BOUTIQUE (Directa, Clara y Accesible) --- */}
+      <section id="boutique" className="w-full py-24 px-6">
+        <div className="max-w-[85rem] mx-auto">
+          <div className="flex flex-col md:flex-row justify-between items-center mb-16 gap-6 fade-up">
+            <h2 className="font-playfair text-4xl md:text-5xl text-foreground">Boutique Holística</h2>
+            <div className="flex flex-wrap justify-center gap-2">
+              {dynamicFilters.map((filter) => (
+                <button
+                  key={filter.id} onClick={() => setActiveFilter(filter.id)}
+                  className={`px-6 py-2.5 rounded-full text-xs font-bold tracking-widest uppercase btn-transition ${
+                    activeFilter === filter.id ? 'bg-foreground text-white' : 'bg-white text-foreground/60 border border-foreground/10 hover:border-gold hover:text-foreground'
+                  }`}
+                >
+                  {filter.label}
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
 
-        {/* Scroll Horizontal Nativo (Super suave en móvil y trackpad) */}
-        <div className="w-full overflow-x-auto hide-scroll snap-x snap-mandatory cursor-grab active:cursor-grabbing px-6 md:px-12 pb-12">
-          <div className="flex gap-6 md:gap-10 w-max">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
             {filteredProducts.map((product) => (
-              <article 
-                key={product.id} 
-                className="w-[75vw] sm:w-[45vw] md:w-[30vw] lg:w-[22vw] snap-center group flex flex-col"
-              >
+              <article key={product.id} className="bg-white rounded-[2rem] p-5 shadow-sm border border-foreground/5 flex flex-col fade-up">
+                {/* Imagen del Producto */}
                 <div 
-                  className="relative w-full aspect-[3/4] rounded-2xl overflow-hidden bg-background mb-6 cursor-pointer"
+                  className="relative w-full aspect-[4/5] rounded-xl overflow-hidden bg-background mb-5 cursor-pointer"
                   onClick={() => setSelectedProduct(product)}
                 >
                   {product.imageUrl ? (
-                    <Image src={product.imageUrl} alt={product.name} fill className="object-cover group-hover:scale-110 transition-transform duration-1000 ease-out" sizes="(max-width: 768px) 75vw, 30vw" />
+                    <Image src={product.imageUrl} alt={product.name} fill className="object-cover hover:scale-105 transition-transform duration-500" sizes="(max-width: 768px) 100vw, 25vw" />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-background"><Sparkles className="text-gold/30" size={32} /></div>
+                    <div className="w-full h-full flex items-center justify-center text-gold/30"><Star size={32} /></div>
                   )}
-                  <div className="absolute inset-0 bg-foreground/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                  <span className="absolute top-3 left-3 bg-white/95 text-foreground text-[10px] font-bold px-3 py-1.5 rounded-full uppercase tracking-widest shadow-sm">
+                    {product.type === 'SERVICE' ? 'Terapia' : 'Objeto'}
+                  </span>
                 </div>
                 
-                <h3 className="font-playfair text-xl md:text-2xl text-foreground mb-1 pr-4 leading-tight">{product.name}</h3>
-                <span className="text-[10px] tracking-widest uppercase text-gray-400 mb-4 block">
-                  {product.type === 'SERVICE' ? 'Terapia' : 'Objeto'}
-                </span>
+                {/* Textos Claros */}
+                <h3 className="font-playfair text-xl text-foreground mb-2 leading-tight">{product.name}</h3>
+                <p className="text-sm text-foreground/60 line-clamp-2 mb-6 flex-grow">{product.description}</p>
                 
-                <div className="flex items-center justify-between mt-auto">
-                  <span className="font-playfair text-lg text-gold">{formatPrice(product.price)}</span>
+                {/* Acción de Compra Explícita (No oculta) */}
+                <div className="pt-4 border-t border-foreground/5 mt-auto flex flex-col gap-4">
+                  <span className="font-playfair text-2xl text-foreground font-medium">{formatPrice(product.price)}</span>
                   <button 
                     onClick={() => addItem({ id: product.id, name: product.name, price: product.price, imageUrl: product.imageUrl || null })}
                     disabled={product.stock === 0}
-                    className="w-10 h-10 rounded-full flex items-center justify-center bg-background text-foreground hover:bg-gold hover:text-white transition-colors disabled:opacity-50"
+                    className="w-full bg-lavender text-foreground hover:bg-gold hover:text-white py-3 rounded-xl text-sm font-bold tracking-wide flex items-center justify-center gap-2 btn-transition disabled:opacity-50"
                   >
-                    <ArrowRight size={16} strokeWidth={1.5} className="-rotate-45" />
+                    {product.stock === 0 ? 'Agotado' : <>Agregar <ArrowRight size={16} /></>}
                   </button>
                 </div>
               </article>
@@ -209,35 +157,68 @@ export default function HomeClient({ products, categories, banners }: HomeClient
         </div>
       </section>
 
-      {/* MODAL DEL PRODUCTO (Glass Minimalista) */}
+      {/* --- TESTIMONIOS (Calidez y Prueba Social) --- */}
+      <section id="testimonios" className="w-full bg-lavender/30 py-24 px-6">
+        <div className="max-w-[85rem] mx-auto text-center fade-up">
+          <h2 className="font-playfair text-4xl md:text-5xl text-foreground mb-16">Experiencias de corazón</h2>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-left">
+            {[
+              "Gracias a la sesión de péndulo, mi hijo ha vuelto a dormir tranquilo. Johanna tiene una energía maternal y muy cálida que nos dio mucha confianza desde el primer minuto.",
+              "Llevaba meses sintiendo un peso en el pecho. La biodecodificación me ayudó a entender el origen. Hoy me siento más ligera, en paz y feliz. Totalmente recomendada.",
+              "Una experiencia maravillosa. Su consulta transmite mucha paz y profesionalidad. Me explicó cada paso con mucha paciencia. Un antes y un después en mi bienestar."
+            ].map((text, i) => (
+              <div key={i} className="bg-white p-8 rounded-[2rem] shadow-sm flex flex-col">
+                <div className="flex text-gold mb-6">
+                  {[...Array(5)].map((_, index) => <Star key={index} size={16} fill="currentColor" className="mr-1" />)}
+                </div>
+                <p className="text-foreground/70 leading-relaxed italic text-base flex-grow">"{text}"</p>
+                <div className="mt-8 pt-6 border-t border-background font-playfair text-gold text-lg">
+                  Consultante
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* MODAL DEL PRODUCTO (Detalle Claro) */}
       {selectedProduct && (
-        <div className="fixed inset-0 z-[999999] flex items-end md:items-center justify-center p-4 md:p-8">
-          <div className="absolute inset-0 bg-foreground/40 backdrop-blur-md transition-opacity" onClick={() => setSelectedProduct(null)} />
-          <div className="relative w-full max-w-5xl bg-white rounded-[2rem] md:rounded-[3rem] overflow-hidden flex flex-col md:flex-row shadow-2xl z-10 animate-in slide-in-from-bottom-10 duration-500 ease-out max-h-[90vh]">
-            <button onClick={() => setSelectedProduct(null)} className="absolute top-4 right-4 md:top-8 md:right-8 z-20 w-10 h-10 bg-white/80 backdrop-blur-md flex items-center justify-center rounded-full text-foreground hover:scale-110 transition-transform">
-              <X size={20} strokeWidth={1.5} />
+        <div className="fixed inset-0 z-[999999] flex items-center justify-center p-4 md:p-8">
+          <div className="absolute inset-0 bg-foreground/60 backdrop-blur-sm" onClick={() => setSelectedProduct(null)} />
+          <div className="relative w-full max-w-5xl bg-white rounded-[2rem] overflow-hidden flex flex-col md:flex-row shadow-2xl z-10 max-h-[90vh]">
+            {/* Botón de cerrar grande y claro */}
+            <button onClick={() => setSelectedProduct(null)} className="absolute top-4 right-4 z-20 w-12 h-12 bg-white/90 border border-foreground/10 flex items-center justify-center rounded-full text-foreground hover:bg-background btn-transition shadow-sm">
+              <X size={24} strokeWidth={2} />
             </button>
             
-            <div className="w-full md:w-1/2 relative h-[35vh] md:h-[70vh] bg-background">
-              {selectedProduct.imageUrl && <Image src={selectedProduct.imageUrl} alt={selectedProduct.name} fill className="object-cover" priority sizes="(max-width: 768px) 100vw, 50vw" />}
+            <div className="w-full md:w-1/2 relative h-[35vh] md:h-auto bg-background">
+              {selectedProduct.imageUrl && <Image src={selectedProduct.imageUrl} alt={selectedProduct.name} fill className="object-cover" sizes="(max-width: 768px) 100vw, 50vw" />}
             </div>
             
-            <div className="w-full md:w-1/2 p-8 md:p-16 flex flex-col overflow-y-auto">
-              <span className="text-[9px] font-bold tracking-[0.3em] uppercase text-gold mb-4 block">
-                {selectedProduct.type === 'SERVICE' ? 'Sesión Sanadora' : 'Pieza Única'}
-              </span>
-              <h2 className="font-playfair text-3xl md:text-5xl text-foreground mb-6 leading-tight">{selectedProduct.name}</h2>
-              <p className="text-gray-500 mb-8 leading-relaxed font-light text-sm md:text-base whitespace-pre-line flex-grow">
+            <div className="w-full md:w-1/2 p-8 md:p-12 lg:p-16 flex flex-col overflow-y-auto">
+              <h2 className="font-playfair text-3xl md:text-4xl text-foreground mb-4">{selectedProduct.name}</h2>
+              <div className="w-16 h-1 bg-gold rounded-full mb-6"></div>
+              
+              <p className="text-foreground/70 mb-8 leading-relaxed text-base whitespace-pre-line flex-grow">
                 {selectedProduct.description}
               </p>
-              <div className="flex items-center justify-between pt-8 border-t border-black/5 mt-auto">
-                <span className="font-playfair text-3xl text-foreground">{formatPrice(selectedProduct.price)}</span>
+
+              {selectedProduct.duration && (
+                <div className="bg-lavender/50 p-4 rounded-xl mb-8 flex items-center gap-3">
+                  <span className="text-foreground font-bold">Duración estimada:</span>
+                  <span className="text-foreground/80">{selectedProduct.duration} minutos</span>
+                </div>
+              )}
+              
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between pt-8 border-t border-black/5 mt-auto gap-6">
+                <span className="font-playfair text-4xl text-foreground">{formatPrice(selectedProduct.price)}</span>
                 <button 
                   onClick={() => { addItem({ id: selectedProduct.id, name: selectedProduct.name, price: selectedProduct.price, imageUrl: selectedProduct.imageUrl || null }); setSelectedProduct(null); }}
                   disabled={selectedProduct.stock === 0}
-                  className="bg-foreground text-white px-8 py-4 rounded-full text-[9px] font-bold tracking-[0.2em] uppercase hover:bg-gold transition-colors disabled:opacity-50"
+                  className="w-full sm:w-auto bg-foreground text-white px-8 py-4 rounded-xl text-sm font-bold tracking-wider hover:bg-gold btn-transition disabled:opacity-50"
                 >
-                  {selectedProduct.stock === 0 ? 'Agotado' : 'Adquirir Obra'}
+                  {selectedProduct.stock === 0 ? 'Agotado' : 'Agregar al Carrito'}
                 </button>
               </div>
             </div>
