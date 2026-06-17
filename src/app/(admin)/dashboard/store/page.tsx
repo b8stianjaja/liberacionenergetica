@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
+import Image from "next/image";
 import ProductControls from "./ProductControls";
 import { Cormorant_Garamond } from "next/font/google";
 
@@ -46,7 +47,13 @@ export default async function StorePage() {
               </div>
 
               {product.imageUrl ? (
-                <img src={product.imageUrl} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                <Image 
+                  src={product.imageUrl} 
+                  alt={product.name} 
+                  fill 
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                  className="object-cover group-hover:scale-105 transition-transform duration-700" 
+                />
               ) : (
                 <span className="text-zinc-300 font-medium tracking-widest text-xs uppercase">Vacío</span>
               )}

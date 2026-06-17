@@ -66,7 +66,7 @@ export default function CartDrawer() {
               
               {/* FUNCIONALIDAD CORREGIDA: Ahora navega a la tienda y cierra el menú */}
               <Link 
-                href="/boutique" 
+                href="/#boutique" 
                 onClick={() => setIsOpen(false)}
                 className="text-xs uppercase tracking-widest border-b border-current pb-1 mt-4 hover:text-[var(--gold-magic)] transition-colors"
               >
@@ -102,21 +102,22 @@ export default function CartDrawer() {
                     <div className="flex items-center justify-between mt-2">
                       <span className="font-semibold text-zinc-700">{formatPrice(item.price)}</span>
                       
-                      <div className="flex items-center gap-3 bg-[var(--bg-canvas)] border border-[var(--purple-deep)]/10 rounded-full px-2 py-1">
+                      {/* Accesibilidad Móvil: Botones más grandes (w-8 h-8) para UX Táctil */}
+                      <div className="flex items-center gap-3 bg-zinc-50/80 border border-[var(--purple-deep)]/10 rounded-full px-3 py-1.5 shadow-sm">
                         <button 
                           onClick={() => updateQuantity(item.id, item.quantity - 1)} 
                           aria-label="Disminuir cantidad"
-                          className="text-zinc-500 hover:text-[var(--purple-deep)] w-6 h-6 flex items-center justify-center"
+                          className="text-zinc-500 hover:text-[var(--purple-deep)] hover:bg-zinc-200 rounded-full w-8 h-8 flex items-center justify-center transition-colors"
                         >
-                          <Minus size={14} strokeWidth={2}/>
+                          <Minus size={16} strokeWidth={2}/>
                         </button>
-                        <span className="text-xs font-bold w-4 text-center">{item.quantity}</span>
+                        <span className="text-sm font-bold w-5 text-center text-[var(--purple-deep)]">{item.quantity}</span>
                         <button 
                           onClick={() => updateQuantity(item.id, item.quantity + 1)} 
                           aria-label="Aumentar cantidad"
-                          className="text-zinc-500 hover:text-[var(--purple-deep)] w-6 h-6 flex items-center justify-center"
+                          className="text-zinc-500 hover:text-[var(--purple-deep)] hover:bg-zinc-200 rounded-full w-8 h-8 flex items-center justify-center transition-colors"
                         >
-                          <Plus size={14} strokeWidth={2}/>
+                          <Plus size={16} strokeWidth={2}/>
                         </button>
                       </div>
                     </div>

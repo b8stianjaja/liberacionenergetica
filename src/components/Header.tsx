@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import Image from 'next/image'; // Added Next.js Image component
+import Image from 'next/image'; 
 import { usePathname } from 'next/navigation';
 import { ShoppingCart, User, Menu, X, ArrowRight } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
@@ -44,6 +44,17 @@ export default function Header() {
 
   useEffect(() => setMobileMenuOpen(false), [pathname, activeHash]);
 
+  // Cerrar menú móvil si se redimensiona la pantalla a desktop
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 768) {
+        setMobileMenuOpen(false);
+      }
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   const navLinks = [
     { name: 'Inicio', href: '/' },
     { name: 'Sobre mí', href: '/#sobre-mi' },
@@ -59,10 +70,7 @@ export default function Header() {
       }`}>
         <div className="max-w-[90rem] mx-auto px-6 lg:px-16 flex justify-between items-center">
           
-          {/* UPDATED LOGO SECTION */}
           <Link href="/" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="flex items-center gap-3 md:gap-4 group relative z-[90]">
-            
-            {/* Image Container: Designed to be slightly larger than the text block */}
             <div className="relative w-10 h-10 md:w-14 md:h-14 flex-shrink-0 transition-transform duration-500 group-hover:scale-105">
               <Image 
                 src="/cruz.png" 
@@ -72,8 +80,6 @@ export default function Header() {
                 priority
               />
             </div>
-
-            {/* Text Container */}
             <div className="flex flex-col items-start">
               <span className="font-serif text-2xl md:text-3xl text-[var(--purple-deep)] leading-none tracking-wide group-hover:text-[var(--gold-magic)] transition-colors duration-500">
                 Johanna Grandón

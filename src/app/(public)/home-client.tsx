@@ -163,24 +163,24 @@ export default function HomeClient({ products, categories, banners }: HomeClient
         </div>
 
         <div className="relative z-10 max-w-4xl pt-20">
-          <div className="overflow-hidden mb-2">
-            <h1 className="hero-text-mask font-playfair text-5xl md:text-[5.5rem] lg:text-[7rem] text-[var(--purple-deep)] leading-[0.9] tracking-tight">
+          <div className="overflow-hidden pt-2 pb-4 -mt-2 -mb-4">
+            <h1 className="hero-text-mask font-playfair text-5xl md:text-[5.5rem] lg:text-[7rem] text-[var(--purple-deep)] leading-tight md:leading-none tracking-tight">
               <span className="block translate-y-full">Despierta tu</span>
             </h1>
           </div>
-          <div className="overflow-hidden mb-8">
-            <h1 className="hero-text-mask font-playfair text-5xl md:text-[5.5rem] lg:text-[7rem] leading-[0.9] tracking-tight flex items-center gap-4">
-              <span className="block translate-y-full golden-rainbow-text italic font-light">energía vital.</span>
+          <div className="overflow-hidden pt-2 pb-6 -mt-2 -mb-6">
+            <h1 className="hero-text-mask font-playfair text-5xl md:text-[5.5rem] lg:text-[7rem] leading-tight md:leading-none tracking-tight flex items-center gap-4">
+              <span className="block translate-y-full golden-rainbow-text italic font-light pr-2">energía vital.</span>
             </h1>
           </div>
           
-          <div className="overflow-hidden mb-12">
+          <div className="overflow-hidden pt-2 pb-4 -mt-2 -mb-4 mt-6">
             <p className="hero-text-mask text-[var(--purple-deep)]/80 text-base md:text-xl font-light max-w-lg leading-relaxed">
               <span className="block translate-y-full">Sanación cuántica, radiestesia y biodecodificación para liberar las memorias que tu cuerpo ya no necesita cargar.</span>
             </p>
           </div>
 
-          <Link href="/#terapias" className="group relative inline-flex items-center gap-4 text-[var(--purple-deep)] font-bold uppercase tracking-[0.2em] text-xs hover:text-[var(--gold-magic)] transition-colors">
+          <Link href="/#terapias" className="group relative inline-flex items-center gap-4 text-[var(--purple-deep)] font-bold uppercase tracking-[0.2em] text-xs hover:text-[var(--gold-magic)] transition-colors mt-8">
             <div className="w-12 h-12 rounded-full border border-[var(--purple-deep)] flex items-center justify-center group-hover:scale-110 group-hover:border-[var(--gold-magic)] transition-all duration-500 shadow-lg shadow-[var(--purple-deep)]/5">
               <MoveRight strokeWidth={1} className="group-hover:translate-x-1 transition-transform" />
             </div>
@@ -234,7 +234,7 @@ export default function HomeClient({ products, categories, banners }: HomeClient
           
           {/* Card 1 */}
           <div className="tarot-card sticky top-[10vh] w-full min-h-[500px] lg:h-[65vh] bg-white rounded-[2.5rem] shadow-[0_20px_60px_rgba(91,58,128,0.06)] border border-[var(--purple-deep)]/5 overflow-hidden flex flex-col lg:flex-row z-10 transition-transform duration-500 ease-out">
-             <div className="w-full h-64 lg:h-full lg:w-1/2 bg-[var(--purple-light)]/40 relative flex items-center justify-center overflow-hidden">
+             <div className="w-full h-48 sm:h-64 lg:h-full lg:w-1/2 bg-[var(--purple-light)]/40 relative flex items-center justify-center overflow-hidden">
                 <span className="tarot-number text-8xl lg:text-[10rem] font-playfair text-[var(--purple-deep)] opacity-5">I</span>
              </div>
              <div className="w-full lg:w-1/2 p-10 lg:p-20 flex flex-col justify-center bg-white">
@@ -245,7 +245,7 @@ export default function HomeClient({ products, categories, banners }: HomeClient
 
           {/* Card 2 */}
           <div className="tarot-card sticky top-[13vh] w-full min-h-[500px] lg:h-[65vh] bg-[#FDFCF8] rounded-[2.5rem] shadow-[0_30px_60px_rgba(91,58,128,0.1)] border border-[var(--gold-magic)]/20 overflow-hidden flex flex-col lg:flex-row z-20 transition-transform duration-500 ease-out">
-             <div className="w-full h-64 lg:h-full lg:w-1/2 bg-[var(--gold-magic)]/10 relative flex items-center justify-center overflow-hidden">
+             <div className="w-full h-48 sm:h-64 lg:h-full lg:w-1/2 bg-[var(--gold-magic)]/10 relative flex items-center justify-center overflow-hidden">
                 <span className="tarot-number text-8xl lg:text-[10rem] font-playfair text-[var(--gold-magic)] opacity-10">II</span>
              </div>
              <div className="w-full lg:w-1/2 p-10 lg:p-20 flex flex-col justify-center bg-[#FDFCF8]">
@@ -256,7 +256,7 @@ export default function HomeClient({ products, categories, banners }: HomeClient
 
           {/* Card 3 */}
           <div className="tarot-card sticky top-[16vh] w-full min-h-[500px] lg:h-[65vh] bg-[var(--purple-deep)] rounded-[2.5rem] shadow-[0_40px_80px_rgba(0,0,0,0.3)] border border-white/10 overflow-hidden flex flex-col lg:flex-row text-white z-30 transition-transform duration-500 ease-out">
-             <div className="w-full h-64 lg:h-full lg:w-1/2 bg-black/20 relative flex items-center justify-center overflow-hidden">
+             <div className="w-full h-48 sm:h-64 lg:h-full lg:w-1/2 bg-black/20 relative flex items-center justify-center overflow-hidden">
                 <span className="tarot-number text-8xl lg:text-[10rem] font-playfair text-white opacity-5">III</span>
              </div>
              <div className="w-full lg:w-1/2 p-10 lg:p-20 flex flex-col justify-center">
