@@ -101,10 +101,10 @@ export default function Header() {
               <Link 
                 key={link.name} 
                 href={link.href} 
-                className={`relative overflow-hidden group py-1 transition-colors hover:text-[var(--purple-deep)] ${isActive ? 'text-[var(--purple-deep)]' : ''}`}
+                className={`relative inline-block pr-[0.15em] group py-1 transition-colors hover:text-[var(--purple-deep)] ${isActive ? 'text-[var(--purple-deep)]' : ''}`}
               >
                 {link.name}
-                <span className={`absolute bottom-0 left-0 w-full h-[2px] bg-[var(--gold-magic)] transform origin-left transition-transform duration-300 ease-out ${isActive ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100'}`} />
+                <span className={`absolute bottom-0 left-0 w-[calc(100%-0.15em)] h-[2px] bg-[var(--gold-magic)] transform origin-left transition-transform duration-300 ease-out ${isActive ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100'}`} />
               </Link>
               );
             })}
