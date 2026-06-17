@@ -194,12 +194,21 @@ export default function HomeClient({ products, categories, banners }: HomeClient
       <section id="sobre-mi" className="relative w-full py-32 bg-white px-6 lg:px-16 overflow-hidden">
         <div className="max-w-[80rem] mx-auto flex flex-col lg:flex-row items-center gap-16 lg:gap-24 relative z-10">
           <div className="w-full lg:w-1/2 relative">
-            <div className="reveal-image aspect-[3/4] w-full max-w-md mx-auto bg-[var(--purple-light)] rounded-[2rem] overflow-hidden relative shadow-2xl">
-              <div className="absolute inset-0 bg-gradient-to-t from-[var(--purple-deep)]/40 to-transparent z-10" />
-              <div className="absolute inset-0 flex items-center justify-center text-[var(--purple-deep)]/20">
-                <Leaf size={100} strokeWidth={0.5} className="floating-element" />
-              </div>
-            </div>
+                <div className="reveal-image aspect-[3/4] w-full max-w-md mx-auto bg-[var(--purple-light)] rounded-[2rem] overflow-hidden relative shadow-2xl">
+                  
+                  {/* 1. EL GIF ANIMADO */}
+                  <Image 
+                    src="/johanna.png" /* Cambia esto por el nombre exacto de tu archivo en la carpeta public */
+                    alt="Sobre Johanna Grandón"
+                    fill
+                    className="object-cover"
+                    unoptimized={true} /* CRÍTICO: Esto le dice a Next.js que NO comprima ni congele el GIF */
+                  />
+
+                  {/* 2. GRADIENTE MÍSTICO (Mantenemos esto para que se integre bien con el fondo) */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-[var(--purple-deep)]/40 to-transparent z-10 mix-blend-multiply" />
+                  
+                </div>
             <div className="absolute -bottom-8 -right-8 w-48 h-48 bg-[var(--gold-magic)] rounded-full blur-[80px] opacity-20 -z-10 floating-element" />
           </div>
 
