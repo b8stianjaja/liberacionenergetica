@@ -98,14 +98,14 @@ export default function Header() {
             {navLinks.map((link) => {
               const isActive = activeHash === link.href || (activeHash === '/' && link.href === '/');
               return (
-                <Link 
-                  key={link.name} 
-                  href={link.href} 
-                  className={`relative overflow-hidden group py-1 transition-colors hover:text-[var(--purple-deep)] ${isActive ? 'text-[var(--purple-deep)]' : ''}`}
-                >
-                  {link.name}
-                  <span className={`absolute bottom-0 left-0 w-full h-[2px] bg-[var(--gold-magic)] transform origin-left transition-transform duration-300 ease-out ${isActive ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100'}`} />
-                </Link>
+              <Link 
+                key={link.name} 
+                href={link.href} 
+                className={`relative overflow-hidden group py-1 transition-colors hover:text-[var(--purple-deep)] ${isActive ? 'text-[var(--purple-deep)]' : ''}`}
+              >
+                {link.name}
+                <span className={`absolute bottom-0 left-0 w-full h-[2px] bg-[var(--gold-magic)] transform origin-left transition-transform duration-300 ease-out ${isActive ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100'}`} />
+              </Link>
               );
             })}
           </nav>
