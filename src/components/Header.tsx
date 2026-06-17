@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image'; // Added Next.js Image component
 import { usePathname } from 'next/navigation';
 import { ShoppingCart, User, Menu, X, ArrowRight } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
@@ -16,12 +17,10 @@ export default function Header() {
   const pathname = usePathname();
   const { itemsCount, toggleCart, isLoaded } = useCart();
 
-  // Detección de scroll y hash activo
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 20);
       
-      // Actualizar hash activo basado en la posición de scroll
       const sections = ['inicio', 'sobre-mi', 'terapias', 'testimonios', 'boutique'];
       let current = '';
       
@@ -29,7 +28,6 @@ export default function Header() {
         const element = document.getElementById(section);
         if (element) {
           const rect = element.getBoundingClientRect();
-          // Si el top de la sección está por encima del medio de la pantalla
           if (rect.top <= window.innerHeight / 2) {
             current = `#${section}`;
           }
@@ -39,7 +37,6 @@ export default function Header() {
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
-    // Run once on mount
     handleScroll();
     
     return () => window.removeEventListener('scroll', handleScroll);
@@ -62,13 +59,29 @@ export default function Header() {
       }`}>
         <div className="max-w-[90rem] mx-auto px-6 lg:px-16 flex justify-between items-center">
           
-          <Link href="/" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="flex flex-col items-start group relative z-[90]">
-            <span className="font-serif text-2xl md:text-3xl text-[var(--purple-deep)] leading-none tracking-wide group-hover:text-[var(--gold-magic)] transition-colors duration-500">
-              Johanna Grandón
-            </span>
-            <span className="text-[9px] md:text-[10px] text-[var(--gold-magic)] tracking-[0.25em] uppercase mt-1.5 font-bold">
-              Liberación Energética
-            </span>
+          {/* UPDATED LOGO SECTION */}
+          <Link href="/" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="flex items-center gap-3 md:gap-4 group relative z-[90]">
+            
+            {/* Image Container: Designed to be slightly larger than the text block */}
+            <div className="relative w-10 h-10 md:w-14 md:h-14 flex-shrink-0 transition-transform duration-500 group-hover:scale-105">
+              <Image 
+                src="/ankh.png" 
+                alt="Cruz Ankh - Liberación Energética"
+                fill
+                className="object-contain opacity-90 group-hover:opacity-100 transition-opacity drop-shadow-sm"
+                priority
+              />
+            </div>
+
+            {/* Text Container */}
+            <div className="flex flex-col items-start">
+              <span className="font-serif text-2xl md:text-3xl text-[var(--purple-deep)] leading-none tracking-wide group-hover:text-[var(--gold-magic)] transition-colors duration-500">
+                Johanna Grandón
+              </span>
+              <span className="text-[9px] md:text-[10px] text-[var(--gold-magic)] tracking-[0.25em] uppercase mt-1.5 font-bold">
+                Liberación Energética
+              </span>
+            </div>
           </Link>
           
           <nav className="hidden md:flex space-x-8 text-[12px] uppercase tracking-[0.15em] font-bold text-zinc-500">
