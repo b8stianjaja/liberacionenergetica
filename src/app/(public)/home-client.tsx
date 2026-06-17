@@ -238,7 +238,7 @@ export default function HomeClient({ products, categories, banners }: HomeClient
              {/* NUEVO: Contenedor con fotos adaptables y overlay místico */}
              <div className="w-full h-56 sm:h-72 lg:h-full lg:w-1/2 relative overflow-hidden bg-[var(--purple-light)]/40">
                 <Image 
-                  src="/radiestesia1" 
+                  src="/radie.png" 
                   alt="Sesión de Sanación y Radiestesia Holística" 
                   fill 
                   sizes="(max-width: 1024px) 100vw, 50vw"
