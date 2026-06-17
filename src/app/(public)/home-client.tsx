@@ -40,8 +40,8 @@ export default function HomeClient({ products, categories, banners }: HomeClient
   useGSAP(() => {
     // 0. SCROLL PREMIUM CON LENIS
     const lenis = new Lenis({
-      lerp: 0.05, // Suavidad extrema. Menor = más manteca.
-      wheelMultiplier: 0.6, // Frena la velocidad agresiva del ratón en PC
+      lerp: 0.05, 
+      wheelMultiplier: 0.6, 
       smoothWheel: true,
     });
 
@@ -68,11 +68,11 @@ export default function HomeClient({ products, categories, banners }: HomeClient
       });
     });
 
-    // 1. PRELOADER INMERSIVO (EYE CANDY)
+    // 1. PRELOADER INMERSIVO
     const tl = gsap.timeline({ 
       onComplete: () => { 
         document.body.style.overflow = ""; 
-        lenis.start(); // Libera la bestia
+        lenis.start(); 
       } 
     });
 
@@ -82,7 +82,7 @@ export default function HomeClient({ products, categories, banners }: HomeClient
       .fromTo(".hero-text-mask span", { y: "100%" }, { y: "0%", stagger: 0.15, duration: 1.2, ease: "expo.out" }, "-=0.8")
       .fromTo(".hero-image-wrapper", { scale: 1.2, filter: "blur(20px)" }, { scale: 1, filter: "blur(0px)", duration: 2, ease: "power3.out" }, "-=1.2");
 
-    // 2. ANIMACIÓN FLOTANTE INFINITA (EYE CANDY)
+    // 2. ANIMACIÓN FLOTANTE INFINITA
     gsap.to(".floating-element", {
       y: -15,
       rotation: 5,
@@ -93,7 +93,7 @@ export default function HomeClient({ products, categories, banners }: HomeClient
       stagger: 0.2
     });
 
-    // 3. REVEAL CINEMATOGRÁFICO DE IMÁGENES (CLIP-PATH)
+    // 3. REVEAL CINEMATOGRÁFICO DE IMÁGENES
     gsap.utils.toArray('.reveal-image').forEach((img: any) => {
       gsap.fromTo(img,
         { clipPath: "polygon(0 100%, 100% 100%, 100% 100%, 0% 100%)", scale: 1.1 },
@@ -115,21 +115,21 @@ export default function HomeClient({ products, categories, banners }: HomeClient
       );
     });
 
-    // 5. PARALLAX INTERNO DEL TAROT (Profundidad 3D)
+    // 5. PARALLAX INTERNO DEL TAROT
     gsap.utils.toArray('.tarot-number').forEach((num: any) => {
       gsap.to(num, {
-        y: 120,
-        opacity: 0,
+        y: 60,
+        opacity: 0.2,
         scrollTrigger: {
-          trigger: num.parentElement.parentElement, // La carta contenedora
-          start: "top center",
+          trigger: num.parentElement, 
+          start: "top bottom",
           end: "bottom top",
-          scrub: 1.5 // Parallax ultra suave gracias a Lenis
+          scrub: 1.5 
         }
       });
     });
 
-    // 6. FADE IN DE LA BOUTIQUE (EFECTO RESORTE)
+    // 6. FADE IN DE LA BOUTIQUE
     gsap.fromTo(".boutique-item", 
       { y: 80, opacity: 0, scale: 0.95 }, 
       { scrollTrigger: { trigger: ".boutique-grid", start: "top 80%" }, y: 0, opacity: 1, scale: 1, duration: 1, stagger: 0.15, ease: "back.out(1.5)" }
@@ -163,19 +163,20 @@ export default function HomeClient({ products, categories, banners }: HomeClient
         </div>
 
         <div className="relative z-10 max-w-4xl pt-20">
-          <div className="overflow-hidden pt-2 pb-4 -mt-2 -mb-4">
-            <h1 className="hero-text-mask font-playfair text-5xl md:text-[5.5rem] lg:text-[7rem] text-[var(--purple-deep)] leading-tight md:leading-none tracking-tight">
+          {/* CORRECCIÓN DE RECORTE DE TEXTO (GSAP MASK FIX): Padding vertical expansivo y leading holístico */}
+          <div className="hero-text-mask overflow-hidden py-4 md:py-6 -my-4 md:-my-6">
+            <h1 className="font-playfair text-5xl md:text-[5.5rem] lg:text-[7rem] text-[var(--purple-deep)] leading-[1.2] md:leading-[1.15] tracking-tight pb-2">
               <span className="block translate-y-full">Despierta tu</span>
             </h1>
           </div>
-          <div className="overflow-hidden pt-2 pb-6 -mt-2 -mb-6">
-            <h1 className="hero-text-mask font-playfair text-5xl md:text-[5.5rem] lg:text-[7rem] leading-tight md:leading-none tracking-tight flex items-center gap-4">
-              <span className="block translate-y-full golden-rainbow-text italic font-light pr-2">energía vital.</span>
+          <div className="hero-text-mask overflow-hidden py-4 md:py-6 -my-4 md:-my-6">
+            <h1 className="font-playfair text-5xl md:text-[5.5rem] lg:text-[7rem] leading-[1.2] md:leading-[1.15] tracking-tight flex flex-wrap items-center gap-4 pb-2">
+              <span className="block translate-y-full golden-rainbow-text italic font-light pr-4 py-1">energía vital.</span>
             </h1>
           </div>
           
-          <div className="overflow-hidden pt-2 pb-4 -mt-2 -mb-4 mt-6">
-            <p className="hero-text-mask text-[var(--purple-deep)]/80 text-base md:text-xl font-light max-w-lg leading-relaxed">
+          <div className="hero-text-mask overflow-hidden py-2 mt-6">
+            <p className="text-[var(--purple-deep)]/80 text-base md:text-xl font-light max-w-lg leading-relaxed">
               <span className="block translate-y-full">Sanación cuántica, radiestesia y biodecodificación para liberar las memorias que tu cuerpo ya no necesita cargar.</span>
             </p>
           </div>
@@ -232,10 +233,19 @@ export default function HomeClient({ products, categories, banners }: HomeClient
 
         <div className="max-w-[1000px] mx-auto flex flex-col gap-[20vh] pb-[30vh]">
           
-          {/* Card 1 */}
-          <div className="tarot-card sticky top-[10vh] w-full min-h-[500px] lg:h-[65vh] bg-white rounded-[2.5rem] shadow-[0_20px_60px_rgba(91,58,128,0.06)] border border-[var(--purple-deep)]/5 overflow-hidden flex flex-col lg:flex-row z-10 transition-transform duration-500 ease-out">
-             <div className="w-full h-48 sm:h-64 lg:h-full lg:w-1/2 bg-[var(--purple-light)]/40 relative flex items-center justify-center overflow-hidden">
-                <span className="tarot-number text-8xl lg:text-[10rem] font-playfair text-[var(--purple-deep)] opacity-5">I</span>
+          {/* Card 1 - Radiestesia */}
+          <div className="tarot-card group sticky top-[10vh] w-full min-h-[500px] lg:h-[65vh] bg-white rounded-[2.5rem] shadow-[0_20px_60px_rgba(91,58,128,0.06)] border border-[var(--purple-deep)]/5 overflow-hidden flex flex-col lg:flex-row z-10 transition-transform duration-500 ease-out">
+             {/* NUEVO: Contenedor con fotos adaptables y overlay místico */}
+             <div className="w-full h-56 sm:h-72 lg:h-full lg:w-1/2 relative overflow-hidden bg-[var(--purple-light)]/40">
+                <Image 
+                  src="/radiestesia1" 
+                  alt="Sesión de Sanación y Radiestesia Holística" 
+                  fill 
+                  sizes="(max-width: 1024px) 100vw, 50vw"
+                  className="object-cover opacity-85 group-hover:scale-105 transition-transform duration-700 ease-out"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-[var(--purple-deep)]/30 to-transparent mix-blend-multiply" />
+                <span className="tarot-number absolute text-8xl lg:text-[10rem] font-playfair text-[var(--purple-deep)] opacity-20 z-10 select-none bottom-4 left-6">I</span>
              </div>
              <div className="w-full lg:w-1/2 p-10 lg:p-20 flex flex-col justify-center bg-white">
                <h3 className="font-playfair text-3xl lg:text-4xl text-[var(--purple-deep)] mb-6">Radiestesia</h3>
@@ -243,10 +253,19 @@ export default function HomeClient({ products, categories, banners }: HomeClient
              </div>
           </div>
 
-          {/* Card 2 */}
-          <div className="tarot-card sticky top-[13vh] w-full min-h-[500px] lg:h-[65vh] bg-[#FDFCF8] rounded-[2.5rem] shadow-[0_30px_60px_rgba(91,58,128,0.1)] border border-[var(--gold-magic)]/20 overflow-hidden flex flex-col lg:flex-row z-20 transition-transform duration-500 ease-out">
-             <div className="w-full h-48 sm:h-64 lg:h-full lg:w-1/2 bg-[var(--gold-magic)]/10 relative flex items-center justify-center overflow-hidden">
-                <span className="tarot-number text-8xl lg:text-[10rem] font-playfair text-[var(--gold-magic)] opacity-10">II</span>
+          {/* Card 2 - Biodecodificación */}
+          <div className="tarot-card group sticky top-[13vh] w-full min-h-[500px] lg:h-[65vh] bg-[#FDFCF8] rounded-[2.5rem] shadow-[0_30px_60px_rgba(91,58,128,0.1)] border border-[var(--gold-magic)]/20 overflow-hidden flex flex-col lg:flex-row z-20 transition-transform duration-500 ease-out">
+             {/* NUEVO: Contenedor con fotos adaptables y overlay místico */}
+             <div className="w-full h-56 sm:h-72 lg:h-full lg:w-1/2 relative overflow-hidden bg-[var(--gold-magic)]/10">
+                <Image 
+                  src="/biodescodificacion.png" 
+                  alt="Análisis de Biodecodificación Emocional" 
+                  fill 
+                  sizes="(max-width: 1024px) 100vw, 50vw"
+                  className="object-cover opacity-85 group-hover:scale-105 transition-transform duration-700 ease-out"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-[var(--purple-deep)]/20 to-transparent mix-blend-multiply" />
+                <span className="tarot-number absolute text-8xl lg:text-[10rem] font-playfair text-[var(--gold-magic)] opacity-30 z-10 select-none bottom-4 left-6">II</span>
              </div>
              <div className="w-full lg:w-1/2 p-10 lg:p-20 flex flex-col justify-center bg-[#FDFCF8]">
                <h3 className="font-playfair text-3xl lg:text-4xl text-[var(--purple-deep)] mb-6">Biodecodificación</h3>
@@ -254,14 +273,23 @@ export default function HomeClient({ products, categories, banners }: HomeClient
              </div>
           </div>
 
-          {/* Card 3 */}
-          <div className="tarot-card sticky top-[16vh] w-full min-h-[500px] lg:h-[65vh] bg-[var(--purple-deep)] rounded-[2.5rem] shadow-[0_40px_80px_rgba(0,0,0,0.3)] border border-white/10 overflow-hidden flex flex-col lg:flex-row text-white z-30 transition-transform duration-500 ease-out">
-             <div className="w-full h-48 sm:h-64 lg:h-full lg:w-1/2 bg-black/20 relative flex items-center justify-center overflow-hidden">
-                <span className="tarot-number text-8xl lg:text-[10rem] font-playfair text-white opacity-5">III</span>
+          {/* Card 3 - Péndulo Hebreo */}
+          <div className="tarot-card group sticky top-[16vh] w-full min-h-[500px] lg:h-[65vh] bg-[var(--purple-deep)] rounded-[2.5rem] shadow-[0_40px_80px_rgba(0,0,0,0.3)] border border-white/10 overflow-hidden flex flex-col lg:flex-row text-white z-30 transition-transform duration-500 ease-out">
+             {/* NUEVO: Contenedor con fotos adaptables y overlay místico */}
+             <div className="w-full h-56 sm:h-72 lg:h-full lg:w-1/2 relative overflow-hidden bg-black/20">
+                <Image 
+                  src="/pendulo.png" 
+                  alt="Terapia Profesional con Péndulo Hebreo" 
+                  fill 
+                  sizes="(max-width: 1024px) 100vw, 50vw"
+                  className="object-cover opacity-75 group-hover:scale-105 transition-transform duration-700 ease-out"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent mix-blend-multiply" />
+                <span className="tarot-number absolute text-8xl lg:text-[10rem] font-playfair text-white opacity-20 z-10 select-none bottom-4 left-6">III</span>
              </div>
              <div className="w-full lg:w-1/2 p-10 lg:p-20 flex flex-col justify-center">
                <h3 className="font-playfair text-3xl lg:text-4xl mb-6">Péndulo Hebreo</h3>
-               <p className="text-white/80 font-light leading-relaxed text-lg">Sellado del aura. Utilizamos símbolos radiónicos milenarios y la Cruz de la Vida egipcia (Ankh) para anclar tu nueva frecuencia y proteger tu campo áurico de reincidencias.</p>
+               <p className="text-white/80 font-light leading-relaxed text-lg">Sellado del aura. Utilizamos símbolos radiónicos milenarios y la Cruz de la Vida egipcia (Ankh) para anclar tu nueva frequency y proteger tu campo áurico de reincidencias.</p>
              </div>
           </div>
 
@@ -354,4 +382,4 @@ export default function HomeClient({ products, categories, banners }: HomeClient
       </section>
     </div>
   );
-}
+} 

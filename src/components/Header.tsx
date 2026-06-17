@@ -44,7 +44,7 @@ export default function Header() {
 
   useEffect(() => setMobileMenuOpen(false), [pathname, activeHash]);
 
-  // Cerrar menú móvil si se redimensiona la pantalla a desktop
+  // CORRECCIÓN DE RESPONSIVIDAD: Auto-cierra el menú móvil si se redimensiona a pantallas grandes
   useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth >= 768) {
@@ -68,9 +68,11 @@ export default function Header() {
       <header id="app-header" className={`w-full fixed top-0 z-[80] transition-all duration-500 ease-in-out ${
         isScrolled ? 'bg-white/85 backdrop-blur-xl border-b border-[var(--purple-deep)]/10 shadow-sm py-3' : 'bg-transparent py-5'
       }`}>
-        <div className="max-w-[90rem] mx-auto px-6 lg:px-16 flex justify-between items-center">
+        <div className="max-w-[90rem] mx-auto px-6 lg:px-16 flex justify-between items-center gap-4">
           
-          <Link href="/" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="flex items-center gap-3 md:gap-4 group relative z-[90]">
+          {/* SECCIÓN DEL LOGO MEJORADA Y SEGIN GRÁFICA RESPONSIVA */}
+          <Link href="/" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="flex items-center gap-3 md:gap-4 group relative z-[90] max-w-[70%] sm:max-w-xl">
+            
             <div className="relative w-10 h-10 md:w-14 md:h-14 flex-shrink-0 transition-transform duration-500 group-hover:scale-105">
               <Image 
                 src="/cruz.png" 
@@ -80,11 +82,13 @@ export default function Header() {
                 priority
               />
             </div>
+
+            {/* Contenedor de Texto con anchos máximos controlados y leading fluido para evitar recortes de texto */}
             <div className="flex flex-col items-start">
-              <span className="font-serif text-2xl md:text-3xl text-[var(--purple-deep)] leading-none tracking-wide group-hover:text-[var(--gold-magic)] transition-colors duration-500">
+              <span className="font-serif text-xl sm:text-2xl md:text-3xl text-[var(--purple-deep)] leading-tight tracking-wide group-hover:text-[var(--gold-magic)] transition-colors duration-500">
                 Johanna Grandón
               </span>
-              <span className="text-[9px] md:text-[10px] text-[var(--gold-magic)] tracking-[0.25em] uppercase mt-1.5 font-bold">
+              <span className="text-[7px] xs:text-[9px] md:text-[10px] text-[var(--gold-magic)] tracking-[0.1em] xs:tracking-[0.25em] uppercase mt-1 md:mt-1.5 font-bold leading-normal block break-words max-w-xs sm:max-w-md md:max-w-none">
                 Radiestesista, Biodecodificadora Emocional y Terapeuta Profesional Holística con Péndulo Hebreo
               </span>
             </div>
@@ -106,7 +110,7 @@ export default function Header() {
             })}
           </nav>
 
-          <div className="flex items-center space-x-4 md:space-x-6 z-[90]">
+          <div className="flex items-center space-x-4 md:space-x-6 z-[90] flex-shrink-0">
             <div className="hidden sm:flex items-center space-x-5">
               <Link href="/login" aria-label="Portal de Usuario" className="text-[var(--purple-deep)] hover:text-[var(--gold-magic)] transition-colors">
                 <User size={20} strokeWidth={1.5} />
