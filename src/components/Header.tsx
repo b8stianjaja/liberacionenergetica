@@ -65,7 +65,7 @@ export default function Header() {
             {/* Image Container: Designed to be slightly larger than the text block */}
             <div className="relative w-10 h-10 md:w-14 md:h-14 flex-shrink-0 transition-transform duration-500 group-hover:scale-105">
               <Image 
-                src="/ankh.png" 
+                src="/cruz.png" 
                 alt="Cruz Ankh - Liberación Energética"
                 fill
                 className="object-contain opacity-90 group-hover:opacity-100 transition-opacity drop-shadow-sm"
@@ -79,7 +79,7 @@ export default function Header() {
                 Johanna Grandón
               </span>
               <span className="text-[9px] md:text-[10px] text-[var(--gold-magic)] tracking-[0.25em] uppercase mt-1.5 font-bold">
-                Liberación Energética
+                Radiestesista, Biodecodificadora Emocional y Terapeuta Profesional Holística con Péndulo Hebreo
               </span>
             </div>
           </Link>
