@@ -5,6 +5,8 @@
 
 ## 1. Producto y límites comprobados
 
+**Decisión de producto aprobada (18-10-2026):** desarrollar una **plataforma integral** que cubra **web pública, agenda de sesiones, consultantes, tienda y administración**. Es el **alcance objetivo**, no una declaración de funcionalidades completadas. Toda ampliación debe mantener separadas las decisiones de negocio y la evidencia de implementación.
+
 Proyecto web para presentar los servicios de Johanna Grandón y gestionar un catálogo/boutique y contenidos desde un panel administrativo. **En el código actual existen:** portada pública, secciones informativas, catálogo de productos dinámico, carrito local, acceso mediante credenciales, panel con resumen, agenda basada en pedidos, listado de clientes y administración de banners/productos. **No considerar operativos** el checkout, pagos, registro público ni reservas autoservicio: no hay rutas ni flujo completo para acreditarlo.
 
 No incorporar afirmaciones de diagnóstico médico o resultados terapéuticos garantizados en contenidos. Los cambios de alcance comercial, agenda o tienda necesitan una decisión explícita antes de implementarse.
