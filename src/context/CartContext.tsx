@@ -28,7 +28,7 @@ const CART_KEY = 'jg_cart';
 const CART_CHANGE_EVENT = 'jg-cart-change';
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
-function getCartSnapshot(): string {
+function getCartSnapshot(): string | null {
   try {
     return window.localStorage.getItem(CART_KEY) ?? '[]';
   } catch {
