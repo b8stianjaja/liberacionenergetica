@@ -1,5 +1,6 @@
 'use server';
 
+import { requireAdmin } from '@/lib/require-admin';
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from 'next/cache';
 import { v2 as cloudinary } from 'cloudinary';
@@ -10,7 +11,8 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-export async function createBanner(prevState: any, formData: FormData) {
+export async function createBanner(_prevState: unknown, formData: FormData) {
+  await requireAdmin();
   const title = formData.get('title') as string;
   const subtitle = formData.get('subtitle') as string;
 
@@ -42,7 +44,7 @@ export async function createBanner(prevState: any, formData: FormData) {
         }
       ).end(buffer);
     });
-  } catch (error) {
+  } catch {
     return { error: "No se pudo subir la imagen a la nube. Verifica tu conexión." };
   }
 
@@ -63,17 +65,19 @@ export async function createBanner(prevState: any, formData: FormData) {
 }
 
 export async function toggleBannerStatus(id: string, currentStatus: boolean) {
+  await requireAdmin();
   try {
     await prisma.banner.update({ where: { id }, data: { isActive: !currentStatus } });
     revalidatePath('/dashboard/banners');
     revalidatePath('/');
     return { success: true };
-  } catch (error) {
+  } catch {
     return { error: "No se pudo cambiar el estado del banner." };
   }
 }
 
 export async function deleteBanner(id: string) {
+  await requireAdmin();
   try {
     const banner = await prisma.banner.findUnique({ where: { id } });
     await prisma.banner.delete({ where: { id } });
@@ -88,7 +92,7 @@ export async function deleteBanner(id: string) {
     revalidatePath('/dashboard/banners');
     revalidatePath('/');
     return { success: true };
-  } catch (error) {
+  } catch {
     return { error: "Ocurrió un error al intentar eliminar el banner." };
   }
 }

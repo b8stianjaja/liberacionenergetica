@@ -1,8 +1,8 @@
 'use server';
 
+import { requireAdmin } from '@/lib/require-admin';
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from 'next/cache';
-import { redirect } from 'next/navigation';
 import { v2 as cloudinary } from 'cloudinary';
 
 cloudinary.config({
@@ -11,7 +11,8 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-export async function createProduct(prevState: any, formData: FormData) {
+export async function createProduct(_prevState: unknown, formData: FormData) {
+  await requireAdmin();
   const name = formData.get('name') as string;
   const description = formData.get('description') as string;
   const price = parseFloat(formData.get('price') as string) || 0;
@@ -62,7 +63,7 @@ export async function createProduct(prevState: any, formData: FormData) {
           }
         ).end(buffer);
       });
-    } catch (error) {
+    } catch {
       return { error: "No se pudo subir la imagen a la nube. Verifica tu conexión." };
     }
   }
@@ -86,17 +87,19 @@ export async function createProduct(prevState: any, formData: FormData) {
 }
 
 export async function toggleProductStatus(id: string, currentStatus: boolean) {
+  await requireAdmin();
   try {
     await prisma.product.update({ where: { id }, data: { isActive: !currentStatus } });
     revalidatePath('/dashboard/store');
     revalidatePath('/');
     return { success: true };
-  } catch (error) {
+  } catch {
     return { error: "No se pudo cambiar el estado." };
   }
 }
 
 export async function deleteProduct(id: string) {
+  await requireAdmin();
   try {
     // 1. Buscamos el producto para obtener su imagen antes de borrarlo
     const product = await prisma.product.findUnique({ where: { id } });
@@ -116,8 +119,8 @@ export async function deleteProduct(id: string) {
     revalidatePath('/dashboard/store');
     revalidatePath('/');
     return { success: true };
-  } catch (error: any) {
-    if (error.code === 'P2003') {
+  } catch (error: unknown) {
+    if (typeof error === 'object' && error !== null && 'code' in error && error.code === 'P2003') {
       return { error: "Este producto ya tiene ventas registradas. Por favor, ocúltalo (👁️) en lugar de borrarlo para mantener el registro financiero intacto." };
     }
     return { error: "Ocurrió un error al intentar eliminar el producto." };

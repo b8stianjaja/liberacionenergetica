@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image'; 
-import { usePathname } from 'next/navigation';
 import { ShoppingCart, User, Menu, X, ArrowRight } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 
@@ -14,7 +13,6 @@ export default function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeHash, setActiveHash] = useState('');
-  const pathname = usePathname();
   const { itemsCount, toggleCart, isLoaded } = useCart();
 
   useEffect(() => {
@@ -41,8 +39,6 @@ export default function Header() {
     
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
-
-  useEffect(() => setMobileMenuOpen(false), [pathname, activeHash]);
 
   // CORRECCIÓN DE RESPONSIVIDAD: Auto-cierra el menú móvil si se redimensiona a pantallas grandes
   useEffect(() => {
@@ -71,7 +67,7 @@ export default function Header() {
         <div className="max-w-[90rem] mx-auto px-6 lg:px-16 flex justify-between items-center gap-4">
           
           {/* SECCIÓN DEL LOGO MEJORADA Y SEGIN GRÁFICA RESPONSIVA */}
-          <Link href="/" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="flex items-center gap-3 md:gap-4 group relative z-[90] max-w-[70%] sm:max-w-xl">
+          <Link href="/" onClick={() => { setMobileMenuOpen(false); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="flex items-center gap-3 md:gap-4 group relative z-[90] max-w-[70%] sm:max-w-xl">
             
             <div className="relative w-10 h-10 md:w-14 md:h-14 flex-shrink-0 transition-transform duration-500 group-hover:scale-105">
               <Image 

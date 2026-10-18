@@ -1,3 +1,4 @@
+import { requireAdmin } from '@/lib/require-admin';
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import Image from "next/image";
@@ -8,6 +9,7 @@ export const dynamic = 'force-dynamic';
 const cormorant = Cormorant_Garamond({ subsets: ["latin"], weight: ["400", "500", "600"], display: "swap" });
 
 export default async function BannersPage() {
+  await requireAdmin();
   const banners = await prisma.banner.findMany({
     orderBy: { createdAt: 'desc' }
   });

@@ -1,3 +1,4 @@
+import { requireAdmin } from '@/lib/require-admin';
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { Prisma } from "@prisma/client";
@@ -11,17 +12,20 @@ type AppointmentWithRelations = Prisma.OrderGetPayload<{
 
 async function completeAppointment(formData: FormData) {
   "use server";
+  await requireAdmin();
   await prisma.order.update({ where: { id: formData.get("orderId") as string }, data: { status: "COMPLETED" } });
   revalidatePath("/dashboard/agenda");
 }
 
 async function cancelAppointment(formData: FormData) {
   "use server";
+  await requireAdmin();
   await prisma.order.update({ where: { id: formData.get("orderId") as string }, data: { status: "CANCELLED" } });
   revalidatePath("/dashboard/agenda");
 }
 
 export default async function AgendaPage() {
+  await requireAdmin();
   const appointments = await prisma.order.findMany({
     where: { bookingDate: { not: null } },
     orderBy: { bookingDate: "asc" },
