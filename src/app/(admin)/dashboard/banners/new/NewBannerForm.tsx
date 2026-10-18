@@ -25,7 +25,7 @@ export default function NewBannerForm() {
           router.push('/dashboard/banners');
           router.refresh(); 
         }
-      } catch (err) {
+      } catch {
         setError('Ocurrió un problema de conexión. Inténtalo de nuevo.');
       }
     });
