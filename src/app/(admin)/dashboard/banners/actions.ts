@@ -1,6 +1,6 @@
-import { requireAdmin } from '@/lib/require-admin';
 'use server';
 
+import { requireAdmin } from '@/lib/require-admin';
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from 'next/cache';
 import { v2 as cloudinary } from 'cloudinary';
