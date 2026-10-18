@@ -30,7 +30,7 @@ export default function NewProductForm({ initialCategories }: { initialCategorie
           router.push('/dashboard/store');
           router.refresh(); 
         }
-      } catch (err) {
+      } catch {
         setError('Ocurrió un problema de conexión. Inténtalo de nuevo.');
       }
     });
