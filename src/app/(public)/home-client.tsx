@@ -1,14 +1,13 @@
 "use client";
 
-import { useRef, useState, useMemo, useEffect } from "react";
+import { useRef, useState, useMemo } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useCart } from "@/context/CartContext";
-import { Plus, Sparkles, MoveRight, Quote, Leaf, CircleDot } from "lucide-react";
+import { Plus, Sparkles, MoveRight, Quote, CircleDot } from "lucide-react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
-// @ts-ignore
 import Lenis from 'lenis';
 
 if (typeof window !== "undefined") {
@@ -94,7 +93,7 @@ export default function HomeClient({ products, categories, banners }: HomeClient
     });
 
     // 3. REVEAL CINEMATOGRÁFICO DE IMÁGENES
-    gsap.utils.toArray('.reveal-image').forEach((img: any) => {
+    gsap.utils.toArray<HTMLElement>('.reveal-image').forEach((img) => {
       gsap.fromTo(img,
         { clipPath: "polygon(0 100%, 100% 100%, 100% 100%, 0% 100%)", scale: 1.1 },
         { 
@@ -108,7 +107,7 @@ export default function HomeClient({ products, categories, banners }: HomeClient
     });
 
     // 4. ANIMACIONES DE TEXTO ORGÁNICAS
-    gsap.utils.toArray('.fade-up').forEach((elem: any) => {
+    gsap.utils.toArray<HTMLElement>('.fade-up').forEach((elem) => {
       gsap.fromTo(elem, 
         { opacity: 0, y: 40 },
         { scrollTrigger: { trigger: elem, start: "top 85%" }, opacity: 1, y: 0, duration: 1, ease: "power3.out" }
@@ -116,12 +115,12 @@ export default function HomeClient({ products, categories, banners }: HomeClient
     });
 
     // 5. PARALLAX INTERNO DEL TAROT
-    gsap.utils.toArray('.tarot-number').forEach((num: any) => {
+    gsap.utils.toArray<HTMLElement>('.tarot-number').forEach((num) => {
       gsap.to(num, {
         y: 60,
         opacity: 0.2,
         scrollTrigger: {
-          trigger: num.parentElement, 
+          trigger: num.parentElement ?? num, 
           start: "top bottom",
           end: "bottom top",
           scrub: 1.5 
@@ -318,7 +317,7 @@ export default function HomeClient({ products, categories, banners }: HomeClient
               { text: "Una experiencia de luz pura. El uso del péndulo hebreo me hizo sentir protegida y renovada.", name: "Andrea V." }
             ].map((testimonio, i) => (
               <div key={i} className="bg-white p-10 rounded-[2rem] shadow-sm border border-[var(--purple-deep)]/5 flex flex-col justify-between items-start text-left hover:-translate-y-3 hover:shadow-xl transition-all duration-500">
-                <p className="text-zinc-600 font-light leading-relaxed mb-8">"{testimonio.text}"</p>
+                <p className="text-zinc-600 font-light leading-relaxed mb-8">&ldquo;{testimonio.text}&rdquo;</p>
                 <span className="font-playfair text-[var(--purple-deep)] font-bold">{testimonio.name}</span>
               </div>
             ))}
