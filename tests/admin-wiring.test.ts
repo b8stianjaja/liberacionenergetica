@@ -27,6 +27,10 @@ for (const [path, functions] of [
   ['src/app/(admin)/dashboard/store/actions.ts', ['createProduct', 'toggleProductStatus', 'deleteProduct']],
   ['src/app/(admin)/dashboard/banners/actions.ts', ['createBanner', 'toggleBannerStatus', 'deleteBanner']],
 ] as const) {
+  test(`el módulo ${path} declara 'use server' al comienzo`, () => {
+    assert.match(source(path), /^['"]use server['"];/);
+  });
+
   for (const functionName of functions) {
     test(`la acción ${functionName} exige requireAdmin al comenzar`, () => {
       const content = source(path);
