@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useMemo, useState, useSyncExternalStore, type ReactNode } from 'react';
 
 type CartItem = {
   id: string;
@@ -21,49 +21,95 @@ interface CartContextType {
   setIsOpen: (isOpen: boolean) => void;
   toggleCart: () => void;
   itemsCount: number;
-  isLoaded: boolean; // NUEVO: Evita errores de hidratación en Next.js
+  isLoaded: boolean;
 }
 
+const CART_KEY = 'jg_cart';
+const CART_CHANGE_EVENT = 'jg-cart-change';
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
+function getCartSnapshot(): string {
+  try {
+    return window.localStorage.getItem(CART_KEY) ?? '[]';
+  } catch {
+    return '[]';
+  }
+}
+
+function getServerCartSnapshot(): null {
+  return null;
+}
+
+function subscribeToCart(onChange: () => void): () => void {
+  window.addEventListener('storage', onChange);
+  window.addEventListener(CART_CHANGE_EVENT, onChange);
+
+  return () => {
+    window.removeEventListener('storage', onChange);
+    window.removeEventListener(CART_CHANGE_EVENT, onChange);
+  };
+}
+
+function isCartItem(value: unknown): value is CartItem {
+  if (value === null || typeof value !== 'object') return false;
+  const item = value as Partial<CartItem>;
+
+  return (
+    typeof item.id === 'string' &&
+    typeof item.name === 'string' &&
+    typeof item.price === 'number' &&
+    Number.isFinite(item.price) &&
+    typeof item.quantity === 'number' &&
+    Number.isInteger(item.quantity) &&
+    item.quantity > 0 &&
+    (item.imageUrl === null || typeof item.imageUrl === 'string')
+  );
+}
+
+function parseCart(snapshot: string | null): CartItem[] {
+  if (!snapshot) return [];
+
+  try {
+    const value: unknown = JSON.parse(snapshot);
+    return Array.isArray(value) ? value.filter(isCartItem) : [];
+  } catch {
+    return [];
+  }
+}
+
+function updateStoredCart(change: (current: CartItem[]) => CartItem[]): void {
+  const items = change(parseCart(getCartSnapshot()));
+
+  try {
+    window.localStorage.setItem(CART_KEY, JSON.stringify(items));
+    window.dispatchEvent(new Event(CART_CHANGE_EVENT));
+  } catch (error) {
+    console.error('No se pudo guardar el carrito en el navegador', error);
+  }
+}
+
 export function CartProvider({ children }: { children: ReactNode }) {
-  const [items, setItems] = useState<CartItem[]>([]);
+  // useSyncExternalStore mantiene el servidor y la hidratación consistentes,
+  // y escucha cambios del almacenamiento local y de otras pestañas.
+  const snapshot = useSyncExternalStore(subscribeToCart, getCartSnapshot, getServerCartSnapshot);
+  const items = useMemo(() => parseCart(snapshot), [snapshot]);
+  const isLoaded = snapshot !== null;
   const [isOpen, setIsOpen] = useState(false);
-  const [isLoaded, setIsLoaded] = useState(false); // Rastrea si se cargó el localStorage
-
-  // Cargar desde localStorage al montar (Solo en el cliente)
-  useEffect(() => {
-    const savedCart = localStorage.getItem('jg_cart');
-    if (savedCart) {
-      try {
-        setItems(JSON.parse(savedCart));
-      } catch (error) {
-        console.error('Error parsing cart from local storage', error);
-      }
-    }
-    setIsLoaded(true); // Indica que ya podemos renderizar cantidades reales de forma segura
-  }, []);
-
-  // Guardar en localStorage cada vez que cambien los items
-  useEffect(() => {
-    if (isLoaded) {
-      localStorage.setItem('jg_cart', JSON.stringify(items));
-    }
-  }, [items, isLoaded]);
 
   const addItem = (newItem: Omit<CartItem, 'quantity'>) => {
-    setItems((prev) => {
-      const existing = prev.find((item) => item.id === newItem.id);
-      if (existing) {
-        return prev.map((item) => item.id === newItem.id ? { ...item, quantity: item.quantity + 1 } : item);
-      }
-      return [...prev, { ...newItem, quantity: 1 }];
+    updateStoredCart((current) => {
+      const existing = current.find((item) => item.id === newItem.id);
+
+      return existing
+        ? current.map((item) => item.id === newItem.id ? { ...item, quantity: item.quantity + 1 } : item)
+        : [...current, { ...newItem, quantity: 1 }];
     });
-    setIsOpen(true); // Abre el carrito automáticamente al añadir
+
+    setIsOpen(true);
   };
 
   const removeItem = (id: string) => {
-    setItems((prev) => prev.filter((item) => item.id !== id));
+    updateStoredCart((current) => current.filter((item) => item.id !== id));
   };
 
   const updateQuantity = (id: string, quantity: number) => {
@@ -71,28 +117,29 @@ export function CartProvider({ children }: { children: ReactNode }) {
       removeItem(id);
       return;
     }
-    setItems((prev) => prev.map((item) => item.id === id ? { ...item, quantity } : item));
+
+    updateStoredCart((current) => current.map((item) => item.id === id ? { ...item, quantity } : item));
   };
 
-  const clearCart = () => setItems([]);
-  const toggleCart = () => setIsOpen((prev) => !prev);
-  
+  const clearCart = () => updateStoredCart(() => []);
+  const toggleCart = () => setIsOpen((current) => !current);
+
   const total = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const itemsCount = items.reduce((sum, item) => sum + item.quantity, 0);
 
   return (
-    <CartContext.Provider value={{ 
-      items, 
-      addItem, 
-      removeItem, 
-      updateQuantity, 
-      clearCart, 
-      total, 
-      isOpen, 
-      setIsOpen, 
-      toggleCart, 
+    <CartContext.Provider value={{
+      items,
+      addItem,
+      removeItem,
+      updateQuantity,
+      clearCart,
+      total,
+      isOpen,
+      setIsOpen,
+      toggleCart,
       itemsCount,
-      isLoaded 
+      isLoaded,
     }}>
       {children}
     </CartContext.Provider>
