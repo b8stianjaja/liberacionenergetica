@@ -1,5 +1,7 @@
+import { requireAdmin } from '@/lib/require-admin';
 import NewBannerForm from "./NewBannerForm";
 
-export default function NewBannerPage() {
+export default async function NewBannerPage() {
+  await requireAdmin();
   return <NewBannerForm />;
 }

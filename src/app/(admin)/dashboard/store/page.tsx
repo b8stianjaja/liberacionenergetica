@@ -1,3 +1,4 @@
+import { requireAdmin } from '@/lib/require-admin';
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import Image from "next/image";
@@ -7,6 +8,7 @@ import { Cormorant_Garamond } from "next/font/google";
 const cormorant = Cormorant_Garamond({ subsets: ["latin"], weight: ["400", "500", "600"], display: "swap" });
 
 export default async function StorePage() {
+  await requireAdmin();
   const products = await prisma.product.findMany({
     orderBy: { createdAt: 'desc' },
     include: { category: true } 

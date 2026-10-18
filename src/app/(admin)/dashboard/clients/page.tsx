@@ -1,3 +1,4 @@
+import { requireAdmin } from '@/lib/require-admin';
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
 import { Cormorant_Garamond } from "next/font/google";
@@ -7,6 +8,7 @@ const cormorant = Cormorant_Garamond({ subsets: ["latin"], weight: ["400", "500"
 type CustomerWithCounts = Prisma.UserGetPayload<{ include: { _count: { select: { orders: true }; }; }; }>;
 
 export default async function ClientesPage() {
+  await requireAdmin();
   const customers = await prisma.user.findMany({
     where: { role: "CUSTOMER" },
     orderBy: { createdAt: "desc" },

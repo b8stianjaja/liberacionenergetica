@@ -1,3 +1,4 @@
+import { requireAdmin } from '@/lib/require-admin';
 'use server';
 
 import { prisma } from "@/lib/prisma";
@@ -11,6 +12,7 @@ cloudinary.config({
 });
 
 export async function createBanner(prevState: any, formData: FormData) {
+  await requireAdmin();
   const title = formData.get('title') as string;
   const subtitle = formData.get('subtitle') as string;
 
@@ -63,6 +65,7 @@ export async function createBanner(prevState: any, formData: FormData) {
 }
 
 export async function toggleBannerStatus(id: string, currentStatus: boolean) {
+  await requireAdmin();
   try {
     await prisma.banner.update({ where: { id }, data: { isActive: !currentStatus } });
     revalidatePath('/dashboard/banners');
@@ -74,6 +77,7 @@ export async function toggleBannerStatus(id: string, currentStatus: boolean) {
 }
 
 export async function deleteBanner(id: string) {
+  await requireAdmin();
   try {
     const banner = await prisma.banner.findUnique({ where: { id } });
     await prisma.banner.delete({ where: { id } });

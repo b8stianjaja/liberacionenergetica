@@ -1,5 +1,5 @@
-import { auth, signOut } from "@/auth";
-import { redirect } from "next/navigation";
+import { signOut } from "@/auth";
+import { requireAdmin } from "@/lib/require-admin";
 import { prisma } from "@/lib/prisma";
 import { Cormorant_Garamond } from "next/font/google";
 import { Users, CalendarClock, PackageOpen, LogOut } from "lucide-react";
@@ -11,8 +11,7 @@ const cormorant = Cormorant_Garamond({
 });
 
 export default async function DashboardPage() {
-  const session = await auth();
-  if (!session?.user) redirect('/login');
+  const session = await requireAdmin();
 
   const [customerCount, pendingAppointments, activeProducts] = await Promise.all([
     prisma.user.count({ where: { role: "CUSTOMER" } }),

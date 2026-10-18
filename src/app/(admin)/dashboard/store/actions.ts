@@ -1,8 +1,8 @@
+import { requireAdmin } from '@/lib/require-admin';
 'use server';
 
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from 'next/cache';
-import { redirect } from 'next/navigation';
 import { v2 as cloudinary } from 'cloudinary';
 
 cloudinary.config({
@@ -12,6 +12,7 @@ cloudinary.config({
 });
 
 export async function createProduct(prevState: any, formData: FormData) {
+  await requireAdmin();
   const name = formData.get('name') as string;
   const description = formData.get('description') as string;
   const price = parseFloat(formData.get('price') as string) || 0;
@@ -86,6 +87,7 @@ export async function createProduct(prevState: any, formData: FormData) {
 }
 
 export async function toggleProductStatus(id: string, currentStatus: boolean) {
+  await requireAdmin();
   try {
     await prisma.product.update({ where: { id }, data: { isActive: !currentStatus } });
     revalidatePath('/dashboard/store');
@@ -97,6 +99,7 @@ export async function toggleProductStatus(id: string, currentStatus: boolean) {
 }
 
 export async function deleteProduct(id: string) {
+  await requireAdmin();
   try {
     // 1. Buscamos el producto para obtener su imagen antes de borrarlo
     const product = await prisma.product.findUnique({ where: { id } });
